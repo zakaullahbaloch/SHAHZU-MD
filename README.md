@@ -1,3 +1,28 @@
+<h1 align="center">Hi 👋, I'm Zakaullah-Tech</h1>
+<h3 align="center">𝖲𝗂𝗆𝗉𝗅𝖾 𝖬𝖽 𝖡𝗈𝗍 𝖢𝗋𝖾𝖺𝗍𝖾𝖽 𝖶𝗂𝗍𝗁 ❤ 𝖡𝗒 | 𝗦 𝗛 𝗔 𝗛 𝗭 𝗨 🩵🌙</h3>
+
+<p align="left"> <img src="https://komarev.com/ghpvc/?username=zakaullahbaloch&label=Profile%20views&color=0e75b6&style=flat" alt="zakaullahbaloch" /> </p>
+
+- 🔭 I’m currently working on [SHAHZU-MD](https://github.com/zakaullahbaloch/khan-md.git)
+
+- 👯 I’m looking to collaborate on [SHAHZU-MD](https://github.com/zakaullahbaloch/khan-md.git)
+
+- 🤝 I’m looking for help with [DEPLOYMENT THE SHAHZU-MD IN FREE JUST WITH PAIR](https://github.com/zakaullahbaloch/khan-md.git)
+
+- 💬 Ask me about **SHAHZU-MD/ WHATSAPP BOT**
+
+- 📫 How to reach me **shahzuking15@gmail.com**
+
+<h3 align="left">Connect with me:</h3>
+<p align="left">
+</p>
+
+<h3 align="left">Languages and Tools:</h3>
+<p align="left"> <a href="https://cassandra.apache.org/" target="_blank" rel="noreferrer"> <img src="https://www.vectorlogo.zone/logos/apache_cassandra/apache_cassandra-icon.svg" alt="cassandra" width="40" height="40"/> </a> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg" alt="javascript" width="40" height="40"/> </a> <a href="https://www.jenkins.io" target="_blank" rel="noreferrer"> <img src="https://www.vectorlogo.zone/logos/jenkins/jenkins-icon.svg" alt="jenkins" width="40" height="40"/> </a> <a href="https://opencv.org/" target="_blank" rel="noreferrer"> <img src="https://www.vectorlogo.zone/logos/opencv/opencv-icon.svg" alt="opencv" width="40" height="40"/> </a> </p>
+
+<p><img align="center" src="https://github-readme-stats.vercel.app/api/top-langs?username=zakaullahbaloch&show_icons=true&locale=en&layout=compact" alt="zakaullahbaloch" /></p>
+
+
 <div align="center">
 
 <img src="https://capsule-render.vercel.app/api?type=waving&height=230&color=0:6a0dad,100:ab47bc&text=KHAN%20MD&fontColor=ffffff&fontSize=85&fontAlignY=40&animation=twinkling&desc=Powered%20By%20Jawad%20TechX&descSize=20&descAlignY=65&stroke=ffffff&strokeWidth=1.2" width="100%"/>
