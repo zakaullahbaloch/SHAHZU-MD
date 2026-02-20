@@ -48,12 +48,12 @@
 </p>
 
 <h1 align="center">
-  <img src="![Image](https://github.com/user-attachments/assets/b6673c47-f23a-4789-8a6b-8c9a63b47c99)/KHAN-MD&link=https://github.com/KHAN-MD" />
+  <img src="![Image](https://github.com/user-attachments/assets/b6673c47-f23a-4789-8a6b-8c9a63b47c99)/KHAN-MD&![Image](https://github.com/user-attachments/assets/b6673c47-f23a-4789-8a6b-8c9a63b47c99)/>
 </h1>
 </p>
 </p>
     <img src="https://komarev.com/ghpvc/?username=JawadYT36&label=Views&color=9D00FF&style=flat" alt="Profile Views" />
-    <img src="https://img.shields.io/github/stars/JawadYT36/KHAN-MD?color=9D00FF&label=Stars&style=flat" alt="GitHub Stars" />
+    <img src="![Image](https://github.com/user-attachments/assets/b6673c47-f23a-4789-8a6b-8c9a63b47c99)" alt="GitHub Stars" />
     <img src="https://img.shields.io/github/forks/JawadYT36/KHAN-MD?style=flat&color=1E88E5&logo=github&logoColor=white&label=Forks" alt="GitHub Forks" />
     <img src="https://img.shields.io/github/followers/JawadYT36?style=flat&color=43A047&logo=github&logoColor=white&label=Followers" alt="GitHub Followers" />
     <img src="https://img.shields.io/github/last-commit/JawadYT36/KHAN-MD?style=flat&color=8E24AA&logo=git&logoColor=white&label=Last%20Commit" alt="Last Commit" />
