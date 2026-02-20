@@ -48,7 +48,7 @@
 </p>
 
 <h1 align="center">
-  <img src="https://img.shields.io/badge/-✨_KHAN--MD_INSIGHTS_✨-purple?style=for-the-badge&logo=sparkles&logoColor=white&labelColor=0d1117&color=9d4edd&label=&link=https://github.com/KHAN-MD&link=https://github.com/KHAN-MD" />
+  <img src="![Image](https://github.com/user-attachments/assets/b6673c47-f23a-4789-8a6b-8c9a63b47c99)/KHAN-MD&link=https://github.com/KHAN-MD" />
 </h1>
 </p>
 </p>
