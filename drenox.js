@@ -12565,6 +12565,7 @@ const antigmEnabled = getSetting(chatId, 'antigm', false)
 if (antigmEnabled && !msg.key.fromMe) {
   const mentioned = new Set()
   const groupMentionTypes = []
+  let hasGroupMentionMetadata = false
   const collectMentionData = (value, depth = 0) => {
     if (!value || typeof value !== 'object' || depth > 8) return
     if (Array.isArray(value)) {
@@ -12572,6 +12573,9 @@ if (antigmEnabled && !msg.key.fromMe) {
       return
     }
     if (Array.isArray(value.mentionedJid)) value.mentionedJid.forEach(jid => mentioned.add(jid))
+    if (Object.prototype.hasOwnProperty.call(value, 'groupMentions') || Object.prototype.hasOwnProperty.call(value, 'groupMention') || Object.prototype.hasOwnProperty.call(value, 'isGroupMention')) {
+      hasGroupMentionMetadata = true
+    }
     if (Array.isArray(value.groupMentions)) groupMentionTypes.push(...value.groupMentions)
     for (const [key, child] of Object.entries(value)) {
       if (key !== 'contextInfo' && typeof child === 'object') collectMentionData(child, depth + 1)
@@ -12580,15 +12584,14 @@ if (antigmEnabled && !msg.key.fromMe) {
   collectMentionData(messageTypes)
   const mentionText = String(body || '').toLowerCase()
   const hasGroupMentionTag = /@(all|everyone|group|allmembers)\b/i.test(mentionText)
-  const isMassMention = mentioned.size >= 3 || groupMentionTypes.length > 0 || hasGroupMentionTag
+  const isMassMention = mentioned.size >= 3 || groupMentionTypes.length > 0 || hasGroupMentionMetadata || hasGroupMentionTag
   const antigmFilter = String(getSetting(chatId, 'antigmFilter', '') || '').toLowerCase().trim()
   const filterMatches = antigmFilter && antigmFilter.split(',').map(item => item.trim()).filter(Boolean).some(item => mentionText.includes(item))
   if (isMassMention && !filterMatches) {
     try {
-      const offender = msg.key.participant || msg.participant || msg.key.remoteJid
-      const senderParticipant = metadata.participants.find(p => p.id === offender || isSameUser(p.id, offender))
-      const senderIsAdmin = senderParticipant && (senderParticipant.admin === 'admin' || senderParticipant.admin === 'superadmin')
-      if (!senderIsAdmin && offender) {
+      const offenderValue = msg.key.participant || msg.participant || msg.key.remoteJid
+      const offender = typeof offenderValue === 'string' ? offenderValue : offenderValue?.id || offenderValue?.jid || offenderValue?.participant
+      if (offender && !isBotParticipant(offender, bad)) {
         const action = String(getSetting(chatId, 'antigmAction', 'delete')).toLowerCase()
         await bad.sendMessage(chatId, { delete: msg.key })
         if (action === 'kick') {
