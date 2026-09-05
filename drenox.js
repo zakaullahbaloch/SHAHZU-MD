@@ -3672,13 +3672,38 @@ break;
 
 case 'getpp': {
   if (!isCreator) return reply("ᴏᴡɴᴇʀ ᴏɴʟʏ.")
-  let userss = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text.replace(/[^0-9]/g, '')+'@s.whatsapp.net'
-  try {
-    var ppuser = await bad.profilePictureUrl(userss, 'image')
-  } catch (err) {
-    var ppuser = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png?q=60'
+
+  const rawTarget = m.mentionedJid?.[0] || m.quoted?.sender || text.trim()
+  let target = rawTarget || senderJid
+  if (target && !String(target).includes('@')) {
+    const digits = String(target).replace(/\D/g, '')
+    target = digits ? `${digits}@s.whatsapp.net` : senderJid
   }
-  bad.sendMessage(from, { image: { url: ppuser }}, { quoted: m })
+
+  try {
+    const ppUrl = await bad.profilePictureUrl(target, 'image').catch(() => null)
+    if (!ppUrl) return reply('❌ ɪs ᴜsᴇʀ ᴋɪ ᴘʀᴏғɪʟᴇ ᴘɪᴄᴛᴜʀᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ɴᴀʜɪ ʜᴀɪ.')
+
+    const response = await axios.get(ppUrl, {
+      responseType: 'arraybuffer',
+      timeout: 30000,
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+      maxContentLength: 10 * 1024 * 1024,
+      validateStatus: status => status >= 200 && status < 300
+    })
+    const buffer = Buffer.from(response.data)
+    if (!buffer.length) throw new Error('empty profile image')
+
+    await bad.sendMessage(from, {
+      image: buffer,
+      mimetype: String(response.headers?.['content-type'] || 'image/jpeg').split(';')[0],
+      caption: `🖼️ ᴘʀᴏғɪʟᴇ ᴘɪᴄᴛᴜʀᴇ\n👤 @${normalizeJid(target)}`,
+      mentions: [target]
+    }, { quoted: m })
+  } catch (error) {
+    console.error('Getpp error:', error.message)
+    return reply('❌ ᴘʀᴏғɪʟᴇ ᴘɪᴄᴛᴜʀᴇ ғᴇᴛᴄʜ ɴᴀʜɪ ʜᴜɪ. ᴜsᴇʀ ᴋɪ ᴘᴘ ᴘʀɪᴠᴀᴛᴇ ʜᴏ sᴀᴋᴛɪ ʜᴀɪ.')
+  }
 }
 break
 
