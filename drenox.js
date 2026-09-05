@@ -6710,16 +6710,43 @@ case 'play': {
   }
 
   try {
-    await bad.sendMessage(m.chat, { react: { text: '⏳', key: m.key } })
+    await bad.sendMessage(m.chat, { react: { text: '⏳', key: m.key } }).catch(() => {})
 
-    const apiUrl = `https://api.sayan-nexuswork.workers.dev/music?query=${encodeURIComponent(text)}`
-    const response = await axios.get(apiUrl, { timeout: 60000 })
-    const data = response.data || {}
-
-    if (data.status !== 'success' || !data.url) {
-      await bad.sendMessage(m.chat, { react: { text: '❌', key: m.key } })
-      return reply('_*No results found. Try another song name.*_')
+    let data = null
+    let apiError = null
+    try {
+      const apiUrl = `https://api.sayan-nexuswork.workers.dev/music?query=${encodeURIComponent(text)}`
+      const response = await axios.get(apiUrl, {
+        timeout: 60000,
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        validateStatus: status => status >= 200 && status < 300
+      })
+      data = response.data?.data || response.data || {}
+      if (!data.url) throw new Error(data.message || 'Music API returned no audio URL')
+    } catch (error) {
+      apiError = error
+      // Fallback search keeps play working when the primary API is unavailable.
+      const result = await yts(text)
+      const video = result?.videos?.[0]
+      if (!video?.url) throw apiError
+      const fallback = await axios.get(
+        `${NEXORACLE_API}downloader/ytmp3?apikey=${NEXORACLE_KEY}&url=${encodeURIComponent(video.url)}`,
+        { timeout: 60000 }
+      )
+      const resultData = fallback.data?.result || {}
+      data = {
+        title: resultData.title || video.title,
+        duration: resultData.duration || video.timestamp,
+        views: resultData.views || video.views,
+        channel: resultData.channel || video.author?.name,
+        thumbnail: resultData.thumbnail || video.thumbnail,
+        url: resultData.download || resultData.url
+      }
+      if (!data.url) throw new Error(`Audio provider unavailable: ${apiError.message}`)
     }
+
+    const audioUrl = String(data.url || data.download || '').trim()
+    if (!/^https?:\/\//i.test(audioUrl)) throw new Error('Invalid audio URL received from provider')
 
     const shortTitle = truncateTitle(data.title)
     const caption = `\`☘️ Ꭲɪᴛʟᴇ : ${shortTitle}\`\n\n*⧉ ⏱️ Ꭰᴜʀᴀᴛɪᴏɴ : ${data.duration || 'N/A'}*\n\n*⧉ 🎭 Ꮩɪᴇᴡꜱ : ${data.views || 'N/A'}*\n\n*⧉ 📺 Ꮯʜᴀɴɴᴇʟ : ${data.channel || 'N/A'}*\n\n*⧉ 🎙️ Cʀᴇᴀᴄᴛᴇʀ : FMS_CHAND*\n\n*Shahzu Say : Uꜱᴇ Hᴇᴀᴅᴘʜᴏɴᴇꜱ ғᴏʀ ʙᴇsᴛ ᴠɪʙᴇ..!! ${pickRandom(heartEmojis)}${pickRandom(musicEmojis)}${pickRandom(flowerEmojis)}*`
@@ -6730,34 +6757,48 @@ case 'play': {
       await reply(caption)
     }
 
-    const audioResponse = await axios.get(data.url, {
-      responseType: 'arraybuffer',
-      timeout: 120000,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/149.0.0.0 Safari/537.36',
-        Referer: 'https://m.youtube.com/'
-      },
-      maxContentLength: 100 * 1024 * 1024,
-      maxBodyLength: 100 * 1024 * 1024
-    })
+    try {
+      const audioResponse = await axios.get(audioUrl, {
+        responseType: 'arraybuffer',
+        timeout: 120000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/149.0.0.0 Safari/537.36',
+          Referer: 'https://m.youtube.com/'
+        },
+        maxContentLength: 100 * 1024 * 1024,
+        maxBodyLength: 100 * 1024 * 1024,
+        validateStatus: status => status >= 200 && status < 300
+      })
+      const audioBuffer = Buffer.from(audioResponse.data)
+      if (!audioBuffer.length) throw new Error('Audio buffer is empty')
+      const contentType = String(audioResponse.headers?.['content-type'] || '').toLowerCase()
+      if (contentType.includes('text/html') || contentType.includes('application/json')) throw new Error(`Provider returned ${contentType}`)
 
-    const audioBuffer = Buffer.from(audioResponse.data)
-    if (!audioBuffer.length) throw new Error('Audio buffer is empty')
+      await bad.sendMessage(m.chat, {
+        audio: audioBuffer,
+        mimetype: 'audio/mpeg',
+        ptt: false,
+        fileName: `${shortTitle.replace(/[\\/:*?"<>|]/g, '') || 'audio'}-shahzuXstudio.mp3`
+      }, { quoted: m })
+    } catch (downloadError) {
+      // Some providers reject server-side downloads but allow WhatsApp to fetch the URL directly.
+      console.error('Play buffer download failed, trying direct URL:', downloadError.message)
+      await bad.sendMessage(m.chat, {
+        audio: { url: audioUrl },
+        mimetype: 'audio/mpeg',
+        ptt: false,
+        fileName: `${shortTitle.replace(/[\\/:*?"<>|]/g, '') || 'audio'}-shahzuXstudio.mp3`
+      }, { quoted: m })
+    }
 
-    await bad.sendMessage(m.chat, {
-      audio: audioBuffer,
-      mimetype: 'audio/mpeg',
-      ptt: false,
-      fileName: `${shortTitle.replace(/[\\/:*?"<>|]/g, '')}-shahzuXstudio.mp3`
-    }, { quoted: m })
-
-    await bad.sendMessage(m.chat, { react: { text: '✅', key: m.key } })
+    await bad.sendMessage(m.chat, { react: { text: '✅', key: m.key } }).catch(() => {})
   } catch (error) {
     console.error('Play command error:', error.response?.data || error.message)
     await bad.sendMessage(m.chat, { react: { text: '❌', key: m.key } }).catch(() => {})
     return reply(`_*Play failed: ${error.message || 'server not responding'}*_`)
   }
 }
+
 break
       //═══════════════════════════════════════════════════════════
 // TIKTOK - Download TikTok Videos
