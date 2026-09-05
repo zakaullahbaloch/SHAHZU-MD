@@ -3180,22 +3180,6 @@ case 'delown': {
 }
 break
 
-case 'addpremium':
-case 'addprem': {
-  if (!isCreator) return reply("ᴏᴡɴᴇʀ ᴏɴʟʏ!")
-  if (!args[0]) return reply(`ᴜsᴀɢᴇ: ${prefix + command} 234xxx`)
-  
-  let number = qtext.split("|")[0].replace(/[^0-9]/g, '')
-  let ceknum = await bad.onWhatsApp(number + "@s.whatsapp.net")
-  if (!ceknum.length) return reply("ɪɴᴠᴀʟɪᴅ ɴᴜᴍʙᴇʀ!")
-  
-  premium.push(number)
-  fs.writeFileSync('./allfunc/premium.json', JSON.stringify(premium))
-  
-  reply("sᴜᴄᴄᴇss! ᴜsᴇʀ ᴀᴅᴅᴇᴅ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ ✅")
-}
-break
-
 case 'delpremium':
 case 'delprem': {
   if (!isCreator) return reply("ᴏᴡɴᴇʀ ᴏɴʟʏ!")
