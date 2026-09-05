@@ -1315,6 +1315,7 @@ case 'menu2': {
 ┃✮│➣ ${prefix}ʟᴇᴀᴠᴇ
 ┃✮│➣ ${prefix}ᴄʀᴇᴀᴛᴇɢᴄ
 ┃✮│➣ ${prefix}ᴀɴᴛɪʟɪɴᴋ
+┃✮│➣ ${prefix}ᴘᴅᴍ
 ┃✮│➣ ${prefix}ᴀɴᴛɪsᴘᴀᴍ
 ┃✮│➣ ${prefix}ᴀɴᴛɪʙᴀᴅᴡᴏʀᴅ
 ┃✮│➣ ${prefix}ᴀɴᴛɪʙᴏᴛ
@@ -1978,6 +1979,7 @@ case 'groupmenu': {
 ┃✮│➣ ${prefix}ʟᴇᴀᴠᴇ
 ┃✮│➣ ${prefix}ᴄʀᴇᴀᴛᴇɢᴄ
 ┃✮│➣ ${prefix}ᴀɴᴛɪʟɪɴᴋ
+┃✮│➣ ${prefix}ᴘᴅᴍ
 ┃✮│➣ ${prefix}ᴀɴᴛɪsᴘᴀᴍ
 ┃✮│➣ ${prefix}ᴀɴᴛɪʙᴀᴅᴡᴏʀᴅ
 ┃✮│➣ ${prefix}ᴀɴᴛɪʙᴏᴛ
@@ -5763,6 +5765,19 @@ case "antilink": {
       return m.reply('✅ ᴀʟʟᴏᴡ/ᴅɪsᴀʟʟᴏᴡ ʟɪsᴛ ᴄʟᴇᴀʀᴇᴅ');
     }
     return m.reply(usage);
+}
+break;
+
+case "pdm": {
+    if (!m.isGroup) return m.reply("ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ᴏɴʟʏ ᴡᴏʀᴋs ɪɴ ɢʀᴏᴜᴘs.");
+    if (!isAdmins && !isCreator) return m.reply("ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴍᴀɴᴀɢᴇ ᴘᴅᴍ.");
+    const pdmAction = (args[1] || '').toLowerCase();
+    if (!['on', 'off'].includes(pdmAction)) {
+        const currentPdm = getSetting(m.chat, 'pdm', false) ? 'ᴏɴ' : 'ᴏғғ';
+        return m.reply(`ᴘᴅᴍ ɪs ᴄᴜʀʀᴇɴᴛʟʏ *${currentPdm}*.\n\nᴜsᴀɢᴇ: ${prefix}pdm on/off`);
+    }
+    setSetting(m.chat, 'pdm', pdmAction === 'on');
+    return m.reply(pdmAction === 'on' ? '✅ ᴘᴅᴍ ᴀᴄᴛɪᴠᴀᴛᴇᴅ ғᴏʀ ᴛʜɪs ɢʀᴏᴜᴘ.' : '❌ ᴘᴅᴍ ᴅᴇᴀᴄᴛɪᴠᴀᴛᴇᴅ ғᴏʀ ᴛʜɪs ɢʀᴏᴜᴘ.');
 }
 break;
 
