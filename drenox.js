@@ -18,7 +18,7 @@ const chalk = require('chalk')
 const axios = require('axios')
 const os = require('os')
 const moment = require('moment-timezone')
-const { exec } = require('child_process')
+const { exec, execFile } = require('child_process')
 const BOT_VERSION = (() => {
   try { return require('./package.json').version || 'unknown' } catch { return 'unknown' }
 })()
@@ -9722,24 +9722,33 @@ break
 
 case 'sticker': {
   if (!m.quoted) return reply(`ʀᴇᴘʟʏ ɪᴍᴀɢᴇ ᴏʀ ᴠɪᴅᴇᴏ ᴡɪᴛʜ ᴄᴏᴍᴍᴀɴᴅ ${prefix + command}`)
-  
-  if (/image/.test(mime)) {
-    let media = await quoted.download()
-    let encmedia = await bad.sendImageAsSticker(from, media, m, { 
-      packname: global.packname, 
-      author: global.author 
-    })
-    await fs.unlinkSync(encmedia)
-  } else if (/video/.test(mime)) {
-    if ((quoted.msg || quoted).seconds > 11) return reply('ᴍᴀx 10s')
-    let media = await quoted.download()
-    let encmedia = await bad.sendVideoAsSticker(from, media, m, { 
-      packname: global.packname, 
-      author: global.author 
-    })
-    await fs.unlinkSync(encmedia)
-  } else {
-    return reply(`sᴇɴᴅ ɪᴍᴀɢᴇ ᴏʀ ᴠɪᴅᴇᴏ ᴡɪᴛʜ ᴄᴏᴍᴍᴀɴᴅ ${prefix + command}\nᴠɪᴅᴇᴏ ᴅᴜʀᴀᴛɪᴏɴ ᴏɴʟʏ 1-9s`)
+
+  try {
+    const quotedMedia = m.quoted.msg || m.quoted
+    const quotedMime = String(quotedMedia.mimetype || '').split(';')[0].toLowerCase()
+    const media = await m.quoted.download()
+    const metadata = { packname: global.packname || 'CHAND-XMD', author: global.author || 'CHAND-XMD' }
+    let stickerPath
+
+    if (quotedMime.startsWith('image/')) {
+      stickerPath = await writeExifImg(media, metadata)
+    } else if (quotedMime.startsWith('video/')) {
+      const seconds = Number(quotedMedia.seconds || 0)
+      if (seconds > 10) return reply('ᴍᴀx 10s')
+      stickerPath = await writeExifVid(media, metadata)
+    } else {
+      return reply(`sᴇɴᴅ ɪᴍᴀɢᴇ ᴏʀ ᴠɪᴅᴇᴏ ᴡɪᴛʜ ᴄᴏᴍᴍᴀɴᴅ ${prefix + command}`)
+    }
+
+    if (!stickerPath || !fs.existsSync(stickerPath)) throw new Error('sticker conversion output missing')
+    try {
+      await bad.sendMessage(m.chat, { sticker: { url: stickerPath } }, { quoted: m })
+    } finally {
+      try { fs.unlinkSync(stickerPath) } catch {}
+    }
+  } catch (error) {
+    console.error('Sticker conversion error:', error)
+    return reply(`❌ sᴛɪᴄᴋᴇʀ ᴄᴏɴᴠᴇʀsɪᴏɴ ғᴀɪʟᴇᴅ: ${error.message}`)
   }
 }
 break
@@ -9822,19 +9831,37 @@ case 'takefull': {
 break;
 
 case 'toimg': {
-  if (!m.quoted) return reply(`ʀᴇᴘʟʏ ᴛᴏ ᴀɴʏ sᴛɪᴄᴋᴇʀ.`)
-  let mime = m.quoted.mtype
-  
-  if (mime =="imageMessage" || mime =="stickerMessage") {
-    let media = await bad.downloadAndSaveMediaMessage(m.quoted)
-    let name = getRandom('.png')
-    exec(`ffmpeg -i ${media} ${name}`, (err) => {
-      fs.unlinkSync(media)
-      let buffer = fs.readFileSync(name)
-      bad.sendMessage(m.chat, { image: buffer }, { quoted: m })
-      fs.unlinkSync(name)
+  if (!m.quoted) return reply(`ʀᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ.`)
+
+  const quotedMedia = m.quoted.msg || m.quoted
+  const quotedMime = String(quotedMedia.mimetype || '').split(';')[0].toLowerCase()
+  const isSticker = m.quoted.mtype === 'stickerMessage' || quotedMime === 'image/webp'
+  if (!isSticker) return reply(`ᴘʟᴇᴀsᴇ ʀᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ`)
+
+  let inputPath
+  let outputPath
+  try {
+    const media = await m.quoted.download()
+    const base = `sticker-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    inputPath = path.join(os.tmpdir(), `${base}.webp`)
+    outputPath = path.join(os.tmpdir(), `${base}.png`)
+    fs.writeFileSync(inputPath, media)
+    await new Promise((resolve, reject) => {
+      execFile('ffmpeg', ['-y', '-i', inputPath, '-frames:v', '1', outputPath], (error, stdout, stderr) => {
+        if (error) return reject(new Error(stderr?.trim() || error.message))
+        resolve()
+      })
     })
-  } else return reply(`ᴘʟᴇᴀsᴇ ʀᴇᴘʟʏ ᴛᴏ ɴᴏɴ ᴀɴɪᴍᴀᴛᴇᴅ sᴛɪᴄᴋᴇʀ`)
+    const image = fs.readFileSync(outputPath)
+    await bad.sendMessage(m.chat, { image, caption: '✅ sᴛɪᴄᴋᴇʀ ᴄᴏɴᴠᴇʀᴛᴇᴅ ᴛᴏ ɪᴍᴀɢᴇ' }, { quoted: m })
+  } catch (error) {
+    console.error('Sticker to image error:', error)
+    return reply(`❌ sᴛɪᴄᴋᴇʀ ᴛᴏ ɪᴍᴀɢᴇ ғᴀɪʟᴇᴅ: ${error.message}`)
+  } finally {
+    for (const tempPath of [inputPath, outputPath]) {
+      try { if (tempPath && fs.existsSync(tempPath)) fs.unlinkSync(tempPath) } catch {}
+    }
+  }
 }
 break
 
