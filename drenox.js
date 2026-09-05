@@ -970,6 +970,53 @@ if (m.isGroup && !isCreator) {
     }
 }
     
+if (getSetting(m.chat, "antilink", false) && m.isGroup) {
+    // Enhanced regex to detect ALL types of links
+    let linkRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.(com|net|org|io|co|in|me|xyz|info|biz|app|dev|tech|online|site|club|store|shop|live|tv|gg|cc|tk|ml|ga|cf|gq)[^\s]*)/gi;
+    
+    if (linkRegex.test(m.text)) {
+        // CRITICAL FIX: Skip bot's own messages
+        if (m.key.fromMe) return;
+        
+        if (isAdmins || isCreator) return;
+        
+        const mode = getSetting(m.chat, "antilink");
+        
+        try {
+            // Delete immediately and do not send a quoted detection reply.
+            await bad.sendMessage(m.chat, { delete: m.key });
+
+            if (mode === 'kick') {
+                await bad.groupParticipantsUpdate(m.chat, [m.sender], 'remove');
+            } else if (mode === 'warn') {
+                if (!global.antilinkWarnings) global.antilinkWarnings = {};
+                if (!global.antilinkWarnings[m.chat]) global.antilinkWarnings[m.chat] = {};
+
+                const warnings = (global.antilinkWarnings[m.chat][m.sender] || 0) + 1;
+                global.antilinkWarnings[m.chat][m.sender] = warnings;
+
+                if (warnings >= 3) {
+                    await bad.groupParticipantsUpdate(m.chat, [m.sender], 'remove');
+                    delete global.antilinkWarnings[m.chat][m.sender];
+                    await bad.sendMessage(m.chat, {
+                        text: `⚠️ @${m.sender.split('@')[0]} ko 3 warnings ke baad remove kar diya gaya.`,
+                        mentions: [m.sender]
+                    });
+                } else {
+                    await bad.sendMessage(m.chat, {
+                        text: `⚠️ @${m.sender.split('@')[0]} warning ${warnings}/3: links allowed nahi hain.`,
+                        mentions: [m.sender]
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Fast antilink error:', error.message);
+        }
+
+        // Stop the link message from reaching other command/feature handlers.
+        return;
+    }
+}
 if (getSetting(m.chat, "feature.antispam", false) && m.isGroup) {
     if (!global.spam) global.spam = {};
     if (!global.spam[m.sender]) global.spam[m.sender] = { count: 0, last: Date.now() };
@@ -5722,51 +5769,34 @@ case 'checkadmin':
       break
 
 case "antilink": {
+    if (!isAdmins && !isCreator) return m.reply("ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴇɴᴀʙʟᴇ/ᴅɪsᴀʙʟᴇ ᴀɴᴛɪʟɪɴᴋ.");
     if (!m.isGroup) return m.reply("ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ᴏɴʟʏ ᴡᴏʀᴋs ɪɴ ɢʀᴏᴜᴘs.");
-    if (!isAdmins && !isCreator) return m.reply("ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴍᴀɴᴀɢᴇ ᴀɴᴛɪʟɪɴᴋ.");
-    const sub = (args[1] || '').toLowerCase();
-    const value = args.slice(2).join(' ').trim();
-    const currentMode = getSetting(m.chat, 'antilink', false) || 'off';
-    const currentAction = getSetting(m.chat, 'antilinkAction', currentMode === 'warn' || currentMode === 'kick' ? currentMode : 'delete');
-    const allowed = getSetting(m.chat, 'antilinkAllowedUrls', []);
-    const allowedList = Array.isArray(allowed) ? allowed : [];
-    const usage = "ᴜsᴀɢᴇ: ᴀɴᴛɪʟɪɴᴋ ᴏɴ/ᴏғғ | ᴀɴᴛɪʟɪɴᴋ ᴀᴄᴛɪᴏɴ ᴅᴇʟᴇᴛᴇ/ᴡᴀʀɴ/ᴋɪᴄᴋ | ᴀɴᴛɪʟɪɴᴋ ᴀʟʟᴏᴡ <ᴅᴏᴍᴀɪɴ> | ᴀɴᴛɪʟɪɴᴋ ᴅɪsᴀʟʟᴏᴡ <ᴅᴏᴍᴀɪɴ> | ᴀɴᴛɪʟɪɴᴋ ʟɪsᴛ | ᴀɴᴛɪʟɪɴᴋ ᴄʟᴇᴀʀ";
-    const normalizeDomain = (input) => String(input || '').toLowerCase().trim().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].split(':')[0];
-    if (!sub) return m.reply(`🛡️ ᴀɴᴛɪʟɪɴᴋ: ${currentMode === 'off' || currentMode === false ? 'ᴏғғ' : currentMode.toUpperCase()}\n⚙️ ᴀᴄᴛɪᴏɴ: ${currentAction}\n✅ ᴀʟʟᴏᴡᴇᴅ: ${allowedList.length ? allowedList.join(', ') : 'ɴᴏɴᴇ'}\n\n${usage}`);
-    if (sub === 'on' || sub === 'off') {
-      setSetting(m.chat, 'antilink', sub === 'on' ? currentAction : false);
-      return m.reply(sub === 'on' ? `🛡️ ᴀɴᴛɪʟɪɴᴋ ᴇɴᴀʙʟᴇᴅ (${currentAction} ᴍᴏᴅᴇ)` : '🚫 ᴀɴᴛɪʟɪɴᴋ ᴅɪsᴀʙʟᴇᴅ');
+    if (!args[1]) return m.reply("ᴜsᴀɢᴇ: ᴀɴᴛɪʟɪɴᴋ ᴡᴀʀɴ ᴏɴ/ᴏғғ | ᴀɴᴛɪʟɪɴᴋ ᴋɪᴄᴋ ᴏɴ/ᴏғғ | ᴀɴᴛɪʟɪɴᴋ ᴅᴇʟᴇᴛᴇ ᴏɴ/ᴏғғ");
+
+    const mode = args[1].toLowerCase();      // Changed from args[0]
+    const action = args[2] ? args[2].toLowerCase() : null;  // Changed from args[1]
+
+    if (!action) return m.reply("ᴜsᴀɢᴇ: ᴀɴᴛɪʟɪɴᴋ ᴡᴀʀɴ ᴏɴ/ᴏғғ | ᴀɴᴛɪʟɪɴᴋ ᴋɪᴄᴋ ᴏɴ/ᴏғғ | ᴀɴᴛɪʟɪɴᴋ ᴅᴇʟᴇᴛᴇ ᴏɴ/ᴏғғ");
+
+    if (action === "on") {
+        if (mode === "warn") {
+            setSetting(m.chat, "antilink", "warn");
+            m.reply("🛡️ ᴀɴᴛɪʟɪɴᴋ ᴇɴᴀʙʟᴇᴅ ɪɴ *ᴡᴀʀɴ ᴍᴏᴅᴇ*\n\n⚠️ ᴜsᴇʀs ᴡɪʟʟ ʙᴇ ᴋɪᴄᴋᴇᴅ ᴀғᴛᴇʀ 3 ᴡᴀʀɴɪɴɢs");
+        } else if (mode === "kick") {
+            setSetting(m.chat, "antilink", "kick");
+            m.reply("🛡️ ᴀɴᴛɪʟɪɴᴋ ᴇɴᴀʙʟᴇᴅ ɪɴ *ᴋɪᴄᴋ ᴍᴏᴅᴇ*\n\n⚠️ ᴜsᴇʀs ᴡɪʟʟ ʙᴇ ɪɴsᴛᴀɴᴛʟʏ ᴋɪᴄᴋᴇᴅ");
+        } else if (mode === "delete") {
+            setSetting(m.chat, "antilink", "delete");
+            m.reply("🛡️ ᴀɴᴛɪʟɪɴᴋ ᴇɴᴀʙʟᴇᴅ ɪɴ *ᴅᴇʟᴇᴛᴇ ᴍᴏᴅᴇ*\n\n⚠️ ʟɪɴᴋs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ᴏɴʟʏ");
+        } else {
+            m.reply("ɪɴᴠᴀʟɪᴅ ᴍᴏᴅᴇ. ᴜsᴇ: ᴡᴀʀɴ, ᴋɪᴄᴋ, ᴏʀ ᴅᴇʟᴇᴛᴇ");
+        }
+    } else if (action === "off") {
+        setSetting(m.chat, "antilink", false);
+        m.reply("🚫 ᴀɴᴛɪʟɪɴᴋ ᴅɪsᴀʙʟᴇᴅ ғᴏʀ ᴛʜɪs ɢʀᴏᴜᴘ");
+    } else {
+        m.reply("ɪɴᴠᴀʟɪᴅ ᴀᴄᴛɪᴏɴ. ᴜsᴇ: ᴏɴ ᴏʀ ᴏғғ");
     }
-    if (sub === 'action' || sub === 'mode') {
-      if (!['delete', 'warn', 'kick'].includes(value.toLowerCase())) return m.reply('ᴜsᴇ: ᴀɴᴛɪʟɪɴᴋ ᴀᴄᴛɪᴏɴ ᴅᴇʟᴇᴛᴇ/ᴡᴀʀɴ/ᴋɪᴄᴋ');
-      const action = value.toLowerCase();
-      setSetting(m.chat, 'antilinkAction', action);
-      if (currentMode !== false && currentMode !== 'off') setSetting(m.chat, 'antilink', action);
-      return m.reply(`✅ ᴀɴᴛɪʟɪɴᴋ ᴀᴄᴛɪᴏɴ: ${action}`);
-    }
-    if (sub === 'allow' || sub === 'disallow') {
-      const domains = value.split(',').map(normalizeDomain).filter(Boolean);
-      if (!domains.length) return m.reply(`ᴜsᴇ: ᴀɴᴛɪʟɪɴᴋ ${sub} example.com, youtube.com`);
-      const next = [...allowedList];
-      for (const domain of domains) {
-        const index = next.findIndex(item => normalizeDomain(item.replace(/^!/, '')) === domain);
-        if (sub === 'allow' && index === -1) next.push(domain);
-        if (sub === 'disallow' && index !== -1) next[index] = `!${domain}`;
-        if (sub === 'disallow' && index === -1) next.push(`!${domain}`);
-      }
-      setSetting(m.chat, 'antilinkAllowedUrls', next);
-      return m.reply(`✅ ${sub === 'allow' ? 'ᴀʟʟᴏᴡᴇᴅ' : 'ᴅɪsᴀʟʟᴏᴡᴇᴅ'}: ${domains.join(', ')}`);
-    }
-    if (sub === 'list' || sub === 'info') {
-      const good = allowedList.filter(item => !String(item).startsWith('!'));
-      const blocked = allowedList.filter(item => String(item).startsWith('!')).map(item => String(item).slice(1));
-      return m.reply(`🛡️ ᴀɴᴛɪʟɪɴᴋ: ${currentMode === 'off' || currentMode === false ? 'ᴏғғ' : 'ᴏɴ'}\n⚙️ ᴀᴄᴛɪᴏɴ: ${currentAction}\n✅ ᴀʟʟᴏᴡᴇᴅ: ${good.join(', ') || 'ɴᴏɴᴇ'}\n🚫 ᴅɪsᴀʟʟᴏᴡᴇᴅ: ${blocked.join(', ') || 'ɴᴏɴᴇ'}`);
-    }
-    if (sub === 'clear') {
-      setSetting(m.chat, 'antilinkAllowedUrls', []);
-      return m.reply('✅ ᴀʟʟᴏᴡ/ᴅɪsᴀʟʟᴏᴡ ʟɪsᴛ ᴄʟᴇᴀʀᴇᴅ');
-    }
-    return m.reply(usage);
 }
 break;
 
@@ -12533,42 +12563,46 @@ const botIsAdmin = metadata.participants.some((participant) =>
 )
 if (!botIsAdmin) return
 
-// Levanter-inspired anti-link runtime: delete, warn, kick, allowlist and admin-safe handling.
+// Fast antilink action: no quoted detection/reply for delete or kick.
 const antilinkMode = getSetting(chatId, 'antilink', false)
-const antilinkAction = getSetting(chatId, 'antilinkAction', antilinkMode === 'warn' || antilinkMode === 'kick' ? antilinkMode : 'delete')
-const allowedUrls = getSetting(chatId, 'antilinkAllowedUrls', [])
 const linkRegex = /(https?:\/\/|www\.|chat\.whatsapp\.com\/|(?:[a-z0-9-]+\.)+(?:com|net|org|io|co|in|me|xyz|info|biz|app|dev|tech|online|site|store|shop|live|tv|gg|cc)\b)/i
-const extractDomains = (text) => (String(text || '').match(/(?:https?:\/\/|www\.)?([a-z0-9-]+(?:\.[a-z0-9-]+)+)/gi) || []).map(value => value.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].split(':')[0])
-const detectedDomains = extractDomains(body)
-const isAllowed = detectedDomains.some(domain => allowedUrls.some(item => !String(item).startsWith('!') && (domain === String(item).toLowerCase() || domain.endsWith(`.${String(item).toLowerCase()}`))))
-const isExplicitlyDisallowed = detectedDomains.some(domain => allowedUrls.some(item => String(item).startsWith('!') && (domain === String(item).slice(1).toLowerCase() || domain.endsWith(`.${String(item).slice(1).toLowerCase()}`))))
+
 if (antilinkMode && linkRegex.test(body) && !msg.key.fromMe) {
   try {
-    const offender = msg.key.participant || msg.participant || msg.key.remoteJid
-    const senderParticipant = metadata.participants.find(p => p.id === offender || isSameUser(p.id, offender))
-    const senderIsAdmin = senderParticipant && (senderParticipant.admin === 'admin' || senderParticipant.admin === 'superadmin')
-    if (senderIsAdmin || (isAllowed && !isExplicitlyDisallowed)) continue
+    // Delete first, immediately. No reply is sent in delete/kick modes.
     await bad.sendMessage(chatId, { delete: msg.key })
-    if (antilinkAction === 'kick') {
-      await bad.groupParticipantsUpdate(chatId, [offender], 'remove')
-    } else if (antilinkAction === 'warn') {
+
+    if (antilinkMode === 'kick') {
+      await bad.groupParticipantsUpdate(chatId, [msg.key.participant || msg.participant], 'remove')
+    } else if (antilinkMode === 'warn') {
       if (!global.antilinkWarnings) global.antilinkWarnings = {}
       if (!global.antilinkWarnings[chatId]) global.antilinkWarnings[chatId] = {}
+      const offender = msg.key.participant || msg.participant || msg.key.remoteJid
       const warnings = (global.antilinkWarnings[chatId][offender] || 0) + 1
       global.antilinkWarnings[chatId][offender] = warnings
-      const limit = Number(getSetting(chatId, 'antilinkWarnLimit', 3)) || 3
-      if (warnings >= limit) {
+
+      if (warnings >= 3) {
         await bad.groupParticipantsUpdate(chatId, [offender], 'remove')
         delete global.antilinkWarnings[chatId][offender]
+        await bad.sendMessage(chatId, {
+          text: `⚠️ @${offender.split('@')[0]} ko 3 warnings ke baad remove kar diya gaya.`,
+          mentions: [offender]
+        })
       } else {
-        await bad.sendMessage(chatId, { text: `⚠️ @${offender.split('@')[0]} warning ${warnings}/${limit}: links allowed nahi hain.`, mentions: [offender] })
+        await bad.sendMessage(chatId, {
+          text: `⚠️ @${offender.split('@')[0]} warning ${warnings}/3: links allowed nahi hain.`,
+          mentions: [offender]
+        })
       }
     }
   } catch (error) {
-    console.error('Anti-link error:', error.message)
+    console.error('Fast antilink error:', error.message)
   }
+
+  // Do not let chatbot/other handlers process the link message.
   continue
 }
+            
 // Anti-group-mention protection: handles @all/@everyone and mass mention payloads.
 const antigmEnabled = getSetting(chatId, 'antigm', false)
 if (antigmEnabled && !msg.key.fromMe) {
