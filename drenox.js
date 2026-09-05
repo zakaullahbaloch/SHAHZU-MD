@@ -718,9 +718,10 @@ const budy = body
 // ========== PREFIX DETECTION ==========
 // Default prefixes ke sath bot ka saved custom prefix bhi accept hoga.
 // @ ko intentionally exclude kiya gaya hai taake mentions command na banen.
-const configuredPrefix = String(getSetting('bot', 'prefix', '.') || '.').trim() || '.'
-const allowedPrefixes = [...new Set(['.', configuredPrefix])]
-  .sort((a, b) => b.length - a.length)
+const savedPrefix = String(getSetting('bot', 'prefix', '') || '').trim()
+// Default prefix is '.', but a custom prefix replaces it completely.
+const configuredPrefix = savedPrefix || '.'
+const allowedPrefixes = savedPrefix ? [configuredPrefix] : ['.']
 let prefix = '';
 let isCmd = false;
 
