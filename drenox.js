@@ -13523,50 +13523,57 @@ function setupEventListeners(bad, store) {
                 const linkRegex = /(?:\b(?:https?|ftp):\/\/[^\s<>'"]+|\bwww\d*\.[^\s<>'"]+|\b(?:chat\.whatsapp\.com|wa\.me|t\.me|discord\.gg|bit\.ly|tinyurl\.com)\/[^\s<>'"]+|\b(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?(?:\/[^\s<>'"]*)?|\b(?:[a-z0-9-]+\.)+[a-z]{2,63}(?:\/[^\s<>'"]*)?)/i
                 if (!linkRegex.test(body)) continue
 
-                const metadata = await bad.groupMetadata(chatId).catch(() => null)
-                const botIsAdmin = metadata?.participants?.some(participant =>
-                    (participant.admin === 'admin' || participant.admin === 'superadmin') && isBotParticipant(participant, bad)
-                )
+                // Cache admin status briefly so a burst of links is not slowed by
+                // one groupMetadata request per message.
+                if (!global.antiLinkAdminCache) global.antiLinkAdminCache = new Map()
+                let botIsAdmin = global.antiLinkAdminCache.get(chatId)
+                if (botIsAdmin === undefined) {
+                    const metadata = await bad.groupMetadata(chatId).catch(() => null)
+                    botIsAdmin = Boolean(metadata?.participants?.some(participant =>
+                        (participant.admin === 'admin' || participant.admin === 'superadmin') && isBotParticipant(participant, bad)
+                    ))
+                    global.antiLinkAdminCache.set(chatId, botIsAdmin)
+                    setTimeout(() => {
+                        if (global.antiLinkAdminCache.get(chatId) === botIsAdmin) global.antiLinkAdminCache.delete(chatId)
+                    }, 15000)
+                }
                 if (!botIsAdmin) continue
 
                 const offender = msg.key.participant || msg.participant
                 if (!offender) continue
 
-                // Prevent duplicate upsert listeners/retries from processing the same link.
+                // Do not serialize a whole group behind one slow delete. Each link
+                // is handled immediately and independently, while this key prevents
+                // duplicate upserts/retries from deleting the same message twice.
                 if (!global.antiLinkProcessing) global.antiLinkProcessing = new Set()
                 const messageKey = `${chatId}:${msg.key.id}`
-                if (global.antiLinkProcessing.has(messageKey)) continue
+                if (!msg.key.id || global.antiLinkProcessing.has(messageKey)) continue
                 global.antiLinkProcessing.add(messageKey)
-                setTimeout(() => global.antiLinkProcessing.delete(messageKey), 30000)
+                setTimeout(() => global.antiLinkProcessing.delete(messageKey), 120000)
 
-                const previousTurn = global.antiLinkQueues.get(chatId) || Promise.resolve()
-                let releaseTurn
-                const currentTurn = new Promise(resolve => { releaseTurn = resolve })
-                const queuedTurn = previousTurn.then(() => currentTurn)
-                global.antiLinkQueues.set(chatId, queuedTurn)
-                await previousTurn
-                try {
+                const enforceAntiLink = async () => {
                     const deleteKey = {
                         remoteJid: chatId,
-                        fromMe: false,
+                        fromMe: Boolean(msg.key.fromMe),
                         id: msg.key.id,
                         participant: msg.key.participant || msg.participant
                     }
                     let deleted = false
                     let deleteError = null
-                    for (let attempt = 1; attempt <= 5 && !deleted; attempt++) {
+                    // Fast first attempt, then short retries for WhatsApp race/errors.
+                    for (let attempt = 1; attempt <= 6 && !deleted; attempt++) {
                         try {
                             await bad.sendMessage(chatId, { delete: deleteKey })
                             deleted = true
                         } catch (error) {
                             deleteError = error
-                            if (attempt < 5) await new Promise(resolve => setTimeout(resolve, attempt * 300))
+                            if (attempt < 6) await new Promise(resolve => setTimeout(resolve, Math.min(150 * attempt, 750)))
                         }
                     }
                     if (!deleted) {
-                        console.error(`Anti-link delete failed after 5 attempts: ${deleteError?.message || 'unknown error'}`)
+                        console.error(`Anti-link delete failed after 6 attempts: ${deleteError?.message || 'unknown error'}`)
                         await bad.sendMessage(chatId, {
-                            text: `⚠️ @${offender.split('@')[0]} ka link delete nahi ho saka. Bot ko group admin banayein aur dobara try karein.`,
+                            text: `⚠️ @${offender.split('@')[0]} ka link delete nahi ho saka. Bot ko group admin banayein.`,
                             mentions: [offender]
                         }).catch(() => {})
                     }
@@ -13586,6 +13593,7 @@ function setupEventListeners(bad, store) {
                         if (!global.antilinkWarnings[chatId]) global.antilinkWarnings[chatId] = {}
                         const warnings = (global.antilinkWarnings[chatId][offender] || 0) + 1
                         global.antilinkWarnings[chatId][offender] = warnings
+                        global.antilinkWarnings[chatId][offender] = warnings
                         if (warnings >= 3) {
                             try {
                                 await bad.groupParticipantsUpdate(chatId, [offender], 'remove')
@@ -13604,10 +13612,9 @@ function setupEventListeners(bad, store) {
                             })
                         }
                     }
-                } finally {
-                    releaseTurn()
-                    if (global.antiLinkQueues.get(chatId) === queuedTurn) global.antiLinkQueues.delete(chatId)
                 }
+                // Start now; do not await, otherwise the next incoming link waits.
+                enforceAntiLink().catch(error => console.error('Anti-link enforcement error:', error.message))
             } catch (error) {
                 console.error('Active anti-link error:', error.message)
             }
