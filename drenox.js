@@ -13259,6 +13259,74 @@ if (antilinkMode && hasBlockedLink && !msg.key.fromMe) {
 
 // ==================== SETUP EVENT LISTENERS ====================
 function setupEventListeners(bad, store) {
+    // Active anti-link listener. The command handler stores the selected action
+    // in Settings.js; this listener enforces it for every incoming group message.
+    bad.ev.on('messages.upsert', async ({ messages }) => {
+        for (const msg of (messages || [])) {
+            try {
+                const chatId = msg?.key?.remoteJid
+                if (!chatId?.endsWith('@g.us') || msg.key.fromMe || !msg.message) continue
+
+                const collectText = (value, depth = 0) => {
+                    if (!value || typeof value !== 'object' || depth > 8) return []
+                    if (Array.isArray(value)) return value.flatMap(item => collectText(item, depth + 1))
+                    const output = []
+                    for (const [key, child] of Object.entries(value)) {
+                        if (typeof child === 'string' && ['conversation', 'text', 'caption', 'matchedText', 'displayText'].includes(key)) output.push(child)
+                        else if (child && typeof child === 'object') output.push(...collectText(child, depth + 1))
+                    }
+                    return output
+                }
+
+                const body = collectText(msg.message).join('\n').trim()
+                const modeValue = getSetting(chatId, 'antilink', false)
+                const mode = modeValue === true ? 'delete' : String(modeValue || '').toLowerCase()
+                if (!mode || !body) continue
+
+                const linkRegex = /(?:\b(?:https?|ftp):\/\/[^\s<>'"]+|\bwww\d*\.[^\s<>'"]+|\b(?:chat\.whatsapp\.com|wa\.me|t\.me|discord\.gg|bit\.ly|tinyurl\.com)\/[^\s<>'"]+|\b(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?(?:\/[^\s<>'"]*)?|\b(?:[a-z0-9-]+\.)+[a-z]{2,63}(?:\/[^\s<>'"]*)?)/i
+                if (!linkRegex.test(body)) continue
+
+                const metadata = await bad.groupMetadata(chatId).catch(() => null)
+                const botIsAdmin = metadata?.participants?.some(participant =>
+                    (participant.admin === 'admin' || participant.admin === 'superadmin') && isBotParticipant(participant, bad)
+                )
+                if (!botIsAdmin) continue
+
+                const offender = msg.key.participant || msg.participant
+                if (!offender) continue
+                await bad.sendMessage(chatId, { delete: msg.key })
+
+                if (mode === 'kick') {
+                    await bad.groupParticipantsUpdate(chatId, [offender], 'remove')
+                    await bad.sendMessage(chatId, {
+                        text: `🚫 @${offender.split('@')[0]} ʟɪɴᴋ sʜᴀʀᴇ ᴋᴀʀɴᴇ ᴘᴀʀ ʀᴇᴍᴏᴠᴇ ᴋᴀʀ ᴅɪʏᴀ ɢᴀʏᴀ.`,
+                        mentions: [offender]
+                    })
+                } else if (mode === 'warn') {
+                    if (!global.antilinkWarnings) global.antilinkWarnings = {}
+                    if (!global.antilinkWarnings[chatId]) global.antilinkWarnings[chatId] = {}
+                    const warnings = (global.antilinkWarnings[chatId][offender] || 0) + 1
+                    global.antilinkWarnings[chatId][offender] = warnings
+                    if (warnings >= 3) {
+                        await bad.groupParticipantsUpdate(chatId, [offender], 'remove')
+                        delete global.antilinkWarnings[chatId][offender]
+                        await bad.sendMessage(chatId, {
+                            text: `🚫 @${offender.split('@')[0]} 3 warnings ke baad remove kar diya gaya.`,
+                            mentions: [offender]
+                        })
+                    } else {
+                        await bad.sendMessage(chatId, {
+                            text: `⚠️ @${offender.split('@')[0]} warning ${warnings}/3: group mein links allowed nahi hain.`,
+                            mentions: [offender]
+                        })
+                    }
+                }
+            } catch (error) {
+                console.error('Active anti-link error:', error.message)
+            }
+        }
+    })
+
     bad.ev.on('group-participants.update', async (update) => {
         try {
             const { id, participants, action } = update;
