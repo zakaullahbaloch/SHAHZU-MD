@@ -5462,92 +5462,6 @@ case 'teximg': case 'teximage': case 'maketext': {
 }
 break
 // ═══════════════════════════════════════════════════════════
-// LOGO MAKERS
-// ═══════════════════════════════════════════════════════════
-
-case 'logo2': case 'makelogo': case 'createlogo': {
-  if (!text) return reply(`ᴇxᴀᴍᴘʟᴇ: ${prefix + command} ☠︎CHAND XMD ☠`)
-  
-  await loading()
-  
-  try {
-    const encodedText = encodeURIComponent(text)
-    
-    const styles = [
-      { name: 'NEON', endpoint: 'neon-text' },
-      { name: 'GLITCH', endpoint: 'glitch' },
-      { name: 'GLOW', endpoint: 'neon' },
-      { name: 'LUXURY', endpoint: 'luxury' },
-      { name: 'ROYAL', endpoint: 'royal' },
-      { name: 'GALAXY', endpoint: 'galaxy' }
-    ]
-    
-    const randomStyle = styles[Math.floor(Math.random() * styles.length)]
-    
-    // Try multiple APIs
-    const apis = [
-      `https://omegatech-api.dixonomega.tech/api/Maker/ephoto-1917?text=${encodedText}`,
-      `https://obito-mr-apis.vercel.app/api/maker/${randomStyle.endpoint}?text=${encodedText}`,
-      `https://api.princetechn.com/api/textpro/${randomStyle.endpoint}?text=${encodedText}`
-    ]
-    
-    let success = false
-    
-    for (const apiUrl of apis) {
-      try {
-        await bad.sendMessage(m.chat, {
-          image: { url: apiUrl },
-          caption: `*ʟᴏɢᴏ ᴍᴀᴋᴇʀ - ${randomStyle.name} sᴛʏʟᴇ*\n\n📝 ${text}\n🎨 ${randomStyle.name}\n\n> ᴘᴏᴡᴇʀᴇᴅ ʙʏ | Shahzu_Player 🌚👑︎︎`
-        }, { quoted: m })
-        success = true
-        break
-      } catch {
-        continue
-      }
-    }
-    
-    if (!success) {
-      // Fallback to working Omega API
-      const fallbackUrl = `https://omegatech-api.dixonomega.tech/api/Maker/neon-text?text=${encodedText}`
-      await bad.sendMessage(m.chat, {
-        image: { url: fallbackUrl },
-        caption: `*ʟᴏɢᴏ ᴍᴀᴋᴇʀ - NEON sᴛʏʟᴇ*\n\n📝 ${text}\n\n> ᴘᴏᴡᴇʀᴇᴅ ʙʏ | Shahzu_Player 🌚👑︎︎`
-      }, { quoted: m })
-    }
-    
-  } catch (err) {
-    reply('❌ ғᴀɪʟᴇᴅ ᴛᴏ ᴄʀᴇᴀᴛᴇ ʟᴏɢᴏ.')
-  }
-}
-break
-
-case 'logo': case 'advancedlogo': {
-  if (!text) return reply(`ᴇxᴀᴍᴘʟᴇ: ${prefix + command} Line1|Line2`)
-  
-  await loading()
-  
-  try {
-    const textParts = text.split('|')
-    const line1 = textParts[0]?.trim() || 'WHATSAPP'
-    const line2 = textParts[1]?.trim() || 'SUPPORT'
-    
-    const combinedText = encodeURIComponent(`${line1} ${line2}`)
-    
-    // Use working Omega API
-    const apiUrl = `https://omegatech-api.dixonomega.tech/api/tools/ba-logo?textL=${combinedText}`
-    
-    await bad.sendMessage(m.chat, {
-      image: { url: apiUrl },
-      caption: `*ᴀᴅᴠᴀɴᴄᴇᴅ ʟᴏɢᴏ ᴍᴀᴋᴇʀ*\n\n📝 Line 1: ${line1}\n📝 Line 2: ${line2}\n\n> ᴘᴏᴡᴇʀᴇᴅ ʙʏ | Chand_Md ☠︎︎`
-    }, { quoted: m })
-    
-  } catch (err) {
-    reply('❌ ғᴀɪʟᴇᴅ ᴛᴏ ᴄʀᴇᴀᴛᴇ ʟᴏɢᴏ.')
-  }
-}
-break
-
-// ═══════════════════════════════════════════════════════════
 // FUN CHECK COMMANDS
 // ═══════════════════════════════════════════════════════════
 
@@ -10922,7 +10836,7 @@ async function sendGeneratedLogo({ bad, from, m, reply, command, text, title, st
   }
 }
 
-case 'logo': case 'logo1': case 'logo2': case 'makelogo': case 'makelogo2': case 'logomaker': case 'createlogo': case 'blackpinklogo': {
+case 'logo': case 'logo1': case 'logo2': case 'makelogo': case 'makelogo2': case 'logomaker': case 'createlogo': case 'advancedlogo': case 'blackpinklogo': {
   return sendGeneratedLogo({ bad, from, m, reply, command, text, title: 'logo', style: 'modern minimalist brand mark, professional typography' });
 }
 case 'gaming': case 'gaminglogo': case 'esportslogo': {
