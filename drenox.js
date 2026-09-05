@@ -1897,7 +1897,6 @@ case 'menu2': {
 ┃✮│➣ ${prefix}ʙʟᴏᴄᴋ
 ┃✮│➣ ${prefix}ᴜɴʙʟᴏᴄᴋ
 ┃✮│➣ ${prefix}ʙʀᴏᴀᴅᴄᴀsᴛ
-┃✮│➣ ${prefix}sᴇᴛᴘᴘʙᴏᴛ
 ┃✮│➣ ${prefix}ᴀᴜᴛᴏʙɪᴏ
 ┃✮│➣ ${prefix}sᴇᴛsᴜᴅᴏ
 ┃✮│➣ ${prefix}ᴅᴇʟsᴜᴅᴏ
@@ -1916,7 +1915,6 @@ case 'menu2': {
 ┃✮│➣ ${prefix}ᴀᴜᴛᴏʀᴇᴀᴅ
 ┃✮│➣ ${prefix}ᴀᴜᴛᴏᴠɪᴇᴡsᴛᴀᴛᴜs
 ┃✮│➣ ${prefix}ᴀᴜᴛᴏʟɪᴋᴇsᴛᴀᴛᴜs
-┃✮│➣ ${prefix}ꜰɪxᴏᴡɴᴇʀ
 ┃✮│➣ ${prefix}ᴄᴄɢᴇɴ
 ╰━━━━━━━━━━━━━━━━━━━━━┈⊷
 
@@ -1924,7 +1922,6 @@ case 'menu2': {
 ┃✮│➣ ${prefix}ᴀᴅᴅ
 ┃✮│➣ ${prefix}ᴋɪᴄᴋ
 ┃✮│➣ ${prefix}ᴋɪᴄᴋᴀʟʟ
-┃✮│➣ ${prefix}ᴋɪᴄᴋᴀᴅᴍɪɴs
 ┃✮│➣ ${prefix}ᴘʀᴏᴍᴏᴛᴇ
 ┃✮│➣ ${prefix}ᴅᴇᴍᴏᴛᴇ
 ┃✮│➣ ${prefix}ᴘʀᴏᴍᴏᴛᴇᴀʟʟ
@@ -1954,10 +1951,7 @@ case 'menu2': {
 ┃✮│➣ ${prefix}ᴀɴᴛɪʙɪʟʟ
 ┃✮│➣ ${prefix}ᴡᴇʟᴄᴏᴍᴇ
 ┃✮│➣ ${prefix}ɢᴏᴏᴅʙʏᴇ
-┃✮│➣ ${prefix}ᴘʀᴏᴛᴇᴄᴛ
 ┃✮│➣ ${prefix}ᴀɴᴛɪᴍᴏᴅ
-┃✮│➣ ${prefix}ᴏᴘᴇɴɢʀᴏᴜᴘ
-┃✮│➣ ${prefix}ᴄʟᴏsᴇɢʀᴏᴜᴘ
 ┃✮│➣ ${prefix}ᴏᴘᴇɴᴛɪᴍᴇ
 ┃✮│➣ ${prefix}ᴄʟᴏsᴇᴛɪᴍᴇ
 ┃✮│➣ ${prefix}sᴇᴛᴅᴇsᴄ
@@ -1965,8 +1959,6 @@ case 'menu2': {
 ┃✮│➣ ${prefix}sᴇᴛᴘᴘɢᴄ
 ┃✮│➣ ${prefix}ᴡᴀʀɴ
 ┃✮│➣ ${prefix}ʀᴇsᴇᴛᴡᴀʀɴ
-┃✮│➣ ${prefix}ᴡᴇʟᴄᴏᴍᴇᴄᴀʀᴅ
-┃✮│➣ ${prefix}ᴀɴᴛɪᴅᴇʟᴇᴛᴇ
 ┃✮│➣ ${prefix}ᴀɴᴛɪᴅᴇʟᴇᴛᴇᴅᴍ
 ┃✮│➣ ${prefix}ᴄʜᴀᴛʙᴏᴛ
 ┃✮│➣ ${prefix}ᴄʟᴇᴀʀᴄʜᴀᴛʙᴏᴛ
@@ -2001,18 +1993,15 @@ case 'menu2': {
 ┃ └ ${prefix}ᴛᴏᴍᴘ4
 ┃ 
 ┃ 🎥 ᴠɪᴅᴇᴏ ɢᴇɴᴇʀᴀᴛᴏʀ
-┃ └ ${prefix}ʀᴜɴᴡᴀʏ<ᴘʀᴏᴍᴘᴛ>
+┃ └ ${prefix}ʀᴜɴᴡᴀʏ
 ┃
 ╰━━━━━━━━━━━━━━━━━━━━━┈⊷
 
 ╭━━〔 🤖 ᴀɪ ᴍᴇɴᴜ 〕━━┈⊷
 ┃
 ┃ 💬 ᴄʜᴀᴛ ᴀɪ
-┃ ├ ${prefix}ᴀɪ
-┃ ├ ${prefix}ᴄʜᴀᴛɢᴘᴛ
 ┃ ├ ${prefix}ɢᴘᴛ
 ┃ ├ ${prefix}ɢᴇᴍɪɴɪ
-┃ ├ ${prefix}ʟʟᴀᴍᴀ
 ┃ ├ ${prefix}ᴅᴇᴇᴘsᴇᴇᴋ
 ┃ ├ ${prefix}ᴍɪsᴛʀᴀʟ
 ┃ └ ${prefix}ɢʀᴏǫ
@@ -2035,7 +2024,6 @@ case 'menu2': {
 ┃ ├ ${prefix}currency
 ┃ ├ ${prefix}convert
 ┃ ├ ${prefix}translate
-┃ ├ ${prefix}tr
 ┃ ├ ${prefix}calc
 ┃ ├ ${prefix}calculate
 ┃ ├ ${prefix}tts
@@ -2114,12 +2102,10 @@ case 'menu2': {
 ┃✮│➣ ${prefix}ꜰʟɪʀᴛ
 ┃✮│➣ ${prefix}ᴄᴏᴍᴘʟɪᴍᴇɴᴛ
 ┃✮│➣ ${prefix}ɪɴsᴜʟᴛ
-┃✮│➣ ${prefix}ᴡʜᴏᴀᴍɪ
 ┃✮│➣ ${prefix}sᴛᴜᴘɪᴅᴄʜᴇᴄᴋ
 ┃✮│➣ ${prefix}ᴜɴᴄʟᴇᴀɴᴄʜᴇᴄᴋ
 ┃✮│➣ ${prefix}ʜᴏᴛᴄʜᴇᴄᴋ
 ┃✮│➣ ${prefix}sᴍᴀʀᴛᴄʜᴇᴄᴋ
-┃✮│➣ ${prefix}ɢʀᴇᴀᴛᴄʜᴇᴄᴋ
 ┃✮│➣ ${prefix}ᴇᴠɪʟᴄʜᴇᴄᴋ
 ┃✮│➣ ${prefix}ᴅᴏɢᴄʜᴇᴄᴋ
 ┃✮│➣ ${prefix}ᴄᴏᴏʟᴄʜᴇᴄᴋ
@@ -2172,8 +2158,6 @@ case 'menu2': {
 
 ╭━━〔 🎭 ᴀɴɪᴍᴇ ᴍᴇɴᴜ 〕━━┈⊷
 ┃✮│➣ ${prefix}ᴡᴀɪꜰᴜ
-┃✮│➣ ${prefix}ɴᴡᴀɪꜰᴜ
-┃✮│➣ ${prefix}ʀᴡᴀɪꜰᴜ
 ┃✮│➣ ${prefix}ɴᴇᴋᴏ
 ┃✮│➣ ${prefix}ɴᴇᴋᴏ2
 ┃✮│➣ ${prefix}ᴀɴɪᴍᴇsᴇᴀʀᴄʜ
@@ -2216,7 +2200,6 @@ case 'menu2': {
 ┃✮│➣ ${prefix}ᴋᴜʀᴜᴍɪ
 ┃✮│➣ ${prefix}ʟᴏʟɪ
 ┃✮│➣ ${prefix}ᴍᴀᴅᴀʀᴀ
-┃✮│➣ ${prefix}ᴍᴀɪᴅ
 ┃✮│➣ ${prefix}ᴍᴇɢᴜᴍɪɴ
 ┃✮│➣ ${prefix}ᴍɪᴋᴀsᴀ
 ┃✮│➣ ${prefix}ᴍɪᴋᴜ
@@ -2236,7 +2219,6 @@ case 'menu2': {
 ╰━━━━━━━━━━━━━━━━━━━━━┈⊷
 
 ╭━━〔 🎨 sᴛɪᴄᴋᴇʀ ᴍᴇɴᴜ 〕━━┈⊷
-┃✮│➣ ${prefix}s
 ┃✮│➣ ${prefix}sᴛɪᴄᴋᴇʀ
 ┃✮│➣ ${prefix}ᴛᴀᴋᴇ
 ┃✮│➣ ${prefix}sᴛᴇᴀʟ
@@ -2421,7 +2403,6 @@ case 'menu2': {
 
 ╭━━〔 📱 ᴍɪsᴄ ᴍᴇɴᴜ 〕━━┈⊷
 ┃✮│➣ ${prefix}ʀᴇᴘᴏ
-┃✮│➣ ${prefix}sᴄʀɪᴘᴛ
 ┃✮│➣ ${prefix}ᴛᴇsᴛ
 ┃✮│➣ ${prefix}sᴀᴠᴇ
 ┃✮│➣ ${prefix}ᴅᴏᴡɴʟᴏᴀᴅ
@@ -2431,7 +2412,6 @@ case 'menu2': {
 ┃✮│➣ ${prefix}ᴍʏᴍᴏᴏᴅ
 ┃✮│➣ ${prefix}ᴡᴀʀᴍɢᴘᴛ
 ┃✮│➣ ${prefix}ᴠᴠ
-┃✮│➣ ${prefix}ᴠᴠ2
 ┃✮│➣ ${prefix}ᴛɪᴋᴛᴏᴋsᴛᴀʟᴋ
 ┃✮│➣ ${prefix}ɪɢsᴛᴀʟᴋ
 ┃✮│➣ ${prefix}ꜰꜰsᴛᴀʟᴋ
@@ -2439,7 +2419,6 @@ case 'menu2': {
 ┃✮│➣ ${prefix}ʀᴇᴀᴄᴛᴄʜ
 ┃✮│➣ ${prefix}ꜰᴀᴋᴇʀᴇᴀᴄᴛ
 ┃✮│➣ ${prefix}ᴀᴜᴛᴏʀᴇᴀᴄᴛ
-┃✮│➣ ${prefix}ᴇɴᴄ
 ╰━━━━━━━━━━━━━━━━━━━━━┈⊷
 
 ╭━━━━━━━━━━━━━━━━━━━━━┈⊷
@@ -2545,7 +2524,6 @@ case 'mymenu': {
 ┃✮│➣ ${prefix}ʙʟᴏᴄᴋ
 ┃✮│➣ ${prefix}ᴜɴʙʟᴏᴄᴋ
 ┃✮│➣ ${prefix}ʙʀᴏᴀᴅᴄᴀsᴛ
-┃✮│➣ ${prefix}sᴇᴛᴘᴘʙᴏᴛ
 ┃✮│➣ ${prefix}ᴀᴜᴛᴏʙɪᴏ
 ┃✮│➣ ${prefix}sᴇᴛsᴜᴅᴏ
 ┃✮│➣ ${prefix}ᴅᴇʟsᴜᴅᴏ
@@ -2564,7 +2542,6 @@ case 'mymenu': {
 ┃✮│➣ ${prefix}ᴀᴜᴛᴏʀᴇᴀᴅ
 ┃✮│➣ ${prefix}ᴀᴜᴛᴏᴠɪᴇᴡsᴛᴀᴛᴜs
 ┃✮│➣ ${prefix}ᴀᴜᴛᴏʟɪᴋᴇsᴛᴀᴛᴜs
-┃✮│➣ ${prefix}ꜰɪxᴏᴡɴᴇʀ
 ┃✮│➣ ${prefix}ᴄᴄɢᴇɴ
 ╰━━━━━━━━━━━━━━━━━━━━━┈⊷`
 
@@ -2591,7 +2568,6 @@ case 'groupmenu': {
 ┃✮│➣ ${prefix}ᴀᴅᴅ
 ┃✮│➣ ${prefix}ᴋɪᴄᴋ
 ┃✮│➣ ${prefix}ᴋɪᴄᴋᴀʟʟ
-┃✮│➣ ${prefix}ᴋɪᴄᴋᴀᴅᴍɪɴs
 ┃✮│➣ ${prefix}ᴘʀᴏᴍᴏᴛᴇ
 ┃✮│➣ ${prefix}ᴅᴇᴍᴏᴛᴇ
 ┃✮│➣ ${prefix}ᴘʀᴏᴍᴏᴛᴇᴀʟʟ
@@ -2620,10 +2596,6 @@ case 'groupmenu': {
 ┃✮│➣ ${prefix}ᴀɴᴛɪʙɪʟʟ
 ┃✮│➣ ${prefix}ᴡᴇʟᴄᴏᴍᴇ
 ┃✮│➣ ${prefix}ɢᴏᴏᴅʙʏᴇ
-┃✮│➣ ${prefix}ᴘʀᴏᴛᴇᴄᴛ
-┃✮│➣ ${prefix}ᴀɴᴛɪʜɪᴊᴀᴄᴋ
-┃✮│➣ ${prefix}ᴏᴘᴇɴɢʀᴏᴜᴘ
-┃✮│➣ ${prefix}ᴄʟᴏsᴇɢʀᴏᴜᴘ
 ┃✮│➣ ${prefix}ᴏᴘᴇɴᴛɪᴍᴇ
 ┃✮│➣ ${prefix}ᴄʟᴏsᴇᴛɪᴍᴇ
 ┃✮│➣ ${prefix}sᴇᴛᴅᴇsᴄ
@@ -2631,10 +2603,8 @@ case 'groupmenu': {
 ┃✮│➣ ${prefix}sᴇᴛᴘᴘɢᴄ
 ┃✮│➣ ${prefix}ᴡᴀʀɴ
 ┃✮│➣ ${prefix}ʀᴇsᴇᴛᴡᴀʀɴ
-┃✮│➣ ${prefix}ᴡᴇʟᴄᴏᴍᴇᴄᴀʀᴅ
 ┃✮│➣ ${prefix}ᴄʜᴀᴛʙᴏᴛ
 ┃✮│➣ ${prefix}ᴄʟᴇᴀʀᴄʜᴀᴛʙᴏᴛ
-┃✮│➣ ${prefix}ᴀɴᴛɪᴅᴇʟᴇᴛᴇ
 ┃✮│➣ ${prefix}ᴀɴᴛɪᴅᴇʟᴇᴛᴇᴅᴍ
 ┃✮│➣ ${prefix}ᴄʜᴇᴄᴋᴀᴅᴍɪɴ
 ╰━━━━━━━━━━━━━━━━━━━━━┈⊷`
@@ -2710,7 +2680,6 @@ case 'funmenu': {
 ┃✮│➣ ${prefix}ᴊᴏᴋᴇ
 ┃✮│➣ ${prefix}ᴅᴀᴅᴊᴏᴋᴇ
 ┃✮│➣ ${prefix}ǫᴜᴏᴛᴇ
-┃✮│➣ ${prefix}ᴄʀᴇᴀᴛᴇǫᴜᴏᴛᴇ
 ┃✮│➣ ${prefix}ᴛᴡᴇᴇᴛ
 ┃✮│➣ ${prefix}ꜰᴀᴄᴛ
 ┃✮│➣ ${prefix}ᴀᴅᴠɪᴄᴇ
@@ -2723,12 +2692,10 @@ case 'funmenu': {
 ┃✮│➣ ${prefix}ꜰʟɪʀᴛ
 ┃✮│➣ ${prefix}ᴄᴏᴍᴘʟɪᴍᴇɴᴛ
 ┃✮│➣ ${prefix}ɪɴsᴜʟᴛ
-┃✮│➣ ${prefix}ᴡʜᴏᴀᴍɪ
 ┃✮│➣ ${prefix}sᴛᴜᴘɪᴅᴄʜᴇᴄᴋ
 ┃✮│➣ ${prefix}ᴜɴᴄʟᴇᴀɴᴄʜᴇᴄᴋ
 ┃✮│➣ ${prefix}ʜᴏᴛᴄʜᴇᴄᴋ
 ┃✮│➣ ${prefix}sᴍᴀʀᴛᴄʜᴇᴄᴋ
-┃✮│➣ ${prefix}ɢʀᴇᴀᴛᴄʜᴇᴄᴋ
 ┃✮│➣ ${prefix}ᴇᴠɪʟᴄʜᴇᴄᴋ
 ┃✮│➣ ${prefix}ᴅᴏɢᴄʜᴇᴄᴋ
 ┃✮│➣ ${prefix}ᴄᴏᴏʟᴄʜᴇᴄᴋ
@@ -2817,8 +2784,6 @@ case 'animemenu': {
   const menuText = `
 ╭━━〔 🎭 ᴀɴɪᴍᴇ ᴍᴇɴᴜ 〕━━┈⊷
 ┃✮│➣ ${prefix}ᴡᴀɪꜰᴜ
-┃✮│➣ ${prefix}ɴᴡᴀɪꜰᴜ
-┃✮│➣ ${prefix}ʀᴡᴀɪꜰᴜ
 ┃✮│➣ ${prefix}ɴᴇᴋᴏ
 ┃✮│➣ ${prefix}ɴᴇᴋᴏ2
 ┃✮│➣ ${prefix}ᴀɴɪᴍᴇsᴇᴀʀᴄʜ
@@ -2861,7 +2826,6 @@ case 'animemenu': {
 ┃✮│➣ ${prefix}ᴋᴜʀᴜᴍɪ
 ┃✮│➣ ${prefix}ʟᴏʟɪ
 ┃✮│➣ ${prefix}ᴍᴀᴅᴀʀᴀ
-┃✮│➣ ${prefix}ᴍᴀɪᴅ
 ┃✮│➣ ${prefix}ᴍᴇɢᴜᴍɪɴ
 ┃✮│➣ ${prefix}ᴍɪᴋᴀsᴀ
 ┃✮│➣ ${prefix}ᴍɪᴋᴜ
@@ -2900,7 +2864,6 @@ break
 case 'stickermenu': {
   const menuText = `
 ╭━━〔 🎨 sᴛɪᴄᴋᴇʀ ᴍᴇɴᴜ 〕━━┈⊷
-┃✮│➣ ${prefix}s
 ┃✮│➣ ${prefix}sᴛɪᴄᴋᴇʀ
 ┃✮│➣ ${prefix}ᴛᴀᴋᴇ
 ┃✮│➣ ${prefix}sᴛᴇᴀʟ
@@ -2948,7 +2911,6 @@ case 'utilitymenu': {
 ┃ ├ ${prefix}currency
 ┃ ├ ${prefix}convert
 ┃ ├ ${prefix}translate
-┃ ├ ${prefix}tr
 ┃ ├ ${prefix}calc
 ┃ ├ ${prefix}calculate
 ┃ ├ ${prefix}tts
@@ -3272,11 +3234,8 @@ case 'aimenu': {
 ╭━━〔 🤖 ᴀɪ ᴍᴇɴᴜ 〕━━┈⊷
 ┃
 ┃ 💬 ᴄʜᴀᴛ ᴀɪ
-┃ ├ ${prefix}ᴀɪ
-┃ ├ ${prefix}ᴄʜᴀᴛɢᴘᴛ
 ┃ ├ ${prefix}ɢᴘᴛ
 ┃ ├ ${prefix}ɢᴇᴍɪɴɪ
-┃ ├ ${prefix}ʟʟᴀᴍᴀ
 ┃ ├ ${prefix}ᴅᴇᴇᴘsᴇᴇᴋ
 ┃ ├ ${prefix}ᴍɪsᴛʀᴀʟ
 ┃ └ ${prefix}ɢʀᴏǫ
@@ -3314,7 +3273,6 @@ case 'miscmenu': {
   const menuText = `
 ╭━━〔 📱 ᴍɪsᴄ ᴍᴇɴᴜ 〕━━┈⊷
 ┃✮│➣ ${prefix}ʀᴇᴘᴏ
-┃✮│➣ ${prefix}sᴄʀɪᴘᴛ
 ┃✮│➣ ${prefix}ᴛᴇsᴛ
 ┃✮│➣ ${prefix}sᴀᴠᴇ
 ┃✮│➣ ${prefix}ᴅᴏᴡɴʟᴏᴀᴅ
@@ -3324,7 +3282,6 @@ case 'miscmenu': {
 ┃✮│➣ ${prefix}ᴍʏᴍᴏᴏᴅ
 ┃✮│➣ ${prefix}ᴡᴀʀᴍɢᴘᴛ
 ┃✮│➣ ${prefix}ᴠᴠ
-┃✮│➣ ${prefix}ᴠᴠ2
 ┃✮│➣ ${prefix}ᴛɪᴋᴛᴏᴋsᴛᴀʟᴋ
 ┃✮│➣ ${prefix}ɪɢsᴛᴀʟᴋ
 ┃✮│➣ ${prefix}ꜰꜰsᴛᴀʟᴋ
@@ -3332,7 +3289,6 @@ case 'miscmenu': {
 ┃✮│➣ ${prefix}ʀᴇᴀᴄᴛᴄʜ
 ┃✮│➣ ${prefix}ꜰᴀᴋᴇʀᴇᴀᴄᴛ
 ┃✮│➣ ${prefix}ᴀᴜᴛᴏʀᴇᴀᴄᴛ
-┃✮│➣ ${prefix}ᴇɴᴄ
 ╰━━━━━━━━━━━━━━━━━━━━━┈⊷`
 
   await bad.sendMessage(m.chat, {
