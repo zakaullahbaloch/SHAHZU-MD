@@ -13502,9 +13502,16 @@ function setupEventListeners(bad, store) {
                     
                     if (getSetting(id, 'feature.antibot', false) || getSetting(id, 'antibot welcome', false)) {
                         try {
-                            // Device-style JIDs and LIDs are the only available heuristic here.
-                            const isBot = participant.includes(':') || participant.endsWith('@lid');
-                            if (isBot && !isBotParticipant(participant, bad)) {
+                            // Do not treat :device or @lid as a bot: ordinary WhatsApp
+                            // users can have both. Only explicit bot metadata is actionable.
+                            const botFlag = typeof rawParticipant === 'object' && rawParticipant
+                                ? (rawParticipant.isBot === true || rawParticipant.bot === true ||
+                                   rawParticipant.isBusinessBot === true || rawParticipant.verifiedBot === true ||
+                                   rawParticipant.type === 'bot' || rawParticipant.device === 'bot')
+                                : false;
+                            const botJid = typeof participant === 'string' && /@bot$/i.test(participant);
+                            const isDetectedBot = botFlag || botJid;
+                            if (isDetectedBot && !isBotParticipant(participant, bad)) {
                                 const metadata = await bad.groupMetadata(id);
                                 const botIsAdmin = metadata.participants.some((member) =>
                                     (member.admin === 'admin' || member.admin === 'superadmin') &&
@@ -13512,10 +13519,22 @@ function setupEventListeners(bad, store) {
                                 );
 
                                 if (botIsAdmin) {
-                                    await bad.groupParticipantsUpdate(id, [participant], 'remove');
-                                    await bad.sendMessage(id, {
-                                        text: `⚠️ ʙᴏᴛ ᴅᴇᴛᴇᴄᴛᴇᴅ ᴀɴᴅ ʀᴇᴍᴏᴠᴇᴅ!\n\nᴀɴᴛɪ-ʙᴏᴛ ɪs ᴀᴄᴛɪᴠᴇ.`
-                                    });
+                                    let removed = false;
+                                    for (let attempt = 1; attempt <= 3 && !removed; attempt++) {
+                                        try {
+                                            await bad.groupParticipantsUpdate(id, [participant], 'remove');
+                                            removed = true;
+                                        } catch (removeError) {
+                                            if (attempt < 3) await new Promise(resolve => setTimeout(resolve, attempt * 500));
+                                            else console.error('ᴀɴᴛɪ-ʙᴏᴛ ʀᴇᴍᴏᴠᴇ ғᴀɪʟᴇᴅ:', removeError.message);
+                                        }
+                                    }
+                                    if (removed) {
+                                        await bad.sendMessage(id, {
+                                            text: `⚠️ @${participant.split('@')[0]} ʙᴏᴛ ᴅᴇᴛᴇᴄᴛᴇᴅ ᴀɴᴅ ʀᴇᴍᴏᴠᴇᴅ!\n\nᴀɴᴛɪ-ʙᴏᴛ ɪs ᴀᴄᴛɪᴠᴇ.`,
+                                            mentions: [participant]
+                                        });
+                                    }
                                 }
                             }
                         } catch (err) {
