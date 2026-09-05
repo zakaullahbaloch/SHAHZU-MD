@@ -6204,23 +6204,79 @@ case 'checkadmin':
       break
 
 case "antilink": {
-    if (!isAdmins && !isCreator) return m.reply("ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴇɴᴀʙʟᴇ/ᴅɪsᴀʙʟᴇ ᴀɴᴛɪʟɪɴᴋ.");
     if (!m.isGroup) return m.reply("ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ᴏɴʟʏ ᴡᴏʀᴋs ɪɴ ɢʀᴏᴜᴘs.");
-    const mode = String(args[1] || '').toLowerCase();
-    const action = String(args[2] || '').toLowerCase();
-    const usage = `ᴜsᴀɢᴇ: ${prefix}antilink on/off | ${prefix}antilink delete on/off | ${prefix}antilink warn on/off | ${prefix}antilink kick on/off`;
-    if (!mode) return m.reply(usage);
-    if (mode === 'on') {
-        setSetting(m.chat, 'antilink', 'delete');
-        return m.reply('✅ ᴀɴᴛɪʟɪɴᴋ ᴏɴ: ᴀʟʟ ʟɪɴᴋs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ.');
+    if (!isAdmins && !isCreator) return m.reply("ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴍᴀɴᴀɢᴇ ᴀɴᴛɪʟɪɴᴋ.");
+
+    const subcommand = String(args[1] || '').toLowerCase();
+    const value = args.slice(2).join(' ').trim();
+    const usage = `ᴜsᴀɢᴇ:
+${prefix}antilink on | off
+${prefix}antilink delete on | off
+${prefix}antilink warn on | off
+${prefix}antilink kick on | off
+${prefix}antilink allow <url1,url2>
+${prefix}antilink disallow <url1,url2>
+${prefix}antilink list | info
+${prefix}antilink clear [allow|disallow]`;
+    const normalizeAntiLinkUrl = (url) => String(url || '').trim().toLowerCase()
+        .replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '');
+    const getAllowedUrls = () => {
+        const stored = getSetting(m.chat, 'antilinkAllowedUrls', '');
+        return String(stored || '').split(',').map(u => u.trim()).filter(Boolean);
+    };
+    const saveAllowedUrls = (urls) => setSetting(m.chat, 'antilinkAllowedUrls', urls.length ? urls.join(',') : '');
+
+    if (!subcommand || subcommand === 'status' || subcommand === 'info') {
+        const configured = getSetting(m.chat, 'antilink', false);
+        const mode = configured === true ? 'delete' : String(configured || 'off');
+        const allowed = getAllowedUrls().filter(u => !u.startsWith('!')).join(', ') || 'ɴᴏɴᴇ';
+        const blocked = getAllowedUrls().filter(u => u.startsWith('!')).map(u => u.slice(1)).join(', ') || 'ɴᴏɴᴇ';
+        if (!subcommand) return m.reply(usage);
+        return m.reply(`🛡️ ᴀɴᴛɪʟɪɴᴋ: ${mode}
+✅ ᴀʟʟᴏᴡᴇᴅ: ${allowed}
+🚫 ᴅɪsᴀʟʟᴏᴡᴇᴅ: ${blocked}`);
     }
-    if (mode === 'off') {
-        setSetting(m.chat, 'antilink', false);
-        return m.reply('🚫 ᴀɴᴛɪʟɪɴᴋ ᴅɪsᴀʙʟᴇᴅ ғᴏʀ ᴛʜɪs ɢʀᴏᴜᴘ.');
+    if (subcommand === 'on' || subcommand === 'off') {
+        setSetting(m.chat, 'antilink', subcommand === 'on' ? 'delete' : false);
+        return m.reply(subcommand === 'on' ? '✅ ᴀɴᴛɪʟɪɴᴋ ᴇɴᴀʙʟᴇᴅ (ᴅᴇʟᴇᴛᴇ ᴍᴏᴅᴇ).' : '🚫 ᴀɴᴛɪʟɪɴᴋ ᴅɪsᴀʙʟᴇᴅ.');
     }
-    if (!['delete', 'warn', 'kick'].includes(mode) || !['on', 'off'].includes(action)) return m.reply(usage);
-    setSetting(m.chat, 'antilink', action === 'on' ? mode : false);
-    return m.reply(action === 'on' ? `✅ ᴀɴᴛɪʟɪɴᴋ ${mode} ᴍᴏᴅᴇ ᴇɴᴀʙʟᴇᴅ.` : '🚫 ᴀɴᴛɪʟɪɴᴋ ᴅɪsᴀʙʟᴇᴅ.');
+    if (['delete', 'warn', 'kick'].includes(subcommand)) {
+        if (!['on', 'off'].includes(value)) return m.reply(usage);
+        setSetting(m.chat, 'antilink', value === 'on' ? subcommand : false);
+        return m.reply(value === 'on' ? `✅ ᴀɴᴛɪʟɪɴᴋ ${subcommand} ᴍᴏᴅᴇ ᴇɴᴀʙʟᴇᴅ.` : '🚫 ᴀɴᴛɪʟɪɴᴋ ᴅɪsᴀʙʟᴇᴅ.');
+    }
+    if (subcommand === 'allow' || subcommand === 'disallow') {
+        if (!value) return m.reply(`ᴜsᴇ: ${prefix}antilink ${subcommand} <url1,url2>`);
+        const current = getAllowedUrls();
+        const requested = value.split(',').map(normalizeAntiLinkUrl).filter(Boolean);
+        const currentNormalized = current.map(u => normalizeAntiLinkUrl(u.replace(/^!/, '')));
+        if (subcommand === 'allow') {
+            const additions = requested.filter(u => !currentNormalized.includes(u));
+            if (!additions.length) return m.reply('ℹ️ ɴᴏ ɴᴇᴡ ᴀʟʟᴏᴡᴇᴅ ᴜʀʟs.');
+            saveAllowedUrls([...current, ...additions]);
+            return m.reply(`✅ ᴀʟʟᴏᴡᴇᴅ: ${additions.join(', ')}`);
+        }
+        const additions = requested.filter(u => !currentNormalized.includes(u) || !current.some(x => x === `!${u}`));
+        const withoutAllow = current.filter(u => !requested.includes(normalizeAntiLinkUrl(u.replace(/^!/, ''))));
+        const blocked = additions.map(u => `!${u}`);
+        saveAllowedUrls([...withoutAllow, ...blocked]);
+        return m.reply(`🚫 ᴅɪsᴀʟʟᴏᴡᴇᴅ: ${requested.join(', ')}`);
+    }
+    if (subcommand === 'list') {
+        const list = getAllowedUrls();
+        return m.reply(`✅ ᴀʟʟᴏᴡᴇᴅ: ${list.filter(u => !u.startsWith('!')).join(', ') || 'ɴᴏɴᴇ'}
+🚫 ᴅɪsᴀʟʟᴏᴡᴇᴅ: ${list.filter(u => u.startsWith('!')).map(u => u.slice(1)).join(', ') || 'ɴᴏɴᴇ'}`);
+    }
+    if (subcommand === 'clear') {
+        if (!value) { saveAllowedUrls([]); return m.reply('✅ ᴀɴᴛɪʟɪɴᴋ ᴜʀʟ sᴇᴛᴛɪɴɢs ᴄʟᴇᴀʀᴇᴅ.'); }
+        const current = getAllowedUrls();
+        const type = value.toLowerCase();
+        if (['allow', 'allowed'].includes(type)) saveAllowedUrls(current.filter(u => u.startsWith('!')));
+        else if (['disallow', 'disallowed'].includes(type)) saveAllowedUrls(current.filter(u => !u.startsWith('!')));
+        else return m.reply(usage);
+        return m.reply(`✅ ${type} ᴜʀʟs ᴄʟᴇᴀʀᴇᴅ.`);
+    }
+    return m.reply(usage);
 }
 break;
 
@@ -13006,7 +13062,23 @@ const savedAntilinkMode = getSetting(chatId, 'antilink', false)
 const antilinkMode = savedAntilinkMode === true ? 'delete' : String(savedAntilinkMode || '').toLowerCase()
 const linkRegex = /(?:\b(?:https?|ftp):\/\/[^\s<>'"]+|\bwww\d*\.[^\s<>'"]+|\b(?:chat\.whatsapp\.com|wa\.me|t\.me|discord\.gg|bit\.ly|tinyurl\.com)\/[^\s<>'"]+|\b(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?(?:\/[^\s<>'"]*)?|\b(?:[a-z0-9-]+\.)+[a-z]{2,63}(?:\/[^\s<>'"]*)?)/i
 
-if (antilinkMode && linkRegex.test(body) && !msg.key.fromMe) {
+const antiLinkAllowed = getSetting(chatId, 'antilinkAllowedUrls', '')
+  .split(',').map(u => String(u || '').trim().toLowerCase()).filter(Boolean)
+const normalizeDetectedUrl = (url) => String(url || '').toLowerCase()
+  .replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '')
+const detectedLinks = body.match(new RegExp(linkRegex.source, 'gi')) || []
+const isAllowedLink = (url) => {
+  const normalized = normalizeDetectedUrl(url)
+  const host = normalized.split('/')[0].split(':')[0]
+  const explicitlyBlocked = antiLinkAllowed.some(item => item.startsWith('!') &&
+    (host === item.slice(1).split('/')[0].split(':')[0] || normalized.startsWith(item.slice(1))))
+  if (explicitlyBlocked) return false
+  return antiLinkAllowed.some(item => !item.startsWith('!') &&
+    (host === item.split('/')[0].split(':')[0] || normalized.startsWith(item)))
+}
+const hasBlockedLink = detectedLinks.some(link => !isAllowedLink(link))
+
+if (antilinkMode && hasBlockedLink && !msg.key.fromMe) {
   try {
     // Delete first, immediately. No reply is sent in delete/kick modes.
     const deleteKey = {
