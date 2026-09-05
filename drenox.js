@@ -6365,7 +6365,7 @@ case "antigm": {
     if (!isAdmins && !isCreator) return m.reply("ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴍᴀɴᴀɢᴇ ᴀɴᴛɪ-ɢʀᴏᴜᴘ-ᴍᴇɴᴛɪᴏɴ.");
     const antigmValue = (args[1] || '').toLowerCase();
     const antigmArgs = args.slice(2).join(' ').trim().toLowerCase();
-    const antigmUsage = `ᴜsᴀɢᴇ: ${prefix}antigm on [delete|warn|kick] | ${prefix}antigm off`;
+    const antigmUsage = `ᴜsᴀɢᴇ: ${prefix}antigm on/off [delete|warn|kick] | ${prefix}antigm delete/warn/kick | ${prefix}antigm ignore <ᴛᴇxᴛ>`;
     if (!antigmValue) return m.reply(antigmUsage);
     if (['on', 'off'].includes(antigmValue)) {
         if (antigmValue === 'on' && antigmArgs && !['delete', 'warn', 'kick'].includes(antigmArgs)) return m.reply(antigmUsage);
