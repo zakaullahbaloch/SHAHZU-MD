@@ -679,22 +679,25 @@ async function handleMessage(bad, m, chatUpdate, store) {
     
     const botJid = bad.user.id
     const botNumber = normalizeJid(botJid)
-    
+    const ownerStoreFile = path.join(__dirname, 'allfunc', `owner-${botNumber}.json`)
+    const botOwnerFile = path.join(__dirname, 'allfunc', `botowner-${botNumber}.txt`)
+
+    // Scope owner/sudo records to this bot's WhatsApp number. Never reuse the
+    // repository-wide owner.json, otherwise a sudo from one deployed bot can
+    // accidentally gain access to every other bot using the same codebase.
     try {
-      const botOwnerFile = './allfunc/botowner.txt'
-      let storedOwner = fs.readFileSync(botOwnerFile, 'utf8').trim()
-      
-      if (!storedOwner) {
-        fs.writeFileSync(botOwnerFile, botJid)
-        storedOwner = botJid
-        
-        const ownerNum = normalizeJid(botJid)
-        if (!owner.some(o => normalizeJid(o) === ownerNum)) {
-          owner.push(botJid)
-          fs.writeFileSync('./allfunc/owner.json', JSON.stringify(owner, null, 2))
-        }
+      fs.mkdirSync(path.dirname(ownerStoreFile), { recursive: true })
+      if (fs.existsSync(ownerStoreFile)) {
+        const storedOwners = JSON.parse(fs.readFileSync(ownerStoreFile, 'utf8'))
+        owner = Array.isArray(storedOwners) ? storedOwners : []
+      } else {
+        owner = []
       }
+      if (!owner.some(item => isSameUser(item, botJid) || areJidsSameUser(item, botJid))) owner.push(botJid)
+      fs.writeFileSync(ownerStoreFile, JSON.stringify([...new Set(owner)], null, 2))
+      fs.writeFileSync(botOwnerFile, botJid, 'utf8')
     } catch (e) {
+      owner = [botJid]
       console.log(chalk.red('❌ Error handling bot owner:', e.message))
     }
     
@@ -3376,13 +3379,13 @@ case 'fix': {
   if (!isBot) return reply('❌ sɪʀғ ʙᴏᴛ ɴᴜᴍʙᴇʀ ɪs ᴄᴏᴍᴍᴀɴᴅ ᴋᴏ ᴜsᴇ ᴋᴀʀ sᴀᴋᴛᴀ ʜᴀɪ.')
   try {
     // Force set the sender as owner
-    const botOwnerFile = './allfunc/botowner.txt'
+    const botOwnerFile = path.join(__dirname, 'allfunc', `botowner-${botNumber}.txt`)
     fs.writeFileSync(botOwnerFile, m.sender)
     
     // Add to owner.json
     if (!owner.includes(m.sender)) {
       owner.push(m.sender)
-      fs.writeFileSync('./allfunc/owner.json', JSON.stringify(owner, null, 2))
+      fs.writeFileSync(ownerStoreFile, JSON.stringify(owner, null, 2))
     }
     
     // Add to premium too
@@ -3784,7 +3787,7 @@ case 'setsudo': {
   const sudoJid = number + '@s.whatsapp.net'
   if (!owner.some(item => isSameUser(item, sudoJid))) {
     owner.push(sudoJid)
-    fs.writeFileSync('./allfunc/owner.json', JSON.stringify(owner, null, 2))
+    fs.writeFileSync(ownerStoreFile, JSON.stringify(owner, null, 2))
   }
   reply(`✅ @${number} ᴋᴏ sᴜᴅᴏ ᴘᴇʀᴍɪssɪᴏɴ ᴅᴇ ᴅɪ ɢᴀɪ.`)
 }
@@ -3796,7 +3799,7 @@ case 'delsudo': {
   const number = text.replace(/[^0-9]/g, '')
   const sudoJid = number + '@s.whatsapp.net'
   owner = owner.filter(item => !isSameUser(item, sudoJid))
-  fs.writeFileSync('./allfunc/owner.json', JSON.stringify(owner, null, 2))
+  fs.writeFileSync(ownerStoreFile, JSON.stringify(owner, null, 2))
   reply(`✅ @${number} sᴜᴅᴏ ᴘᴇʀᴍɪssɪᴏɴ ʀᴇᴍᴏᴠᴇᴅ.`)
 }
 break
@@ -13852,17 +13855,9 @@ function setupEventListeners(bad, store) {
                         
                         if (!msgData) continue;
                         
-                        let botOwnerJid = '';
-                        try {
-                            if (fs.existsSync('./allfunc/botowner.txt')) {
-                                botOwnerJid = fs.readFileSync('./allfunc/botowner.txt', 'utf8').trim();
-                                if (!botOwnerJid.includes('@s.whatsapp.net')) {
-                                    botOwnerJid = botOwnerJid + '@s.whatsapp.net';
-                                }
-                            }
-                        } catch (e) {
-                            console.error('Error reading bot owner:', e);
-                        }
+                        // Always notify the owner of this connected bot, not a
+                        // shared owner file from another deployment.
+                        const botOwnerJid = bad.user?.id || '';
                         
                         if (!botOwnerJid) continue;
                         
