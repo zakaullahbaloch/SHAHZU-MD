@@ -13004,8 +13004,10 @@ function setupEventListeners(bad, store) {
                                 }
                             }
                         }
-                        const actorValue = update.author || update.actor || update.from || update.by;
-                        const actor = typeof actorValue === 'string' ? actorValue : actorValue?.id || actorValue?.jid || actorValue?.participant;
+                        const actorValue = update.author || update.actor || update.from || update.by || update.executor || update.initiator || update.sender;
+                        const actor = typeof actorValue === 'string'
+                            ? actorValue
+                            : actorValue?.id || actorValue?.jid || actorValue?.participant || actorValue?.phoneNumber;
                         if (actor && !isProtectedBotTarget(actor)) {
                             await bad.groupParticipantsUpdate(id, [actor], 'demote').catch(error =>
                                 console.error('Anti-mod actor demotion failed:', error.message)
