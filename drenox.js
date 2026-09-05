@@ -12867,12 +12867,18 @@ function setupEventListeners(bad, store) {
     bad.ev.on('group-participants.update', async (update) => {
         try {
             const { id, participants, action } = update;
+            const eventAction = String(action || '').toLowerCase();
+            if (!id || !id.endsWith('@g.us')) return;
             
             const welcomeImage = "https://files.catbox.moe/9slbo0.jpg";
             const goodbyeImage = "https://files.catbox.moe/9slbo0.jpg";
             
-            for (let participant of participants) {
-                if (action === 'add') {
+            for (const rawParticipant of (Array.isArray(participants) ? participants : [participants])) {
+                const participant = typeof rawParticipant === 'string'
+                    ? rawParticipant
+                    : rawParticipant?.id || rawParticipant?.jid || rawParticipant?.participant;
+                if (!participant) continue;
+                if (eventAction === 'add' || eventAction === 'added') {
                     if (getSetting(id, 'welcome', false)) {
                         try {
                             const mention = `@${participant.split('@')[0]}`;
@@ -12908,7 +12914,7 @@ function setupEventListeners(bad, store) {
                         }
                     }
                 } 
-                else if (action === 'remove') {
+                else if (eventAction === 'remove' || eventAction === 'removed') {
                                         if (getSetting(id, 'goodbye', false)) {
                         try {
                             const mention = `@${participant.split('@')[0]}`;
@@ -12921,13 +12927,13 @@ function setupEventListeners(bad, store) {
                         }
                     }
                 }
-                else if (action === 'promote' || action === 'demote') {
+                else if (eventAction === 'promote' || eventAction === 'demote') {
                     await updateAdminState(bad, id);
                 }
             }
 
             // PDM: notify the group whenever an admin promotion/demotion happens.
-            if ((action === 'promote' || action === 'demote') && getSetting(id, 'pdm', false)) {
+            if ((eventAction === 'promote' || eventAction === 'demote') && getSetting(id, 'pdm', false)) {
                 try {
                     const changedParticipants = Array.isArray(participants) ? participants.filter(Boolean) : [participants].filter(Boolean);
                     const actor = update.author || update.actor || update.from || update.by;
@@ -12935,7 +12941,7 @@ function setupEventListeners(bad, store) {
                     const targetText = changedParticipants.map(user => `@${String(user).split('@')[0]}`).join(', ');
                     const actorText = actor ? `\n👤 ʙʏ: @${String(actor).split('@')[0]}` : '';
                     await bad.sendMessage(id, {
-                        text: `📢 *ᴘʀᴏᴍᴏᴛᴇ/ᴅᴇᴍᴏᴛᴇ ᴜᴘᴅᴀᴛᴇ*\n\n${action === 'promote' ? '✅ ᴘʀᴏᴍᴏᴛᴇᴅ' : '⚠️ ᴅᴇᴍᴏᴛᴇᴅ'}: ${targetText}${actorText}`,
+                        text: `📢 *ᴘʀᴏᴍᴏᴛᴇ/ᴅᴇᴍᴏᴛᴇ ᴜᴘᴅᴀᴛᴇ*\n\n${eventAction === 'promote' ? '✅ ᴘʀᴏᴍᴏᴛᴇᴅ' : '⚠️ ᴅᴇᴍᴏᴛᴇᴅ'}: ${targetText}${actorText}`,
                         mentions
                     });
                 } catch (error) {
@@ -12944,7 +12950,7 @@ function setupEventListeners(bad, store) {
             }
             
             // Anti-modification protection: restore unauthorized promote/demote changes.
-            if ((action === 'promote' || action === 'demote') && getSetting(id, 'antimod', false)) {
+            if ((eventAction === 'promote' || eventAction === 'demote') && getSetting(id, 'antimod', false)) {
                 try {
                     // Let WhatsApp finish applying the change before reading fresh metadata.
                     await new Promise(resolve => setTimeout(resolve, 800));
@@ -12956,7 +12962,7 @@ function setupEventListeners(bad, store) {
                         console.error('Anti-modification skipped: bot is not an admin in', id);
                     } else {
                         const changedParticipants = Array.isArray(participants) ? participants.filter(Boolean) : [participants].filter(Boolean);
-                        const reverseAction = action === 'demote' ? 'promote' : 'demote';
+                        const reverseAction = eventAction === 'demote' ? 'promote' : 'demote';
                         for (const participant of changedParticipants) {
                             for (let attempt = 1; attempt <= 2; attempt++) {
                                 try {
@@ -12975,7 +12981,7 @@ function setupEventListeners(bad, store) {
                             );
                         }
                         await bad.sendMessage(id, {
-                            text: `🛡️ ᴀɴᴛɪ-ᴍᴏᴅ ᴛʀɪɢɢᴇʀᴇᴅ: ᴜɴᴀᴜᴛʜᴏʀɪᴢᴇᴅ ${action} ʀᴇᴠᴇʀᴛᴇᴅ.`
+                            text: `🛡️ ᴀɴᴛɪ-ᴍᴏᴅ ᴛʀɪɢɢᴇʀᴇᴅ: ᴜɴᴀᴜᴛʜᴏʀɪᴢᴇᴅ ${eventAction} ʀᴇᴠᴇʀᴛᴇᴅ.`
                         });
                         await updateAdminState(bad, id);
                     }
@@ -12986,7 +12992,7 @@ function setupEventListeners(bad, store) {
             }
 
             // Anti-Hijack & Protected Admins
-            if (action === 'demote') {
+            if (eventAction === 'demote') {
                 const botJid = bad.user.id;
                 const metadata = await bad.groupMetadata(id);
                 const botParticipant = metadata.participants.find(p => p.id === botJid);
