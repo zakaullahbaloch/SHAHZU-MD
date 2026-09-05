@@ -742,42 +742,9 @@ const senderNumber = normalizeJid(senderJid)
 // ✅ Bot check
 const isBot = m.key.fromMe || isSameUser(senderJid, botJid) || areJidsSameUser(senderJid, botJid)
 
-// ✅ Owner check
-let isCreator = false
-
-try {
-  const botOwnerFile = './allfunc/botowner.txt'
-  let storedOwner = ''
-  
-  if (fs.existsSync(botOwnerFile)) {
-    storedOwner = fs.readFileSync(botOwnerFile, 'utf8').trim()
-  }
-  
-  if (!storedOwner) {
-    fs.writeFileSync(botOwnerFile, botJid)
-    storedOwner = botJid
-  }
-  
-  const ownerNum = normalizeJid(storedOwner)
-  
-  if (ownerNum === senderNumber) {
-    isCreator = true
-  }
-  
-  if (!isCreator && owner && owner.length > 0) {
-    isCreator = owner.some(ownerJid => {
-      const oNum = normalizeJid(ownerJid)
-      return oNum === senderNumber
-    })
-  }
-  
-  if (!isCreator && botNumber === senderNumber) {
-    isCreator = true
-  }
-  
-} catch (e) {
-  console.log(chalk.red('❌ Owner check error:', e.message))
-}
+// ✅ Strict owner check: only the number currently running/deployed as the bot
+// is the owner. owner.json and manually-added owner numbers are not trusted.
+const isCreator = isBot
     
     let groupMetadata = null
     let participants = []
