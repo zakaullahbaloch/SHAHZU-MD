@@ -1374,7 +1374,6 @@ ${boardDisplay}
       'del',
       'delete',
       'deletingtext',
-      'delprem',
       'delpremium',
       'delsudo',
       'demote',
