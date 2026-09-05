@@ -1719,6 +1719,7 @@ ${boardDisplay}
       'setprefix',
       'setprofile',
       'setsudo',
+      'sudolist',
       'shinobu',
       'ship',
       'shortlink',
@@ -1928,6 +1929,7 @@ case 'menu2': {
 ┃✮│➣ ${prefix}ʙʀᴏᴀᴅᴄᴀsᴛ
 ┃✮│➣ ${prefix}ᴀᴜᴛᴏʙɪᴏ
 ┃✮│➣ ${prefix}sᴇᴛsᴜᴅᴏ
+┃✮│➣ ${prefix}sᴜᴅᴏʟɪsᴛ
 ┃✮│➣ ${prefix}ᴅᴇʟsᴜᴅᴏ
 ┃✮│➣ ${prefix}ᴠᴠ
 ┃✮│➣ ${prefix}ᴅᴇʟᴘʀᴇᴍ
@@ -3776,6 +3778,21 @@ case 'broadcast': {
 }
 break
 
+
+case 'sudolist': {
+  if (!isCreator) return reply('❌ ᴏᴡɴᴇʀ ᴏʀ sᴜᴅᴏ ᴏɴʟʏ.')
+  const sudoNumbers = owner
+    .filter(item => !isSameUser(item, botJid))
+    .map(item => normalizeJid(item))
+    .filter(Boolean)
+  if (!sudoNumbers.length) return reply('📋 ᴛʜɪs ʙᴏᴛ ᴋᴇ sᴜᴅᴏ ʟɪsᴛ ᴍᴇɪɴ ᴋᴏɪ ɴᴜᴍʙᴇʀ ɴᴀʜɪ ʜᴀɪ.')
+  const lines = sudoNumbers.map((number, index) => `${index + 1}. @${number}`)
+  return bad.sendMessage(m.chat, {
+    text: `╭━━〔 📋 sᴜᴅᴏ ʟɪsᴛ 〕━━┈⊷\n┃ ʙᴏᴛ: @${botNumber}\n┃\n${lines.join('\n')}\n╰━━━━━━━━━━━━━━━┈⊷`,
+    mentions: [botJid, ...sudoNumbers.map(number => `${number}@s.whatsapp.net`)]
+  }, { quoted: m })
+}
+break
 
 case 'setsudo': {
   if (!isBot) return reply('❌ sɪʀғ ʙᴏᴛ ɴᴜᴍʙᴇʀ sᴇᴛsᴜᴅᴏ ᴋᴀʀ sᴀᴋᴛᴀ ʜᴀɪ.')
