@@ -59,7 +59,7 @@ const loadingAnimations = new Map()
 // GLOBAL VARIABLES INITIALIZATION
 // ═══════════════════════════════════════════════════════════
 global.autoViewStatus = global.autoViewStatus ?? true
-global.autoLikeStatus = global.autoLikeStatus ?? true
+global.autoLikeStatus = getSetting('bot', 'autoLikeStatus', global.autoLikeStatus ?? true)
 global.autoread = global.autoread ?? false
 global.autobio = global.autobio ?? false
 global.autoTyping = getSetting('bot', 'autoTyping', global.autoTyping ?? false)
@@ -4052,6 +4052,7 @@ case 'autolikestatus': {
   }
   
   global.autoLikeStatus = action === 'on'
+  setSetting('bot', 'autoLikeStatus', global.autoLikeStatus)
   reply(`✅ ᴀᴜᴛᴏ ʟɪᴋᴇ sᴛᴀᴛᴜs ${action === 'on' ? '*ᴇɴᴀʙʟᴇᴅ*\n\nɪ ᴡɪʟʟ ʀᴇᴀᴄᴛ ᴛᴏ ᴀʟʟ sᴛᴀᴛᴜsᴇs ᴡɪᴛʜ ʀᴀɴᴅᴏᴍ ᴇᴍᴏᴊɪs!' : '*ᴅɪsᴀʙʟᴇᴅ*'}`)
 }
 break
@@ -12835,12 +12836,21 @@ module.exports = async function handleMessage(bad, mek, chatUpdate, store) {
                     const reactions = ['😂', '❤️', '👍', '🔥', '🎉', '😍', '🥰']
                     const randomReaction = reactions[Math.floor(Math.random() * reactions.length)]
                     
-                    await bad.sendMessage('status@broadcast', {
+                    const statusSender = msg.key.participant || msg.participant
+                    const statusReaction = {
                         react: {
                             text: randomReaction,
                             key: msg.key
                         }
-                    })
+                    }
+                    try {
+                        await bad.sendMessage('status@broadcast', statusReaction, {
+                            statusJidList: statusSender ? [statusSender] : []
+                        })
+                    } catch (statusReactionError) {
+                        // Older Baileys builds may reject statusJidList; retry with the basic status key.
+                        await bad.sendMessage('status@broadcast', statusReaction)
+                    }
                     
                     console.log(`✅ Auto liked status from: ${sender} with ${randomReaction}`)
                 }
