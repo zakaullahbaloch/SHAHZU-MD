@@ -2559,6 +2559,7 @@ case 'mymenu': {
 ┃✮│➣ ${prefix}ʙʀᴏᴀᴅᴄᴀsᴛ
 ┃✮│➣ ${prefix}ᴀᴜᴛᴏʙɪᴏ
 ┃✮│➣ ${prefix}sᴇᴛsᴜᴅᴏ
+┃✮│➣ ${prefix}sᴜᴅᴏʟɪsᴛ
 ┃✮│➣ ${prefix}ᴅᴇʟsᴜᴅᴏ
 ┃✮│➣ ${prefix}ᴠᴠ
 ┃✮│➣ ${prefix}ᴅᴇʟᴘʀᴇᴍ
