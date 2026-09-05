@@ -19,6 +19,10 @@ const axios = require('axios')
 const os = require('os')
 const moment = require('moment-timezone')
 const { exec } = require('child_process')
+const BOT_VERSION = (() => {
+  try { return require('./package.json').version || 'unknown' } catch { return 'unknown' }
+})()
+const getBotUsername = sock => sock?.user?.name || sock?.user?.verifiedName || sock?.user?.notify || sock?.user?.id?.split('@')[0] || 'CHAND XMD'
 const googleTTS = require('google-tts-api')
 const yts = require('yt-search')
 const ytdl = require('@distube/ytdl-core')
@@ -1249,14 +1253,16 @@ case 'menu2': {
   
   const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)]
   const uptime = runtime(process.uptime())
+  const botUsername = getBotUsername(bad)
   
   const menuText = `
 ╭━━〔 ☠️ ᴀʟʟ ᴄᴏᴍᴍᴀɴᴅs ☠️ 〕━━┈⊷
 ┃✮╭────────────────
-┃✮│ 🤖 ʙᴏᴛ  :*「CHAND XMD」︎*
-┃✮│ 👑 ᴏᴡɴᴇʀ : *⸔𝐅𝐌𝐒 𝐂𝐇𝐀𝐍𝐃⸕*
-┃✮│ 📦 ᴠᴇʀsɪᴏɴ  : *2.0*
-┃✮│ 📡 ᴘʟᴀᴛғᴏʀᴍ : *VPS*
+┃✮│ 🤖 ʙᴏᴛ ᴜsᴇʀɴᴀᴍᴇ: *${botUsername}*
+┃✮│ 👑 ᴏᴡɴᴇʀ: *⸔𝐅𝐌𝐒 𝐂𝐇𝐀𝐍𝐃⸕*
+┃✮│ 📦 ᴠᴇʀsɪᴏɴ: *v${BOT_VERSION}*
+┃✮│ ⏱️ ᴜᴘᴛɪᴍᴇ: *${uptime}*
+┃✮│ 📡 ᴘʟᴀᴛғᴏʀᴍ: *WhatsApp*
 ┃✮╰────────────────
 ╰━━━━━━━━━━━━━━━┈⊷
 
@@ -1847,14 +1853,16 @@ case 'listmenu': {
   
   const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)]
   const uptime = runtime(process.uptime())
+  const botUsername = getBotUsername(bad)
   
   const menuText = `
 ╭━━〔 ☠️ ᴀʟʟ ᴄᴏᴍᴍᴀɴᴅs ☠️ 〕━━┈⊷
 ┃✮╭────────────────
-┃✮│ 🤖 ʙᴏᴛ  :*「CHAND XMD」︎*
-┃✮│ 👑 ᴏᴡɴᴇʀ : *⸔𝐅𝐌𝐒 𝐂𝐇𝐀𝐍𝐃⸕*
-┃✮│ 📦 ᴠᴇʀsɪᴏɴ  : *2.0*
-┃✮│ 📡 ᴘʟᴀᴛғᴏʀᴍ : *Vps*
+┃✮│ 🤖 ʙᴏᴛ ᴜsᴇʀɴᴀᴍᴇ: *${botUsername}*
+┃✮│ 👑 ᴏᴡɴᴇʀ: *⸔𝐅𝐌𝐒 𝐂𝐇𝐀𝐍𝐃⸕*
+┃✮│ 📦 ᴠᴇʀsɪᴏɴ: *v${BOT_VERSION}*
+┃✮│ ⏱️ ᴜᴘᴛɪᴍᴇ: *${uptime}*
+┃✮│ 📡 ᴘʟᴀᴛғᴏʀᴍ: *WhatsApp*
 ┃✮╰────────────────
 ╰━━━━━━━━━━━━━━━┈⊷
 
@@ -3043,7 +3051,7 @@ break
   
 case 'runtime':
 case 'alive': {
-  const uptime = runtime(process.uptime());
+  const uptime = runtime(process.uptime())
   reply(
 `🟢 *Bot Status:* ONLINE
 👑 *Owner:* ⸔𝐅𝐌𝐒 𝐂𝐇𝐀𝐍𝐃⸕
