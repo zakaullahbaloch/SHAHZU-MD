@@ -970,53 +970,6 @@ if (m.isGroup && !isCreator) {
     }
 }
     
-if (getSetting(m.chat, "antilink", false) && m.isGroup) {
-    // Enhanced regex to detect ALL types of links
-    let linkRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.(com|net|org|io|co|in|me|xyz|info|biz|app|dev|tech|online|site|club|store|shop|live|tv|gg|cc|tk|ml|ga|cf|gq)[^\s]*)/gi;
-    
-    if (linkRegex.test(m.text)) {
-        // CRITICAL FIX: Skip bot's own messages
-        if (m.key.fromMe) return;
-        
-        if (isAdmins || isCreator) return;
-        
-        const mode = getSetting(m.chat, "antilink");
-        
-        try {
-            // Delete immediately and do not send a quoted detection reply.
-            await bad.sendMessage(m.chat, { delete: m.key });
-
-            if (mode === 'kick') {
-                await bad.groupParticipantsUpdate(m.chat, [m.sender], 'remove');
-            } else if (mode === 'warn') {
-                if (!global.antilinkWarnings) global.antilinkWarnings = {};
-                if (!global.antilinkWarnings[m.chat]) global.antilinkWarnings[m.chat] = {};
-
-                const warnings = (global.antilinkWarnings[m.chat][m.sender] || 0) + 1;
-                global.antilinkWarnings[m.chat][m.sender] = warnings;
-
-                if (warnings >= 3) {
-                    await bad.groupParticipantsUpdate(m.chat, [m.sender], 'remove');
-                    delete global.antilinkWarnings[m.chat][m.sender];
-                    await bad.sendMessage(m.chat, {
-                        text: `⚠️ @${m.sender.split('@')[0]} ko 3 warnings ke baad remove kar diya gaya.`,
-                        mentions: [m.sender]
-                    });
-                } else {
-                    await bad.sendMessage(m.chat, {
-                        text: `⚠️ @${m.sender.split('@')[0]} warning ${warnings}/3: links allowed nahi hain.`,
-                        mentions: [m.sender]
-                    });
-                }
-            }
-        } catch (error) {
-            console.error('Fast antilink error:', error.message);
-        }
-
-        // Stop the link message from reaching other command/feature handlers.
-        return;
-    }
-}
 if (getSetting(m.chat, "feature.antispam", false) && m.isGroup) {
     if (!global.spam) global.spam = {};
     if (!global.spam[m.sender]) global.spam[m.sender] = { count: 0, last: Date.now() };
