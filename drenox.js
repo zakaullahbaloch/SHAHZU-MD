@@ -1858,9 +1858,8 @@ ${boardDisplay}
     if (isCmd && command && recognizedCommands.has(command)) {
       try {
         await bad.sendMessage(from, { react: { text: '⏳', key: m.key } })
-        setTimeout(() => {
-          bad.sendMessage(from, { react: { text: '', key: m.key } }).catch(() => {})
-        }, 2500)
+        // Do not send an empty reaction after the timer: Baileys can render it as
+        // a standalone dot message. Each command now clears/replaces its own reaction.
       } catch (reactionError) {
         console.error('Command loading reaction error:', reactionError.message)
       }
