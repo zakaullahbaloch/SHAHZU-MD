@@ -12936,8 +12936,13 @@ function setupEventListeners(bad, store) {
             // PDM: notify the group whenever an admin promotion/demotion happens.
             if ((eventAction === 'promote' || eventAction === 'demote') && getSetting(id, 'pdm', false)) {
                 try {
-                    const changedParticipants = Array.isArray(participants) ? participants.filter(Boolean) : [participants].filter(Boolean);
-                    const actor = update.author || update.actor || update.from || update.by;
+                    const toJid = value => {
+                        if (!value) return null;
+                        if (typeof value === 'string') return value;
+                        return value.id || value.jid || value.participant || value.phoneNumber || null;
+                    };
+                    const changedParticipants = (Array.isArray(participants) ? participants : [participants]).map(toJid).filter(Boolean);
+                    const actor = toJid(update.author || update.actor || update.from || update.by);
                     const mentions = [...new Set([...changedParticipants, actor].filter(Boolean))];
                     const targetText = changedParticipants.map(user => `@${String(user).split('@')[0]}`).join(', ');
                     const actorText = actor ? `\n👤 ʙʏ: @${String(actor).split('@')[0]}` : '';
@@ -12962,7 +12967,9 @@ function setupEventListeners(bad, store) {
                     if (!botParticipant) {
                         console.error('Anti-modification skipped: bot is not an admin in', id);
                     } else {
-                        const changedParticipants = Array.isArray(participants) ? participants.filter(Boolean) : [participants].filter(Boolean);
+                        const changedParticipants = (Array.isArray(participants) ? participants : [participants])
+                            .map(participant => typeof participant === 'string' ? participant : participant?.id || participant?.jid || participant?.participant)
+                            .filter(Boolean);
                         const reverseAction = eventAction === 'demote' ? 'promote' : 'demote';
                         for (const participant of changedParticipants) {
                             for (let attempt = 1; attempt <= 2; attempt++) {
@@ -12975,7 +12982,8 @@ function setupEventListeners(bad, store) {
                                 }
                             }
                         }
-                        const actor = update.author || update.actor || update.from || update.by;
+                        const actorValue = update.author || update.actor || update.from || update.by;
+                        const actor = typeof actorValue === 'string' ? actorValue : actorValue?.id || actorValue?.jid || actorValue?.participant;
                         if (actor && !isBotParticipant(actor, bad)) {
                             await bad.groupParticipantsUpdate(id, [actor], 'demote').catch(error =>
                                 console.error('Anti-mod actor demotion failed:', error.message)
