@@ -4358,9 +4358,8 @@ case 'promote': {
     
     try {
         await bad.groupParticipantsUpdate(m.chat, [users], 'promote')
-        await reply(`✅ sᴜᴄᴄᴇssғᴜʟʟʏ ᴘʀᴏᴍᴏᴛᴇᴅ @${users.split('@')[0]} ᴛᴏ ᴀᴅᴍɪɴ`)
     } catch (error) {
-        await reply('❌ ғᴀɪʟᴇᴅ ᴛᴏ ᴘʀᴏᴍᴏᴛᴇ ᴜsᴇʀ')
+        console.error('Silent promote failed:', error.message)
     }
 }
 break
@@ -4389,9 +4388,8 @@ case 'demote': {
     
     try {
         await bad.groupParticipantsUpdate(m.chat, [users], 'demote')
-        await reply(`✅ *ᴅᴇᴍᴏᴛᴇᴅ!*\n\n👤 @${users.split('@')[0]}\n\nɪs ɴᴏ ʟᴏɴɢᴇʀ ᴀɴ ᴀᴅᴍɪɴ.`)
     } catch (err) {
-        await reply(`❌ ғᴀɪʟᴇᴅ ᴛᴏ ᴅᴇᴍᴏᴛᴇ: ${err.message}`)
+        console.error('Silent demote failed:', err.message)
     }
 }
 break
