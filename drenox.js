@@ -4727,12 +4727,24 @@ break;
 
 case 'join': {
     if (!isCreator) return reply("ᴏᴡɴᴇʀ ᴏɴʟʏ.")
-    if (!text) return reply(`ᴇxᴀᴍᴘʟᴇ: *${prefix + command} <ɢʀᴏᴜᴘ ʟɪɴᴋ>*`)
-    if (!isUrl(args[0]) || !args[0].includes('whatsapp.com')) return reply("ɪɴᴠᴀʟɪᴅ ɢʀᴏᴜᴘ ʟɪɴᴋ!")
-    
-    let result = args[0].split('https://chat.whatsapp.com/')[1]
-    await bad.groupAcceptInvite(result)
-    reply("sᴜᴄᴄᴇssғᴜʟʟʏ ᴊᴏɪɴᴇᴅ ᴛʜᴇ ɢʀᴏᴜᴘ ✅")
+    if (!text) return reply(`ᴜsᴇ: ${prefix}join https://chat.whatsapp.com/INVITE_CODE`)
+
+    // Accept http/https links, surrounding text, and query/trailing punctuation.
+    const inviteMatch = text.match(/chat\.whatsapp\.com\/([A-Za-z0-9_-]+)/i)
+    const inviteCode = inviteMatch?.[1]?.replace(/[^A-Za-z0-9_-]/g, '')
+    if (!inviteCode) return reply("❌ ᴠᴀʟɪᴅ WhatsApp group invite link dein.")
+
+    try {
+        const groupId = await bad.groupAcceptInvite(inviteCode)
+        await reply(`✅ sᴜᴄᴄᴇssғᴜʟʟʏ ᴊᴏɪɴᴇᴅ ᴛʜᴇ ɢʀᴏᴜᴘ${groupId ? `\n🆔 ${groupId}` : ''}`)
+    } catch (error) {
+        console.error('Join command error:', error.response?.data || error.message)
+        const message = String(error.message || '').toLowerCase()
+        if (message.includes('already') || message.includes('409')) {
+            return reply('ℹ️ ʙᴏᴛ ᴘᴇʜʟᴇ sᴇ ɪs ɢʀᴏᴜᴘ ᴍᴇɪɴ ᴊᴏɪɴᴇᴅ ʜᴜᴀ ʜᴀɪ.')
+        }
+        return reply(`❌ ɢʀᴏᴜᴘ ᴊᴏɪɴ ғᴀɪʟᴇᴅ: ${error.message || 'invite expired or invalid'}`)
+    }
 }
 break
 
