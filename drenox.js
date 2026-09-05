@@ -4168,17 +4168,44 @@ break
 
 case 'promoteall': {
     if (!m.isGroup) return reply("ɢʀᴏᴜᴘ ᴄᴏᴍᴍᴀɴᴅ ᴏɴʟʏ.")
-    
     if (!isCreator) return reply("ᴏᴡɴᴇʀ ᴏɴʟʏ.")
-    
-    const metadata = await bad.groupMetadata(m.chat)
-    let users = metadata.participants.filter((u) => !u.admin && u.id !== botNumber)
-    
-    for (let user of users) {
-        await bad.groupParticipantsUpdate(m.chat, [user.id], 'promote')
-        await sleep(1000)
+    if (!isBotAdmins) return reply('❌ ᴘᴇʜʟᴇ ʙᴏᴛ ᴋᴏ ɢʀᴏᴜᴘ ᴀᴅᴍɪɴ ʙᴀɴᴀᴏ.')
+
+    try {
+        const metadata = await bad.groupMetadata(m.chat)
+        const usersToPromote = metadata.participants
+            .filter(participant => !participant.admin && !isBotParticipant(participant, bad))
+            .map(participant => participant.id)
+
+        if (!usersToPromote.length) return reply('ℹ️ ᴘʀᴏᴍᴏᴛᴇ ᴋᴀʀɴᴇ ᴋᴇ ʟɪʏᴇ ᴋᴏɪ ᴍᴇᴍʙᴇʀ ɴᴀʜɪ ʜᴀɪ.')
+
+        const batchSize = 10
+        const batches = []
+        for (let i = 0; i < usersToPromote.length; i += batchSize) {
+            batches.push(usersToPromote.slice(i, i + batchSize))
+        }
+
+        let promoted = 0
+        await Promise.all(batches.map(async (batch) => {
+            for (let attempt = 1; attempt <= 3; attempt++) {
+                try {
+                    await bad.groupParticipantsUpdate(m.chat, batch, 'promote')
+                    promoted += batch.length
+                    return
+                } catch (error) {
+                    if (attempt === 3) {
+                        console.error(`Promoteall batch failed (${batch.length} users):`, error.message)
+                        return
+                    }
+                    await sleep(attempt * 250)
+                }
+            }
+        }))
+        return reply(`✅ ᴘʀᴏᴍᴏᴛᴇ ᴄᴏᴍᴘʟᴇᴛᴇ: ${promoted}/${usersToPromote.length}`)
+    } catch (error) {
+        console.error('Promoteall error:', error.message)
+        return reply(`❌ ᴘʀᴏᴍᴏᴛᴇᴀʟʟ ғᴀɪʟᴇᴅ: ${error.message}`)
     }
-    reply(`✅ ᴘʀᴏᴍᴏᴛᴇᴅ ${users.length} ᴜsᴇʀs ᴛᴏ ᴀᴅᴍɪɴ`)
 }
 break
 
