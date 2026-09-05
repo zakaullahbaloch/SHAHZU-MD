@@ -12465,40 +12465,41 @@ case 'vv': {
   if (!m.quoted) {
     return reply(`*ʀᴇᴘʟʏ ᴛᴏ ᴀɴ ɪᴍᴀɢᴇ, ᴠɪᴅᴇᴏ, ᴏʀ ᴀᴜᴅɪᴏ ᴡɪᴛʜ ᴛʜᴇ ᴄᴀᴘᴛɪᴏɴ ${prefix + command}*`)
   }
-  
-  let mime = (m.quoted.msg || m.quoted).mimetype || ''
+
   try {
-    if (/image/.test(mime)) {
-      let media = await m.quoted.download()
-      await bad.sendMessage(botJid, {
+    const quotedMedia = m.quoted.msg || m.quoted
+    const mime = String(quotedMedia.mimetype || m.quoted.mimetype || '').split(';')[0].toLowerCase()
+    const media = await m.quoted.download().catch(() => bad.downloadMediaMessage(m.quoted))
+    if (!media) throw new Error('media download failed')
+
+    // Always target the logged-in bot account's normal DM JID. Do not quote
+    // the original group message because cross-chat quoted keys are rejected.
+    const botDm = jidNormalizedUser(botJid) || botJid
+    if (mime.startsWith('image/')) {
+      await bad.sendMessage(botDm, {
         image: media,
-        caption: "✅ ᴠɪᴇᴡ ᴏɴᴄᴇ ɪᴍᴀɢᴇ sᴇɴᴛ ᴛᴏ ʏᴏᴜʀ ᴅᴍ",
-        viewOnce: true,
-      }, { quoted: m })
-      
-    } else if (/video/.test(mime)) {
-      let media = await m.quoted.download()
-      await bad.sendMessage(botJid, {
-        video: media,
-        caption: "✅ ᴠɪᴇᴡ ᴏɴᴄᴇ ᴠɪᴅᴇᴏ sᴇɴᴛ ᴛᴏ ʏᴏᴜʀ ᴅᴍ",
-        viewOnce: true,
-      }, { quoted: m })
-      
-    } else if (/audio/.test(mime)) {
-      let media = await m.quoted.download()
-      await bad.sendMessage(botJid, {
-        audio: media,
-        mimetype: 'audio/mpeg',
-        ptt: true,
+        caption: '✅ ᴠɪᴇᴡ ᴏɴᴄᴇ ɪᴍᴀɢᴇ sᴇɴᴛ ᴛᴏ ʙᴏᴛ ᴅᴍ',
         viewOnce: true
-      }, { quoted: m })
-      
+      })
+    } else if (mime.startsWith('video/')) {
+      await bad.sendMessage(botDm, {
+        video: media,
+        caption: '✅ ᴠɪᴇᴡ ᴏɴᴄᴇ ᴠɪᴅᴇᴏ sᴇɴᴛ ᴛᴏ ʙᴏᴛ ᴅᴍ',
+        viewOnce: true
+      })
+    } else if (mime.startsWith('audio/')) {
+      // WhatsApp does not support viewOnce on audio payloads reliably.
+      await bad.sendMessage(botDm, {
+        audio: media,
+        mimetype: mime || 'audio/ogg; codecs=opus',
+        ptt: true
+      })
     } else {
-      reply(`❌ ᴜɴsᴜᴘᴘᴏʀᴛᴇᴅ ᴍᴇᴅɪᴀ ᴛʏᴘᴇ!\nʀᴇᴘʟʏ ᴛᴏ ᴀɴ ɪᴍᴀɢᴇ, ᴠɪᴅᴇᴏ, ᴏʀ ᴀᴜᴅɪᴏ ᴡɪᴛʜ *${prefix + command}*`)
+      return reply(`❌ ᴜɴsᴜᴘᴘᴏʀᴛᴇᴅ ᴍᴇᴅɪᴀ ᴛʏᴘᴇ!\nʀᴇᴘʟʏ ᴛᴏ ᴀɴ ɪᴍᴀɢᴇ, ᴠɪᴅᴇᴏ, ᴏʀ ᴀᴜᴅɪᴏ ᴡɪᴛʜ *${prefix + command}*`)
     }
   } catch (err) {
-    console.error('ᴇʀʀᴏʀ ᴘʀᴏᴄᴇssɪɴɢ ᴍᴇᴅɪᴀ:', err)
-    reply(`ғᴀɪʟᴇᴅ ᴛᴏ ᴘʀᴏᴄᴇss ᴍᴇᴅɪᴀ. ᴘʟᴇᴀsᴇ ᴛʀʏ ᴀɢᴀɪɴ.`)
+    console.error('ᴠᴠ ᴍᴇᴅɪᴀ ᴇʀʀᴏʀ:', err)
+    return reply(`❌ ᴠᴠ ғᴀɪʟᴇᴅ: ${err.message || 'media processing error'}`)
   }
 }
 break
