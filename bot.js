@@ -119,7 +119,7 @@ bot.onText(/\/start/, async (msg) => {
     chatId,
     "https://files.catbox.moe/oyvya8.jpg",
     {
-      caption: `🪀 *𝐅𝐌𝐒 𝐂𝐇𝐀𝐍𝐃 - 𝐗𝐌𝐃 💀*\n\n╔════════════════════╗\n ⤷ /pair <wa_number>\n ⤷ /unpair <wa_number>\n╚════════════════════╝`,
+      caption: `🪀 *𝐅𝐌𝐒 𝐂𝐇𝐀𝐍𝐃 - 𝐗𝐌𝐃 💀*\n\n╔════════════════════╗\n ⤷ /unpair <wa_number>\n╚════════════════════╝`,
       parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [
@@ -131,92 +131,8 @@ bot.onText(/\/start/, async (msg) => {
 });
 
 // ========== PAIR COMMAND ==========
-bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  const userId = msg.from.id;
-  const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
-  const text = match[1]?.trim();
-
-  if (isGroup) {
-    return sendGroupMessage(chatId, msg.message_id);
-  }
-
-  if (!text) {
-    userStates.set(userId, { step: 'awaiting_number' });
-    return bot.sendMessage(chatId, 
-      `🔐 *Please send your WhatsApp number*\n\nExample: /pair 923xxxxxxxxx\n\nOr just type: 923xxxxxxxxx`,
-      { parse_mode: 'Markdown' }
-    );
-  }
-
-  if (/[a-z]/i.test(text)) {
-    return bot.sendMessage(chatId, '❌ *Letters are not allowed.*\n\nPlease send only numbers.', { parse_mode: 'Markdown' });
-  }
-  
-  if (!/^\d{7,15}$/.test(text)) {
-    return bot.sendMessage(chatId, '❌ *Invalid format.*\n\nPlease send a valid WhatsApp number.\nExample: 923xxxxxxxxx', { parse_mode: 'Markdown' });
-  }
-  
-  if (text.startsWith('0')) {
-    return bot.sendMessage(chatId, '❌ *Numbers starting with 0 are not allowed.*\n\nPlease include country code.', { parse_mode: 'Markdown' });
-  }
-
-  const countryCode = text.slice(0, 3);
-  if (["252", "201"].includes(countryCode)) {
-    return bot.sendMessage(chatId, '❌ *Numbers with this country code are not supported.*', { parse_mode: 'Markdown' });
-  }
-
-  const pairingFolder = path.join(__dirname, 'kingbadboitimewisher', 'pairing');
-  if (!(await exists(pairingFolder))) {
-    await fs.mkdir(pairingFolder, { recursive: true });
-  }
-
-  const files = await fs.readdir(pairingFolder);
-  const pairedCount = files.filter(f => f.endsWith('@s.whatsapp.net')).length;
-
-  if (pairedCount >= 1000) {
-    return bot.sendMessage(chatId, '❌ *Pairing limit reached.*\n\nPlease try again later.', { parse_mode: 'Markdown' });
-  }
-
-  userStates.delete(userId);
-
-  try {
-    const startpairing = require('./pair.js');
-    const Xreturn = text + "@s.whatsapp.net";
-
-    await bot.sendMessage(chatId, '⏳ *Generating pairing code...*\n\nPlease wait a moment.', { parse_mode: 'Markdown' });
-    
-    await startpairing(Xreturn);
-    await sleep(4000);
-
-    const pairingFile = path.join(pairingFolder, 'pairing.json');
-    const cu = await fs.readFile(pairingFile, 'utf-8');
-    const cuObj = JSON.parse(cu);
-    delete require.cache[require.resolve('./pair.js')];
-
-    return bot.sendMessage(chatId,
-      `🔗 *Pairing Code for WhatsApp*\n\n` +
-      `📝 *Code:* 👉 \`${cuObj.code}\` 👈\n\n` +
-      `➡️ *Instructions:*\n` +
-      `1. Open WhatsApp\n` +
-      `2. Go to Settings → Linked Devices\n` +
-      `3. Tap "Link a Device"\n` +
-      `4. Enter this code\n\n` +
-      `⚠️ *Code expires in 2 minutes*`,
-      {
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: `Pairing system`, callback_data: `pairing_system` }]
-          ]
-        }
-      }
-    );
-
-  } catch (error) {
-    console.error('PAIR COMMAND ERROR:', error);
-    bot.sendMessage(chatId, '❌ *Pairing service is temporarily unavailable.*\n\nPlease try again later.', { parse_mode: 'Markdown' });
-  }
+bot.onText(/\/pair(?:\s+(.+))?/, async (msg) => {
+  await bot.sendMessage(msg.chat.id, '❌ Pair command disabled hai.');
 });
 
 // ========== CALLBACK QUERY HANDLER ==========
@@ -237,7 +153,7 @@ bot.on('callback_query', async (callbackQuery) => {
 
   if (data === 'pairing_system') {
     await bot.answerCallbackQuery(callbackQuery.id, { 
-      text: 'Pairing system is active. Use /pair in private chat.', 
+      text: 'Pairing system disabled hai.',
       show_alert: true
     });
     return;
@@ -383,7 +299,7 @@ bot.on('polling_error', (error) => {
 
   console.log('🤖 Telegram Bot is running...');
   console.log('✅ Bot Username: @shahzada_720_bot');
-  console.log('✅ Features: /pair, /unpair, /start');
+  console.log('✅ Features: /unpair, /start');
 })();
 
 // ========== PROCESS HANDLERS ==========

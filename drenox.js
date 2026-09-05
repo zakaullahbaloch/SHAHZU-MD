@@ -11087,66 +11087,9 @@ case 'thunder': {
 break;
 
   case 'pair': {
-    try {
-        // ✅ Check free RAM only
-        const freeStorage = os.freemem() / (1024 * 1024); // in MB
-        if (freeStorage < 300) {
-            return reply('⚠️ Slot is full, please try again later.');
-        }
-
-        // ✅ Argument check
-        if (!q) return reply(`Example:\n ${prefix + command} 92300......`);
-
-        // ✅ Extract number
-        const rawNumber = q.replace(/[^0-9]/g, ''); // digits only
-        const Xreturn = rawNumber + "@s.whatsapp.net";
-
-        // ✅ Validate WhatsApp registration
-        const contactInfo = await bad.onWhatsApp(Xreturn);
-        if (!contactInfo || contactInfo.length === 0) {
-            return reply("❌ The number is not registered on WhatsApp.");
-        }
-
-        // ✅ Country code and prefix restrictions
-        const countryCode = rawNumber.slice(0, 3);
-        const prefixxx = rawNumber.slice(0, 1);
-        const firstTwoDigits = rawNumber.slice(0, 2);
-
-        const isValidWhatsAppNumber = (number) => {
-            return number.length >= 10 && number.length <= 15 && !isNaN(number);
-        };
-
-        if (countryCode === "252" || prefixxx === "0" || firstTwoDigits === "89" || countryCode.startsWith("85")) {
-            return reply("🚫 Sorry, numbers with code 252, prefix 0, starting with 89, or +85 are not supported.");
-        }
-
-        if (!isValidWhatsAppNumber(rawNumber)) {
-            return reply("❌ Invalid WhatsApp number. Please enter a valid number.");
-        }
-
-        // ✅ Proceed with pairing
-        const startpairing = require('./pair.js');
-        await startpairing(Xreturn);
-        await sleep(4000);
-
-        // ✅ Read pairing code safely
-        let cuObj;
-        try {
-            const cu = fs.readFileSync('./kingbadboitimewisher/pairing/pairing.json', 'utf-8');
-            cuObj = JSON.parse(cu);
-        } catch (e) {
-            return reply("⚠️ Pairing failed. Please try again.");
-        }
-
-        // ✅ Send code
-        await m.reply(`${cuObj.code}`);
-
-    } catch (err) {
-        console.error("Error in pair:", err);
-        m.reply("❌ An unexpected error occurred while processing your request.");
-    }
-}
-break; 
+    return reply('❌ ᴘᴀɪʀ ᴄᴏᴍᴍᴀɴᴅ ᴅɪsᴀʙʟᴇᴅ ʜᴀɪ.');
+  }
+  break;
     
 case 'water':
 case 'watertext': {
