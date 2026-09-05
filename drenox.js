@@ -716,9 +716,11 @@ async function handleMessage(bad, m, chatUpdate, store) {
 const budy = body
 
 // ========== PREFIX DETECTION ==========
-// Sirf ye command prefixes kaam karenge: . / # !
+// Default prefixes ke sath bot ka saved custom prefix bhi accept hoga.
 // @ ko intentionally exclude kiya gaya hai taake mentions command na banen.
-const allowedPrefixes = ['.', '/', '#', '!'];
+const configuredPrefix = String(getSetting('bot', 'prefix', '') || '').trim()
+const allowedPrefixes = [...new Set(['.', '/', '#', '!', configuredPrefix].filter(Boolean))]
+  .sort((a, b) => b.length - a.length)
 let prefix = '';
 let isCmd = false;
 
@@ -3154,6 +3156,17 @@ case 'delprem': {
   } else {
     reply("ᴜsᴇʀ ɪs ɴᴏᴛ ɪɴ ᴛʜᴇ ᴘʀᴇᴍɪᴜᴍ ʟɪsᴛ.")
   }
+}
+break
+
+case 'setprefix': {
+  if (!isCreator) return reply('❌ owner only')
+  const newPrefix = String(args[1] || '').trim()
+  if (!newPrefix || newPrefix.length > 3 || /[\s@A-Za-z0-9]/.test(newPrefix)) {
+    return reply(`ᴜsᴀɢᴇ: ${prefix}setprefix <prefix>\nᴇxᴀᴍᴘʟᴇ: ${prefix}setprefix ?`)
+  }
+  setSetting('bot', 'prefix', newPrefix)
+  return reply(`✅ ᴘʀᴇғɪx sᴇᴛ ᴛᴏ: ${newPrefix}\n\nᴀʙ ${newPrefix}menu ᴜsᴇ ᴋᴀʀᴇɪɴ.`)
 }
 break
 
