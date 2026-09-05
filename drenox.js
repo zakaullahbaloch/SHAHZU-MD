@@ -12806,6 +12806,34 @@ function setupEventListeners(bad, store) {
                 }
             }
             
+            // Anti-modification protection: restore unauthorized promote/demote changes.
+            if ((action === 'promote' || action === 'demote') && getSetting(id, 'antimod', false)) {
+                try {
+                    const metadata = await bad.groupMetadata(id);
+                    const botParticipant = metadata.participants.find(p => isBotParticipant(p, bad));
+                    if (!botParticipant || !botParticipant.admin) return;
+
+                    const actor = update.author || update.actor || update.from || update.by;
+                    for (const participant of participants) {
+                        if (action === 'demote') {
+                            await bad.groupParticipantsUpdate(id, [participant], 'promote');
+                        } else {
+                            await bad.groupParticipantsUpdate(id, [participant], 'demote');
+                        }
+                    }
+                    if (actor && !isBotParticipant(actor, bad)) {
+                        await bad.groupParticipantsUpdate(id, [actor], 'demote').catch(() => {});
+                    }
+                    await bad.sendMessage(id, {
+                        text: `🛡️ ᴀɴᴛɪ-ᴍᴏᴅ ᴛʀɪɢɢᴇʀᴇᴅ: ᴜɴᴀᴜᴛʜᴏʀɪᴢᴇᴅ ${action} ʀᴇᴠᴇʀᴛᴇᴅ.`
+                    });
+                    await updateAdminState(bad, id);
+                    return;
+                } catch (err) {
+                    console.error('Anti-modification error:', err.message);
+                }
+            }
+
             // Anti-Hijack & Protected Admins
             if (action === 'demote') {
                 const botJid = bad.user.id;
