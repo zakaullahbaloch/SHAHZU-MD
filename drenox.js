@@ -1907,8 +1907,9 @@ case 'menu2': {
   const menuText = `
 ╭━━〔 ☠️ ᴀʟʟ ᴄᴏᴍᴍᴀɴᴅs ☠️ 〕━━┈⊷
 ┃✮╭────────────────
-┃✮│ 👤 ᴜsᴇʀɴᴀᴍᴇ: *${menuUsername}*
+┃✮│ 👤 ᴜsᴇʀ: *${menuUsername}*
 ┃✮│ 🤖 ʙᴏᴛ ɴᴀᴍᴇ: *CHAND-XMD*
+┃✮│ ⚙️ ᴍᴏᴅᴇ: *${bad.public ? 'PUBLIC' : 'PRIVATE'}*
 ┃✮│ 👑 ᴏᴡɴᴇʀ: *⸔𝐅𝐌𝐒 𝐂𝐇𝐀𝐍𝐃⸕*
 ┃✮│ 📦 ᴠᴇʀsɪᴏɴ: *v${BOT_VERSION}*
 ┃✮│ ⏱️ ᴜᴘᴛɪᴍᴇ: *${uptime}*
@@ -2487,8 +2488,9 @@ case 'listmenu': {
   const menuText = `
 ╭━━〔 ☠️ ᴀʟʟ ᴄᴏᴍᴍᴀɴᴅs ☠️ 〕━━┈⊷
 ┃✮╭────────────────
-┃✮│ 👤 ᴜsᴇʀɴᴀᴍᴇ: *${menuUsername}*
+┃✮│ 👤 ᴜsᴇʀ: *${menuUsername}*
 ┃✮│ 🤖 ʙᴏᴛ ɴᴀᴍᴇ: *CHAND-XMD*
+┃✮│ ⚙️ ᴍᴏᴅᴇ: *${bad.public ? 'PUBLIC' : 'PRIVATE'}*
 ┃✮│ 👑 ᴏᴡɴᴇʀ: *⸔𝐅𝐌𝐒 𝐂𝐇𝐀𝐍𝐃⸕*
 ┃✮│ 📦 ᴠᴇʀsɪᴏɴ: *v${BOT_VERSION}*
 ┃✮│ ⏱️ ᴜᴘᴛɪᴍᴇ: *${uptime}*
