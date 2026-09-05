@@ -1203,6 +1203,13 @@ ${boardDisplay}
 // ═══════════════════════════════════════
     // COMMAND HANDLER START
     // ═══════════════════════════════════════
+    if (isCmd && command) {
+      try {
+        await bad.sendMessage(from, { react: { text: '⏳', key: m.key } })
+      } catch (reactionError) {
+        console.error('Command loading reaction error:', reactionError.message)
+      }
+    }
     switch(command) {
 
 
