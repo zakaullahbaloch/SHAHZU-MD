@@ -13553,30 +13553,29 @@ function setupEventListeners(bad, store) {
                 setTimeout(() => global.antiLinkProcessing.delete(messageKey), 120000)
 
                 const enforceAntiLink = async () => {
-                    const deleteKey = {
-                        remoteJid: chatId,
-                        fromMe: Boolean(msg.key.fromMe),
-                        id: msg.key.id,
-                        participant: msg.key.participant || msg.participant
-                    }
+                    // Preserve Baileys' original key fields. Rebuilding a group
+                    // key can drop device/LID metadata and make deletion rejected.
+                    const participant = msg.key.participant || msg.participant || undefined
+                    const deleteKeys = [
+                        { ...msg.key, remoteJid: chatId, fromMe: false, participant },
+                        { remoteJid: chatId, fromMe: false, id: msg.key.id, participant }
+                    ]
                     let deleted = false
                     let deleteError = null
-                    // Fast first attempt, then short retries for WhatsApp race/errors.
-                    for (let attempt = 1; attempt <= 6 && !deleted; attempt++) {
+                    // Retry immediately with both exact-key variants. Never send a
+                    // warning fallback: delete mode must stay delete-only and silent.
+                    for (let attempt = 1; attempt <= 8 && !deleted; attempt++) {
+                        const deleteKey = deleteKeys[(attempt - 1) % deleteKeys.length]
                         try {
                             await bad.sendMessage(chatId, { delete: deleteKey })
                             deleted = true
                         } catch (error) {
                             deleteError = error
-                            if (attempt < 6) await new Promise(resolve => setTimeout(resolve, Math.min(150 * attempt, 750)))
+                            if (attempt < 8) await new Promise(resolve => setTimeout(resolve, Math.min(100 * attempt, 500)))
                         }
                     }
                     if (!deleted) {
-                        console.error(`Anti-link delete failed after 6 attempts: ${deleteError?.message || 'unknown error'}`)
-                        await bad.sendMessage(chatId, {
-                            text: `⚠️ @${offender.split('@')[0]} ka link delete nahi ho saka. Bot ko group admin banayein.`,
-                            mentions: [offender]
-                        }).catch(() => {})
+                        console.error(`Anti-link delete failed after 8 attempts: ${deleteError?.message || 'unknown error'}`)
                     }
 
                     if (mode === 'kick') {
@@ -13593,7 +13592,6 @@ function setupEventListeners(bad, store) {
                         if (!global.antilinkWarnings) global.antilinkWarnings = {}
                         if (!global.antilinkWarnings[chatId]) global.antilinkWarnings[chatId] = {}
                         const warnings = (global.antilinkWarnings[chatId][offender] || 0) + 1
-                        global.antilinkWarnings[chatId][offender] = warnings
                         global.antilinkWarnings[chatId][offender] = warnings
                         if (warnings >= 3) {
                             try {
