@@ -3782,15 +3782,14 @@ break
 
 case 'sudolist': {
   if (!isCreator) return reply('❌ ᴏᴡɴᴇʀ ᴏʀ sᴜᴅᴏ ᴏɴʟʏ.')
-  const sudoNumbers = owner
-    .filter(item => !isSameUser(item, botJid))
+  const sudoNumbers = [...new Set(owner
+    .filter(item => !isSameUser(item, botJid) && !areJidsSameUser(item, botJid))
     .map(item => normalizeJid(item))
-    .filter(Boolean)
-  if (!sudoNumbers.length) return reply('📋 ᴛʜɪs ʙᴏᴛ ᴋᴇ sᴜᴅᴏ ʟɪsᴛ ᴍᴇɪɴ ᴋᴏɪ ɴᴜᴍʙᴇʀ ɴᴀʜɪ ʜᴀɪ.')
-  const lines = sudoNumbers.map((number, index) => `${index + 1}. @${number}`)
+    .filter(number => /^\d+$/.test(number)))]
+  if (!sudoNumbers.length) return reply('📋 ɪs ʙᴏᴛ ᴋɪ sᴜᴅᴏ ʟɪsᴛ ᴍᴇɪɴ ᴋᴏɪ ɴᴜᴍʙᴇʀ ɴᴀʜɪ ʜᴀɪ.')
+  const lines = sudoNumbers.map((number, index) => `${index + 1}. ${number}`)
   return bad.sendMessage(m.chat, {
-    text: `╭━━〔 📋 sᴜᴅᴏ ʟɪsᴛ 〕━━┈⊷\n┃ ʙᴏᴛ: @${botNumber}\n┃\n${lines.join('\n')}\n╰━━━━━━━━━━━━━━━┈⊷`,
-    mentions: [botJid, ...sudoNumbers.map(number => `${number}@s.whatsapp.net`)]
+    text: `╭━━〔 📋 sᴜᴅᴏ ʟɪsᴛ 〕━━┈⊷\n${lines.join('\n')}\n╰━━━━━━━━━━━━━━━┈⊷`
   }, { quoted: m })
 }
 break
