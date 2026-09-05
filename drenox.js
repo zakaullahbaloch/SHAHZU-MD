@@ -5813,7 +5813,8 @@ case "antigm": {
     }
     if (['delete', 'warn', 'kick'].includes(antigmValue)) {
         setSetting(m.chat, 'antigmAction', antigmValue);
-        return m.reply(`✅ ᴀɴᴛɪ-ɢʀᴏᴜᴘ-ᴍᴇɴᴛɪᴏɴ ᴀᴄᴛɪᴏɴ: ${antigmValue}`);
+        setSetting(m.chat, 'antigm', true);
+        return m.reply(`✅ ᴀɴᴛɪ-ɢʀᴏᴜᴘ-ᴍᴇɴᴛɪᴏɴ ᴀᴄᴛɪᴏɴ: ${antigmValue}\n🟢 ᴀɴᴛɪɢᴍ ᴀᴜᴛᴏ-ᴇɴᴀʙʟᴇᴅ`);
     }
     if (antigmValue === 'ignore') {
         if (!antigmArgs) return m.reply(`ᴜsᴇ: ${prefix}antigm ignore <ᴛᴇxᴛ>\nᴜsᴇ: ${prefix}antigm ignore off ᴛᴏ ᴄʟᴇᴀʀ`);
