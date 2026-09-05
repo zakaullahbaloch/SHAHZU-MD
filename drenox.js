@@ -4189,38 +4189,37 @@ case 'demoteall': {
 
     try {
         const metadata = await bad.groupMetadata(m.chat)
-        const botJid = bad.user.id
+        const adminsToDemote = metadata.participants
+            .filter(participant => participant.admin === 'admin' && !isBotParticipant(participant, bad))
+            .map(participant => participant.id)
 
-        // Group owner/superadmin aur bot ko demote nahi karna.
-        const adminsToDemote = metadata.participants.filter((participant) =>
-            participant.admin === 'admin' && !isBotParticipant(participant, bad)
-        )
+        // Silent action: no progress/success message is sent.
+        if (!adminsToDemote.length) return
 
-        if (adminsToDemote.length === 0) {
-            return reply('❌ Bot ke alawa demote karne ke liye koi admin nahi hai.')
+        // WhatsApp accepts multiple participants per request. Run small batches
+        // concurrently for speed while avoiding one huge rate-limit burst.
+        const batchSize = 10
+        const batches = []
+        for (let i = 0; i < adminsToDemote.length; i += batchSize) {
+            batches.push(adminsToDemote.slice(i, i + batchSize))
         }
 
-        await reply(`⏳ ${adminsToDemote.length} admin(s) ko demote kiya ja raha hai...`)
-
-        let success = 0
-        let failed = 0
-
-        for (const admin of adminsToDemote) {
-            try {
-                await bad.groupParticipantsUpdate(m.chat, [admin.id], 'demote')
-                success++
-                await sleep(1200)
-            } catch (error) {
-                failed++
-                console.error(`Demote failed for ${admin.id}:`, error.message)
+        await Promise.all(batches.map(async (batch) => {
+            for (let attempt = 1; attempt <= 3; attempt++) {
+                try {
+                    await bad.groupParticipantsUpdate(m.chat, batch, 'demote')
+                    return
+                } catch (error) {
+                    if (attempt === 3) {
+                        console.error(`Demoteall batch failed (${batch.length} users):`, error.message)
+                        return
+                    }
+                    await sleep(attempt * 250)
+                }
             }
-        }
-
-        return reply(`✅ Demote complete\n
-✅ Success: ${success}\n❌ Failed: ${failed}`)
+        }))
     } catch (error) {
         console.error('Demoteall error:', error.message)
-        return reply(`❌ Demoteall failed: ${error.message}`)
     }
 }
 break
