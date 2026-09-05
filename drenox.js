@@ -6227,18 +6227,19 @@ case "antilink": {
 }
 break;
 
-case "antigm": {
+case "antigm":
+case "antigroupmention": {
     if (!m.isGroup) return m.reply("ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ᴏɴʟʏ ᴡᴏʀᴋs ɪɴ ɢʀᴏᴜᴘs.");
     if (!isAdmins && !isCreator) return m.reply("ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴍᴀɴᴀɢᴇ ᴀɴᴛɪ-ɢʀᴏᴜᴘ-ᴍᴇɴᴛɪᴏɴ.");
     const antigmValue = (args[1] || '').toLowerCase();
     const antigmArgs = args.slice(2).join(' ').trim().toLowerCase();
-    const antigmUsage = `ᴜsᴀɢᴇ: ${prefix}antigm on/off [delete|warn|kick] | ${prefix}antigm delete/warn/kick | ${prefix}antigm ignore <ᴛᴇxᴛ>`;
+    const antigmUsage = `ᴜsᴀɢᴇ: ${prefix}antigm on [delete|warn|kick] | ${prefix}antigm off\nᴏʀ: ${prefix}antigroupmention on [delete|warn|kick]`;
     if (!antigmValue) return m.reply(antigmUsage);
     if (['on', 'off'].includes(antigmValue)) {
         if (antigmValue === 'on' && antigmArgs && !['delete', 'warn', 'kick'].includes(antigmArgs)) return m.reply(antigmUsage);
         if (antigmValue === 'on' && antigmArgs) setSetting(m.chat, 'antigmAction', antigmArgs);
         setSetting(m.chat, 'antigm', antigmValue === 'on');
-        const selectedAction = getSetting(m.chat, 'antigmAction', 'delete');
+        const selectedAction = getSetting(m.chat, 'antigmAction', 'warn');
         return m.reply(antigmValue === 'on'
             ? `✅ ᴀɴᴛɪ-ɢʀᴏᴜᴘ-ᴍᴇɴᴛɪᴏɴ ᴇɴᴀʙʟᴇᴅ.\n⚙️ ᴀᴄᴛɪᴏɴ: ${selectedAction}`
             : '❌ ᴀɴᴛɪ-ɢʀᴏᴜᴘ-ᴍᴇɴᴛɪᴏɴ ᴅɪsᴀʙʟᴇᴅ.');
@@ -6254,7 +6255,7 @@ case "antigm": {
         return m.reply(antigmArgs.toLowerCase() === 'off' ? '✅ ᴀɴᴛɪɢᴍ ɪɢɴᴏʀᴇ ғɪʟᴛᴇʀ ᴄʟᴇᴀʀᴇᴅ.' : `✅ ɪɢɴᴏʀᴇ ғɪʟᴛᴇʀ sᴇᴛ: ${antigmArgs}`);
     }
     if (antigmValue === 'status' || antigmValue === 'info') {
-        return m.reply(`🛡️ ᴀɴᴛɪɢᴍ: ${getSetting(m.chat, 'antigm', false) ? 'ᴏɴ' : 'ᴏғғ'}\n⚙️ ᴀᴄᴛɪᴏɴ: ${getSetting(m.chat, 'antigmAction', 'delete')}\n🔕 ɪɢɴᴏʀᴇ: ${getSetting(m.chat, 'antigmFilter', '') || 'ɴᴏɴᴇ'}`);
+        return m.reply(`🛡️ ᴀɴᴛɪɢᴍ: ${getSetting(m.chat, 'antigm', false) ? 'ᴏɴ' : 'ᴏғғ'}\n⚙️ ᴀᴄᴛɪᴏɴ: ${getSetting(m.chat, 'antigmAction', 'warn')}\n🔕 ɪɢɴᴏʀᴇ: ${getSetting(m.chat, 'antigmFilter', '') || 'ɴᴏɴᴇ'}`);
     }
     return m.reply(antigmUsage);
 }
