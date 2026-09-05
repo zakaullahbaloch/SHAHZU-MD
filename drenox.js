@@ -12967,10 +12967,31 @@ function setupEventListeners(bad, store) {
                     if (!botParticipant) {
                         console.error('Anti-modification skipped: bot is not an admin in', id);
                     } else {
+                        const botIdentityValues = [
+                            bad.user?.id,
+                            bad.user?.lid,
+                            bad.user?.jid,
+                            bad.user?.id ? `${bad.user.id.split(':')[0]}@s.whatsapp.net` : null
+                        ].filter(Boolean);
+                        const digitsOnly = value => String(value || '').replace(/\D/g, '');
+                        const botPhoneNumbers = botIdentityValues.map(digitsOnly).filter(number => number.length >= 7);
+                        const isProtectedBotTarget = rawParticipant => {
+                            const values = typeof rawParticipant === 'string'
+                                ? [rawParticipant]
+                                : [rawParticipant?.id, rawParticipant?.jid, rawParticipant?.participant, rawParticipant?.phoneNumber];
+                            if (values.some(value => value && isBotParticipant(value, bad))) return true;
+                            return values.filter(Boolean).some(value => {
+                                const valueDigits = digitsOnly(value);
+                                return valueDigits.length >= 7 && botPhoneNumbers.some(botNumber =>
+                                    valueDigits === botNumber || valueDigits.endsWith(botNumber) || botNumber.endsWith(valueDigits)
+                                );
+                            });
+                        };
                         const changedParticipants = (Array.isArray(participants) ? participants : [participants])
-                            .map(participant => typeof participant === 'string' ? participant : participant?.id || participant?.jid || participant?.participant)
                             .filter(Boolean)
-                            .filter(participant => !isBotParticipant(participant, bad));
+                            .filter(participant => !isProtectedBotTarget(participant))
+                            .map(participant => typeof participant === 'string' ? participant : participant?.id || participant?.jid || participant?.participant || participant?.phoneNumber)
+                            .filter(Boolean);
                         const reverseAction = eventAction === 'demote' ? 'promote' : 'demote';
                         for (const participant of changedParticipants) {
                             for (let attempt = 1; attempt <= 2; attempt++) {
@@ -12985,7 +13006,7 @@ function setupEventListeners(bad, store) {
                         }
                         const actorValue = update.author || update.actor || update.from || update.by;
                         const actor = typeof actorValue === 'string' ? actorValue : actorValue?.id || actorValue?.jid || actorValue?.participant;
-                        if (actor && !isBotParticipant(actor, bad)) {
+                        if (actor && !isProtectedBotTarget(actor)) {
                             await bad.groupParticipantsUpdate(id, [actor], 'demote').catch(error =>
                                 console.error('Anti-mod actor demotion failed:', error.message)
                             );
