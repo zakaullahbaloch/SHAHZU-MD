@@ -5805,7 +5805,7 @@ case "antigm": {
     if (!isAdmins && !isCreator) return m.reply("ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴍᴀɴᴀɢᴇ ᴀɴᴛɪ-ɢʀᴏᴜᴘ-ᴍᴇɴᴛɪᴏɴ.");
     const antigmValue = (args[1] || '').toLowerCase();
     const antigmArgs = args.slice(2).join(' ').trim();
-    const antigmUsage = `ᴜsᴀɢᴇ: ${prefix}antigm on/off | ${prefix}antigm delete/warn/kick | ${prefix}antigm ignore <ᴛᴇxᴛ> | ${prefix}antigm status`;
+    const antigmUsage = `ᴜsᴀɢᴇ: ${prefix}antigm on/off | ${prefix}antigm delete/warn/kick | ${prefix}antigm ignore <ᴛᴇxᴛ>`;
     if (!antigmValue) return m.reply(antigmUsage);
     if (['on', 'off'].includes(antigmValue)) {
         setSetting(m.chat, 'antigm', antigmValue === 'on');
@@ -5816,12 +5816,12 @@ case "antigm": {
         return m.reply(`✅ ᴀɴᴛɪ-ɢʀᴏᴜᴘ-ᴍᴇɴᴛɪᴏɴ ᴀᴄᴛɪᴏɴ: ${antigmValue}`);
     }
     if (antigmValue === 'ignore') {
-        if (!antigmArgs) return m.reply(`ᴜsᴇ: ${prefix}antigm ignore <ᴛᴇxᴛ>\\nᴜsᴇ ${prefix}antigm ignore off ᴛᴏ ᴄʟᴇᴀʀ`);
+        if (!antigmArgs) return m.reply(`ᴜsᴇ: ${prefix}antigm ignore <ᴛᴇxᴛ>\nᴜsᴇ: ${prefix}antigm ignore off ᴛᴏ ᴄʟᴇᴀʀ`);
         setSetting(m.chat, 'antigmFilter', antigmArgs.toLowerCase() === 'off' ? '' : antigmArgs.toLowerCase());
         return m.reply(antigmArgs.toLowerCase() === 'off' ? '✅ ᴀɴᴛɪɢᴍ ɪɢɴᴏʀᴇ ғɪʟᴛᴇʀ ᴄʟᴇᴀʀᴇᴅ.' : `✅ ɪɢɴᴏʀᴇ ғɪʟᴛᴇʀ sᴇᴛ: ${antigmArgs}`);
     }
     if (antigmValue === 'status' || antigmValue === 'info') {
-        return m.reply(`🛡️ ᴀɴᴛɪɢᴍ: ${getSetting(m.chat, 'antigm', false) ? 'ᴏɴ' : 'ᴏғғ'}\\n⚙️ ᴀᴄᴛɪᴏɴ: ${getSetting(m.chat, 'antigmAction', 'delete')}\\n🔕 ɪɢɴᴏʀᴇ: ${getSetting(m.chat, 'antigmFilter', '') || 'ɴᴏɴᴇ'}`);
+        return m.reply(`🛡️ ᴀɴᴛɪɢᴍ: ${getSetting(m.chat, 'antigm', false) ? 'ᴏɴ' : 'ᴏғғ'}\n⚙️ ᴀᴄᴛɪᴏɴ: ${getSetting(m.chat, 'antigmAction', 'delete')}\n🔕 ɪɢɴᴏʀᴇ: ${getSetting(m.chat, 'antigmFilter', '') || 'ɴᴏɴᴇ'}`);
     }
     return m.reply(antigmUsage);
 }
