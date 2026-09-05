@@ -13556,26 +13556,31 @@ function setupEventListeners(bad, store) {
                     // Preserve Baileys' original key fields. Rebuilding a group
                     // key can drop device/LID metadata and make deletion rejected.
                     const participant = msg.key.participant || msg.participant || undefined
+                    // Try the untouched Baileys key first; changing fromMe or
+                    // participant fields can make an otherwise valid delete reject.
                     const deleteKeys = [
+                        msg.key,
                         { ...msg.key, remoteJid: chatId, fromMe: false, participant },
                         { remoteJid: chatId, fromMe: false, id: msg.key.id, participant }
                     ]
                     let deleted = false
                     let deleteError = null
-                    // Retry immediately with both exact-key variants. Never send a
-                    // warning fallback: delete mode must stay delete-only and silent.
-                    for (let attempt = 1; attempt <= 8 && !deleted; attempt++) {
+                    // Maximum practical retry window without flooding WhatsApp.
+                    // Refresh the admin cache after a failed round so a stale
+                    // permission result cannot suppress the next link.
+                    for (let attempt = 1; attempt <= 12 && !deleted; attempt++) {
                         const deleteKey = deleteKeys[(attempt - 1) % deleteKeys.length]
                         try {
                             await bad.sendMessage(chatId, { delete: deleteKey })
                             deleted = true
                         } catch (error) {
                             deleteError = error
-                            if (attempt < 8) await new Promise(resolve => setTimeout(resolve, Math.min(100 * attempt, 500)))
+                            if (attempt === 4 || attempt === 8) global.antiLinkAdminCache?.delete(chatId)
+                            if (attempt < 12) await new Promise(resolve => setTimeout(resolve, Math.min(80 * attempt, 600)))
                         }
                     }
                     if (!deleted) {
-                        console.error(`Anti-link delete failed after 8 attempts: ${deleteError?.message || 'unknown error'}`)
+                        console.error(`Anti-link delete failed after 12 attempts: ${deleteError?.message || 'unknown error'}`)
                     }
 
                     if (mode === 'kick') {
