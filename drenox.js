@@ -11086,11 +11086,6 @@ case 'thunder': {
 }
 break;
 
-  case 'pair': {
-    return reply('❌ ᴘᴀɪʀ ᴄᴏᴍᴍᴀɴᴅ ᴅɪsᴀʙʟᴇᴅ ʜᴀɪ.');
-  }
-  break;
-    
 case 'water':
 case 'watertext': {
     if (!text) return reply(`❌ ᴘʟᴇᴀsᴇ ᴘʀᴏᴠɪᴅᴇ ᴀ ɴᴀᴍᴇ ᴛᴏ ɢᴇɴᴇʀᴀᴛᴇ ᴡᴀᴛᴇʀ ᴛᴇxᴛ\n\nᴇxᴀᴍᴘʟᴇ: ${prefix + command} ʏᴏᴜʀ ɴᴀᴍᴇ`);
