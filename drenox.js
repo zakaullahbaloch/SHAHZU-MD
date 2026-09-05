@@ -13368,7 +13368,38 @@ function setupEventListeners(bad, store) {
 
                 const offender = msg.key.participant || msg.participant
                 if (!offender) continue
-                await bad.sendMessage(chatId, { delete: msg.key })
+
+                // Prevent duplicate upsert listeners/retries from processing the same link.
+                if (!global.antiLinkProcessing) global.antiLinkProcessing = new Set()
+                const messageKey = `${chatId}:${msg.key.id}`
+                if (global.antiLinkProcessing.has(messageKey)) continue
+                global.antiLinkProcessing.add(messageKey)
+                setTimeout(() => global.antiLinkProcessing.delete(messageKey), 30000)
+
+                const deleteKey = {
+                    remoteJid: chatId,
+                    fromMe: false,
+                    id: msg.key.id,
+                    participant: msg.key.participant || msg.participant
+                }
+                let deleted = false
+                let deleteError = null
+                for (let attempt = 1; attempt <= 5 && !deleted; attempt++) {
+                    try {
+                        await bad.sendMessage(chatId, { delete: deleteKey })
+                        deleted = true
+                    } catch (error) {
+                        deleteError = error
+                        if (attempt < 5) await new Promise(resolve => setTimeout(resolve, attempt * 700))
+                    }
+                }
+                if (!deleted) {
+                    console.error(`Anti-link delete failed after 5 attempts: ${deleteError?.message || 'unknown error'}`)
+                    await bad.sendMessage(chatId, {
+                        text: `⚠️ @${offender.split('@')[0]} ka link delete nahi ho saka. Bot ko group admin banayein aur dobara try karein.`,
+                        mentions: [offender]
+                    }).catch(() => {})
+                }
 
                 if (mode === 'kick') {
                     await bad.groupParticipantsUpdate(chatId, [offender], 'remove')
