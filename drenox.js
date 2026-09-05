@@ -1374,7 +1374,6 @@ ${boardDisplay}
       'del',
       'delete',
       'deletingtext',
-      'delpremium',
       'delsudo',
       'demote',
       'demoteall',
@@ -3761,24 +3760,6 @@ case 'delsudo': {
   owner = owner.filter(item => !isSameUser(item, sudoJid))
   fs.writeFileSync('./allfunc/owner.json', JSON.stringify(owner, null, 2))
   reply(`✅ @${number} sᴜᴅᴏ ᴘᴇʀᴍɪssɪᴏɴ ʀᴇᴍᴏᴠᴇᴅ.`)
-}
-break
-
-case 'delpremium':
-case 'delprem': {
-  if (!isCreator) return reply("ᴏᴡɴᴇʀ ᴏɴʟʏ!")
-  if (!args[0]) return reply(`ᴜsᴀɢᴇ: ${prefix + command} 234xxx`)
-  
-  let number = qtext.split("|")[0].replace(/[^0-9]/g, '')
-  let indexPremium = premium.indexOf(number)
-  
-  if (indexPremium !== -1) {
-    premium.splice(indexPremium, 1)
-    fs.writeFileSync('./allfunc/premium.json', JSON.stringify(premium))
-    reply("sᴜᴄᴄᴇss! ᴜsᴇʀ ʀᴇᴍᴏᴠᴇᴅ ғʀᴏᴍ ᴘʀᴇᴍɪᴜᴍ ✅")
-  } else {
-    reply("ᴜsᴇʀ ɪs ɴᴏᴛ ɪɴ ᴛʜᴇ ᴘʀᴇᴍɪᴜᴍ ʟɪsᴛ.")
-  }
 }
 break
 
