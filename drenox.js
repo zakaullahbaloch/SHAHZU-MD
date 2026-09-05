@@ -3779,28 +3779,34 @@ break
 
 case 'setsudo': {
   if (!isBot) return reply('❌ sɪʀғ ʙᴏᴛ ɴᴜᴍʙᴇʀ sᴇᴛsᴜᴅᴏ ᴋᴀʀ sᴀᴋᴛᴀ ʜᴀɪ.')
-  if (!text) return reply(`ᴜsᴀɢᴇ: ${prefix}setsudo 234xxx`)
+  const mentionedTarget = m.mentionedJid?.[0]
+  const quotedTarget = m.quoted?.sender
   const number = text.replace(/[^0-9]/g, '')
-  if (!number || number.length < 7) return reply('❌ ᴠᴀʟɪᴅ ɴᴜᴍʙᴇʀ ᴅᴇɪɴ.')
-  const checkNumber = await bad.onWhatsApp(number + '@s.whatsapp.net')
-  if (!checkNumber.length) return reply('❌ ɪɴᴠᴀʟɪᴅ ɴᴜᴍʙᴇʀ!')
-  const sudoJid = number + '@s.whatsapp.net'
+  const sudoJid = mentionedTarget || quotedTarget || (number ? number + '@s.whatsapp.net' : '')
+  if (!sudoJid) return reply(`ᴜsᴀɢᴇ: ${prefix}setsudo 234xxx\nᴏʀ ɢʀᴏᴜᴘ ᴍᴇɴᴛɪᴏɴ/ʀᴇᴘʟʏ ᴛᴏ ᴛʜᴇ ᴜsᴇʀ`)
+  if (!mentionedTarget && !quotedTarget) {
+    if (!number || number.length < 7) return reply('❌ ᴠᴀʟɪᴅ ɴᴜᴍʙᴇʀ ᴅᴇɪɴ.')
+    const checkNumber = await bad.onWhatsApp(sudoJid)
+    if (!checkNumber.length) return reply('❌ ɪɴᴠᴀʟɪᴅ ɴᴜᴍʙᴇʀ!')
+  }
   if (!owner.some(item => isSameUser(item, sudoJid))) {
     owner.push(sudoJid)
     fs.writeFileSync(ownerStoreFile, JSON.stringify(owner, null, 2))
   }
-  reply(`✅ @${number} ᴋᴏ sᴜᴅᴏ ᴘᴇʀᴍɪssɪᴏɴ ᴅᴇ ᴅɪ ɢᴀɪ.`)
+  reply(`✅ @${normalizeJid(sudoJid)} ᴋᴏ sᴜᴅᴏ ᴘᴇʀᴍɪssɪᴏɴ ᴅᴇ ᴅɪ ɢᴀɪ.`)
 }
 break
 
 case 'delsudo': {
   if (!isBot) return reply('❌ sɪʀғ ʙᴏᴛ ɴᴜᴍʙᴇʀ sᴜᴅᴏ ʀᴇᴍᴏᴠᴇ ᴋᴀʀ sᴀᴋᴛᴀ ʜᴀɪ.')
-  if (!args[0]) return reply(`ᴜsᴀɢᴇ: ${prefix}delsudo 234xxx`)
+  const mentionedTarget = m.mentionedJid?.[0]
+  const quotedTarget = m.quoted?.sender
   const number = text.replace(/[^0-9]/g, '')
-  const sudoJid = number + '@s.whatsapp.net'
+  const sudoJid = mentionedTarget || quotedTarget || (number ? number + '@s.whatsapp.net' : '')
+  if (!sudoJid) return reply(`ᴜsᴀɢᴇ: ${prefix}delsudo 234xxx\nᴏʀ ɢʀᴏᴜᴘ ᴍᴇɴᴛɪᴏɴ/ʀᴇᴘʟʏ ᴛᴏ ᴛʜᴇ ᴜsᴇʀ`)
   owner = owner.filter(item => !isSameUser(item, sudoJid))
   fs.writeFileSync(ownerStoreFile, JSON.stringify(owner, null, 2))
-  reply(`✅ @${number} sᴜᴅᴏ ᴘᴇʀᴍɪssɪᴏɴ ʀᴇᴍᴏᴠᴇᴅ.`)
+  reply(`✅ @${normalizeJid(sudoJid)} sᴜᴅᴏ ᴘᴇʀᴍɪssɪᴏɴ ʀᴇᴍᴏᴠᴇᴅ.`)
 }
 break
 
