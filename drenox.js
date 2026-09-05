@@ -1827,15 +1827,6 @@ case 'menu2': {
     }
   }, { quoted: m })
 
-  const _audio = menuAudio()
-  if (_audio) {
-    await sleep(2000)
-    await bad.sendMessage(m.chat, {
-      audio: _audio,
-      mimetype: 'audio/mpeg',
-      ptt: false
-    }, { quoted: m })
-  }
 }
 break
     //═══════════════════════════════════════════════════════════
@@ -1900,15 +1891,6 @@ case 'listmenu': {
     }
   }, { quoted: m })
 
-  const _audio = menuAudio()
-  if (_audio) {
-    await sleep(2000)
-    await bad.sendMessage(m.chat, {
-      audio: _audio,
-      mimetype: 'audio/mpeg',
-      ptt: false
-    }, { quoted: m })
-  }
 }
 break
 // ═══════════════════════════════════════════════════════════
@@ -1966,15 +1948,6 @@ case 'mymenu': {
     }
 }, { quoted: m })
 
-const _audio = menuAudio()
-if (_audio) {
-    await sleep(2000)
-    await bad.sendMessage(m.chat, {
-        audio: _audio,
-        mimetype: 'audio/mpeg',
-        ptt: false
-    }, { quoted: m })
-}
 }
 break
 
@@ -2044,15 +2017,6 @@ case 'groupmenu': {
     }
     }, { quoted: m })
 
-const _audio = menuAudio()
-if (_audio) {
-    await sleep(2000)
-    await bad.sendMessage(m.chat, {
-        audio: _audio,
-        mimetype: 'audio/mpeg',
-        ptt: false
-    }, { quoted: m })
-}
 }
 break
 
@@ -2101,15 +2065,6 @@ case 'downloadmenu': {
     }
     }, { quoted: m })
 
-const _audio = menuAudio()
-if (_audio) {
-    await sleep(2000)
-    await bad.sendMessage(m.chat, {
-        audio: _audio,
-        mimetype: 'audio/mpeg',
-        ptt: false
-    }, { quoted: m })
-}
 }
 break
 
@@ -2181,15 +2136,6 @@ case 'funmenu': {
     }
     }, { quoted: m })
 
-const _audio = menuAudio()
-if (_audio) {
-    await sleep(2000)
-    await bad.sendMessage(m.chat, {
-        audio: _audio,
-        mimetype: 'audio/mpeg',
-        ptt: false
-    }, { quoted: m })
-}
 }
 break
 
@@ -2228,15 +2174,6 @@ case 'gamemenu': {
     }
     }, { quoted: m })
 
-const _audio = menuAudio()
-if (_audio) {
-    await sleep(2000)
-    await bad.sendMessage(m.chat, {
-        audio: _audio,
-        mimetype: 'audio/mpeg',
-        ptt: false
-    }, { quoted: m })
-}
 }
 break
 
@@ -2321,15 +2258,6 @@ case 'animemenu': {
     }
     }, { quoted: m })
 
-const _audio = menuAudio()
-if (_audio) {
-    await sleep(2000)
-    await bad.sendMessage(m.chat, {
-        audio: _audio,
-        mimetype: 'audio/mpeg',
-        ptt: false
-    }, { quoted: m })
-}
 }
 break
 
@@ -2373,15 +2301,6 @@ case 'stickermenu': {
     }
     }, { quoted: m })
 
-const _audio = menuAudio()
-if (_audio) {
-    await sleep(2000)
-    await bad.sendMessage(m.chat, {
-        audio: _audio,
-        mimetype: 'audio/mpeg',
-        ptt: false
-    }, { quoted: m })
-}
 }
 break
 
@@ -2472,15 +2391,6 @@ case 'utilitymenu': {
     }
     }, { quoted: m })
 
-const _audio = menuAudio()
-if (_audio) {
-    await sleep(2000)
-    await bad.sendMessage(m.chat, {
-        audio: _audio,
-        mimetype: 'audio/mpeg',
-        ptt: false
-    }, { quoted: m })
-}
 }
 break
 
@@ -2515,15 +2425,6 @@ case 'voicemenu': {
     }
     }, { quoted: m })
 
-const _audio = menuAudio()
-if (_audio) {
-    await sleep(2000)
-    await bad.sendMessage(m.chat, {
-        audio: _audio,
-        mimetype: 'audio/mpeg',
-        ptt: false
-    }, { quoted: m })
-}
 }
 break
 
@@ -2607,15 +2508,6 @@ case 'imagemenu': {
     }
     }, { quoted: m })
 
-const _audio = menuAudio()
-if (_audio) {
-    await sleep(2000)
-    await bad.sendMessage(m.chat, {
-        audio: _audio,
-        mimetype: 'audio/mpeg',
-        ptt: false
-    }, { quoted: m })
-}
 }
 break
 
@@ -2650,15 +2542,6 @@ case 'emojimenu': {
     }
     }, { quoted: m })
 
-const _audio = menuAudio()
-if (_audio) {
-    await sleep(2000)
-    await bad.sendMessage(m.chat, {
-        audio: _audio,
-        mimetype: 'audio/mpeg',
-        ptt: false
-    }, { quoted: m })
-}
 }
 break
 
@@ -2745,15 +2628,6 @@ case 'logomenu': {
     }
     }, { quoted: m })
 
-const _audio = menuAudio()
-if (_audio) {
-    await sleep(2000)
-    await bad.sendMessage(m.chat, {
-        audio: _audio,
-        mimetype: 'audio/mpeg',
-        ptt: false
-    }, { quoted: m })
-}
 }
 break
 
@@ -2797,15 +2671,6 @@ case 'aimenu': {
     }
     }, { quoted: m })
 
-const _audio = menuAudio()
-if (_audio) {
-    await sleep(2000)
-    await bad.sendMessage(m.chat, {
-        audio: _audio,
-        mimetype: 'audio/mpeg',
-        ptt: false
-    }, { quoted: m })
-}
 }
 break
 
