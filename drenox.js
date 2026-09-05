@@ -1926,7 +1926,6 @@ case 'menu2': {
 ╰━━━━━━━━━━━━━━━┈⊷
 
 ╭━━〔 👑 ᴏᴡɴᴇʀ ᴍᴇɴᴜ 〕━━┈⊷
-┃✮│➣ ${prefix}ᴘᴜʙʟɪᴄ
 ┃✮│➣ ${prefix}sᴇʟꜰ
 ┃✮│➣ ${prefix}ʙʟᴏᴄᴋ
 ┃✮│➣ ${prefix}ᴜɴʙʟᴏᴄᴋ
@@ -2556,7 +2555,6 @@ case 'ownermenu':
 case 'mymenu': {
   const menuText = `
 ╭━━〔 👑 ᴏᴡɴᴇʀ ᴍᴇɴᴜ 〕━━┈⊷
-┃✮│➣ ${prefix}ᴘᴜʙʟɪᴄ
 ┃✮│➣ ${prefix}sᴇʟꜰ
 ┃✮│➣ ${prefix}ʙʟᴏᴄᴋ
 ┃✮│➣ ${prefix}ᴜɴʙʟᴏᴄᴋ
