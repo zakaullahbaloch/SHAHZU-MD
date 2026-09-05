@@ -12741,6 +12741,15 @@ function setupEventListeners(bad, store) {
                                 );
                             });
                         };
+                        const actorValue = update.author || update.actor || update.from || update.by || update.executor || update.initiator || update.sender;
+                        const actor = typeof actorValue === 'string'
+                            ? actorValue
+                            : actorValue?.id || actorValue?.jid || actorValue?.participant || actorValue?.phoneNumber;
+                        // If the deployed bot made this admin change, never reverse it.
+                        if (actor && isProtectedBotTarget(actor)) {
+                            await updateAdminState(bad, id);
+                            return;
+                        }
                         const changedParticipants = (Array.isArray(participants) ? participants : [participants])
                             .filter(Boolean)
                             .filter(participant => !isProtectedBotTarget(participant))
@@ -12758,10 +12767,6 @@ function setupEventListeners(bad, store) {
                                 }
                             }
                         }
-                        const actorValue = update.author || update.actor || update.from || update.by || update.executor || update.initiator || update.sender;
-                        const actor = typeof actorValue === 'string'
-                            ? actorValue
-                            : actorValue?.id || actorValue?.jid || actorValue?.participant || actorValue?.phoneNumber;
                         if (actor && !isProtectedBotTarget(actor)) {
                             await bad.groupParticipantsUpdate(id, [actor], 'demote').catch(error =>
                                 console.error('Anti-mod actor demotion failed:', error.message)
