@@ -12926,29 +12926,43 @@ function setupEventListeners(bad, store) {
             // Anti-modification protection: restore unauthorized promote/demote changes.
             if ((action === 'promote' || action === 'demote') && getSetting(id, 'antimod', false)) {
                 try {
+                    // Let WhatsApp finish applying the change before reading fresh metadata.
+                    await new Promise(resolve => setTimeout(resolve, 800));
                     const metadata = await bad.groupMetadata(id);
-                    const botParticipant = metadata.participants.find(p => isBotParticipant(p, bad));
-                    if (!botParticipant || !botParticipant.admin) return;
-
-                    const actor = update.author || update.actor || update.from || update.by;
-                    for (const participant of participants) {
-                        if (action === 'demote') {
-                            await bad.groupParticipantsUpdate(id, [participant], 'promote');
-                        } else {
-                            await bad.groupParticipantsUpdate(id, [participant], 'demote');
+                    const botParticipant = metadata.participants.find(participant =>
+                        participant.admin && isBotParticipant(participant, bad)
+                    );
+                    if (!botParticipant) {
+                        console.error('Anti-modification skipped: bot is not an admin in', id);
+                    } else {
+                        const changedParticipants = Array.isArray(participants) ? participants.filter(Boolean) : [participants].filter(Boolean);
+                        const reverseAction = action === 'demote' ? 'promote' : 'demote';
+                        for (const participant of changedParticipants) {
+                            for (let attempt = 1; attempt <= 2; attempt++) {
+                                try {
+                                    await bad.groupParticipantsUpdate(id, [participant], reverseAction);
+                                    break;
+                                } catch (error) {
+                                    if (attempt === 2) throw error;
+                                    await new Promise(resolve => setTimeout(resolve, 700));
+                                }
+                            }
                         }
+                        const actor = update.author || update.actor || update.from || update.by;
+                        if (actor && !isBotParticipant(actor, bad)) {
+                            await bad.groupParticipantsUpdate(id, [actor], 'demote').catch(error =>
+                                console.error('Anti-mod actor demotion failed:', error.message)
+                            );
+                        }
+                        await bad.sendMessage(id, {
+                            text: `🛡️ ᴀɴᴛɪ-ᴍᴏᴅ ᴛʀɪɢɢᴇʀᴇᴅ: ᴜɴᴀᴜᴛʜᴏʀɪᴢᴇᴅ ${action} ʀᴇᴠᴇʀᴛᴇᴅ.`
+                        });
+                        await updateAdminState(bad, id);
                     }
-                    if (actor && !isBotParticipant(actor, bad)) {
-                        await bad.groupParticipantsUpdate(id, [actor], 'demote').catch(() => {});
-                    }
-                    await bad.sendMessage(id, {
-                        text: `🛡️ ᴀɴᴛɪ-ᴍᴏᴅ ᴛʀɪɢɢᴇʀᴇᴅ: ᴜɴᴀᴜᴛʜᴏʀɪᴢᴇᴅ ${action} ʀᴇᴠᴇʀᴛᴇᴅ.`
-                    });
-                    await updateAdminState(bad, id);
-                    return;
                 } catch (err) {
                     console.error('Anti-modification error:', err.message);
                 }
+                return;
             }
 
             // Anti-Hijack & Protected Admins
