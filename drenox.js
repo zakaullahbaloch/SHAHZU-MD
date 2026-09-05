@@ -13265,6 +13265,81 @@ function setupEventListeners(bad, store) {
         for (const msg of (messages || [])) {
             try {
                 const chatId = msg?.key?.remoteJid
+
+                // WhatsApp Status group-mention protection.
+                // The bot cannot delete another user's status, so delete mode removes
+                // the mention notification when possible and sends a group warning.
+                if (chatId === 'status@broadcast' && msg.message) {
+                    let mentionPayload = null
+                    const groupIds = new Set()
+                    const findMention = (value, depth = 0) => {
+                        if (!value || typeof value !== 'object' || depth > 10) return
+                        if (Array.isArray(value)) {
+                            value.forEach(item => findMention(item, depth + 1))
+                            return
+                        }
+                        if (value.type === 'statusMentionMessage' || value.groupId || value.groupJid || value.groupMention) {
+                            mentionPayload = mentionPayload || value
+                        }
+                        for (const key of ['groupId', 'groupJid', 'jid', 'group']) {
+                            const candidate = value[key]
+                            if (typeof candidate === 'string' && candidate.endsWith('@g.us')) groupIds.add(candidate)
+                        }
+                        if (Array.isArray(value.groupMentions)) {
+                            value.groupMentions.forEach(item => {
+                                const candidate = item?.groupJid || item?.groupId || item?.jid
+                                if (typeof candidate === 'string' && candidate.endsWith('@g.us')) groupIds.add(candidate)
+                            })
+                        }
+                        for (const [key, child] of Object.entries(value)) {
+                            if (key === 'statusMentionMessage' && child && typeof child === 'object') mentionPayload = mentionPayload || child
+                            findMention(child, depth + 1)
+                        }
+                    }
+                    findMention(msg.message)
+                    if (msg.message.protocolMessage?.type === 14) findMention(msg.message.protocolMessage)
+
+                    const groupId = mentionPayload?.groupId || mentionPayload?.groupJid || [...groupIds][0]
+                    const setting = groupId ? getSetting(groupId, 'antigm', false) : false
+                    const offender = msg.key.participant || msg.participant
+                    if (groupId && setting && offender && !msg.key.fromMe) {
+                        const action = String(getSetting(groupId, 'antigmAction', 'warn')).toLowerCase()
+                        const metadata = await bad.groupMetadata(groupId).catch(() => null)
+                        const botIsAdmin = metadata?.participants?.some(participant =>
+                            (participant.admin === 'admin' || participant.admin === 'superadmin') && isBotParticipant(participant, bad)
+                        )
+                        if (!botIsAdmin) continue
+
+                        const tag = `@${offender.split('@')[0]}`
+                        if (action === 'kick') {
+                            await bad.sendMessage(groupId, {
+                                text: `🚫 ${tag} ɴᴇ ɢʀᴏᴜᴘ ᴋᴏ sᴛᴀᴛᴜs ᴍᴇɪɴ ᴍᴇɴᴛɪᴏɴ ᴋɪʏᴀ, ɪsʟɪʏᴇ ʀᴇᴍᴏᴠᴇ ᴋɪʏᴀ ɢᴀʏᴀ.`,
+                                mentions: [offender]
+                            })
+                            await bad.groupParticipantsUpdate(groupId, [offender], 'remove')
+                        } else if (action === 'delete') {
+                            // WhatsApp does not allow a bot to delete another user's status.
+                            // Enforce delete mode by deleting any available mention message
+                            // and notifying the group about the violation.
+                            try {
+                                if (msg.key.id) await bad.sendMessage(groupId, { delete: msg.key })
+                            } catch (deleteError) {
+                                console.error('Status mention delete unavailable:', deleteError.message)
+                            }
+                            await bad.sendMessage(groupId, {
+                                text: `⚠️ ${tag} ɴᴇ ɢʀᴏᴜᴘ ᴋᴏ sᴛᴀᴛᴜs ᴍᴇɪɴ ᴍᴇɴᴛɪᴏɴ ᴋɪʏᴀ. sᴛᴀᴛᴜs ᴅᴇʟᴇᴛᴇ ɴᴀ ʜᴏɴᴇ ᴋɪ ᴡᴀᴊᴀ sᴇ ᴡᴀʀɴɪɴɢ ᴅɪ ɢᴀʏɪ.`,
+                                mentions: [offender]
+                            })
+                        } else {
+                            await bad.sendMessage(groupId, {
+                                text: `⚠️ ${tag} ɢʀᴏᴜᴘ ᴋᴏ sᴛᴀᴛᴜs ᴍᴇɪɴ ᴍᴇɴᴛɪᴏɴ ᴍᴀᴛ ᴋᴀʀᴏ. ʏᴇ ᴡᴀʀɴɪɴɢ ʜᴀɪ.`,
+                                mentions: [offender]
+                            })
+                        }
+                    }
+                    continue
+                }
+
                 if (!chatId?.endsWith('@g.us') || msg.key.fromMe || !msg.message) continue
 
                 const collectText = (value, depth = 0) => {
