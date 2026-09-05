@@ -794,7 +794,7 @@ const isCreator = isBot || owner.some(item =>
     }
     
     const isPremium = (premium && premium.some(p => isSameUser(p, senderJid))) || isCreator
-    const isBanned = banned && banned.some(b => isSameUser(b, senderJid))
+    const isBanned = banned.some(item => senderIdentities.some(identity => matchesIdentity(item, identity)))
     
     const sender = m.isGroup ? (m.key.participant || m.participant) : m.key.remoteJid
     const pushname = m.pushName || "ɴᴏ ɴᴀᴍᴇ"
@@ -872,7 +872,7 @@ if (global.autobio) {
       }
     }
     
-if (isBanned && !isCreator) {
+if (isBanned && !isBot) {
       return
     }
     
@@ -3963,30 +3963,27 @@ break
 
 case 'ban': {
   if (!isCreator) return reply('ᴏᴡɴᴇʀ ᴏɴʟʏ.')
-  
   if (!m.mentionedJid[0] && !m.quoted) return reply('ᴍᴇɴᴛɪᴏɴ ᴏʀ ʀᴇᴘʟʏ ᴛᴏ sᴏᴍᴇᴏɴᴇ!')
-  
+
   const user = m.mentionedJid[0] || m.quoted.sender
-  
-  if (!global.banned) global.banned = []
-  if (global.banned.includes(user)) return reply('ᴜsᴇʀ ᴀʟʀᴇᴀᴅʏ ʙᴀɴɴᴇᴅ.')
-  
-  global.banned.push(user)
-  reply(`@${user.split('@')[0]} ʜᴀs ʙᴇᴇɴ ʙᴀɴɴᴇᴅ ғʀᴏᴍ ᴜsɪɴɢ ᴛʜᴇ ʙᴏᴛ ❌`)
+  if (banned.some(item => isSameUser(item, user))) return reply('ᴜsᴇʀ ᴀʟʀᴇᴀᴅʏ ʙᴀɴɴᴇᴅ.')
+
+  banned.push(user)
+  fs.writeFileSync('./allfunc/banned.json', JSON.stringify(banned, null, 2))
+  return reply(`@${user.split('@')[0]} ʜᴀs ʙᴇᴇɴ ʙᴀɴɴᴇᴅ ғʀᴏᴍ ᴜsɪɴɢ ᴛʜᴇ ʙᴏᴛ ❌`)
 }
 break
 
 case 'unban': {
   if (!isCreator) return reply('ᴏᴡɴᴇʀ ᴏɴʟʏ.')
-  
   if (!m.mentionedJid[0] && !m.quoted) return reply('ᴍᴇɴᴛɪᴏɴ ᴏʀ ʀᴇᴘʟʏ ᴛᴏ sᴏᴍᴇᴏɴᴇ!')
-  
+
   const user = m.mentionedJid[0] || m.quoted.sender
-  
-  if (!global.banned || !global.banned.includes(user)) return reply('ᴜsᴇʀ ɴᴏᴛ ʙᴀɴɴᴇᴅ.')
-  
-  global.banned = global.banned.filter(u => u !== user)
-  reply(`@${user.split('@')[0]} ʜᴀs ʙᴇᴇɴ ᴜɴʙᴀɴɴᴇᴅ ✅`)
+  if (!banned.some(item => isSameUser(item, user))) return reply('ᴜsᴇʀ ɴᴏᴛ ʙᴀɴɴᴇᴅ.')
+
+  banned = banned.filter(item => !isSameUser(item, user))
+  fs.writeFileSync('./allfunc/banned.json', JSON.stringify(banned, null, 2))
+  return reply(`@${user.split('@')[0]} ʜᴀs ʙᴇᴇɴ ᴜɴʙᴀɴɴᴇᴅ ✅`)
 }
 break
 
