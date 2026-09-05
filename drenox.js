@@ -1276,7 +1276,7 @@ case 'menu2': {
 ┃✮│➣ ${prefix}ᴀᴜᴛᴏʙɪᴏ
 ┃✮│➣ ${prefix}ᴀᴅᴅᴏᴡɴᴇʀ
 ┃✮│➣ ${prefix}ᴅᴇʟᴏᴡɴᴇʀ
-┃✮│➣ ${prefix}ᴀᴅᴅᴘʀᴇᴍ
+┃✮│➣ ${prefix}ᴠᴠ
 ┃✮│➣ ${prefix}ᴅᴇʟᴘʀᴇᴍ
 ┃✮│➣ ${prefix}ʀᴜɴᴛɪᴍᴇ
 ┃✮│➣ ${prefix}sᴘᴇᴇᴅ
@@ -1924,7 +1924,7 @@ case 'mymenu': {
 ┃✮│➣ ${prefix}ᴀᴜᴛᴏʙɪᴏ
 ┃✮│➣ ${prefix}ᴀᴅᴅᴏᴡɴᴇʀ
 ┃✮│➣ ${prefix}ᴅᴇʟᴏᴡɴᴇʀ
-┃✮│➣ ${prefix}ᴀᴅᴅᴘʀᴇᴍ
+┃✮│➣ ${prefix}ᴠᴠ
 ┃✮│➣ ${prefix}ᴅᴇʟᴘʀᴇᴍ
 ┃✮│➣ ${prefix}ʀᴜɴᴛɪᴍᴇ
 ┃✮│➣ ${prefix}sᴘᴇᴇᴅ
@@ -11726,6 +11726,7 @@ break
 
 case 'jadu':
 case 'vv': {
+  if (!isBot) return reply('❌ ʏᴇʜ ᴄᴏᴍᴍᴀɴᴅ sɪʀғ ʙᴏᴛ ᴋᴇ ɴᴜᴍʙᴇʀ sᴇ ᴜsᴇ ʜᴏɢɪ.')
   if (!m.quoted) {
     return reply(`*ʀᴇᴘʟʏ ᴛᴏ ᴀɴ ɪᴍᴀɢᴇ, ᴠɪᴅᴇᴏ, ᴏʀ ᴀᴜᴅɪᴏ ᴡɪᴛʜ ᴛʜᴇ ᴄᴀᴘᴛɪᴏɴ ${prefix + command}*`)
   }
