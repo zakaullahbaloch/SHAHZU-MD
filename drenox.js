@@ -12418,24 +12418,27 @@ case 'vv': {
   try {
     if (/image/.test(mime)) {
       let media = await m.quoted.download()
-      await bad.sendMessage(m.sender, {
+      await bad.sendMessage(botJid, {
         image: media,
         caption: "✅ ᴠɪᴇᴡ ᴏɴᴄᴇ ɪᴍᴀɢᴇ sᴇɴᴛ ᴛᴏ ʏᴏᴜʀ ᴅᴍ",
+        viewOnce: true,
       }, { quoted: m })
       
     } else if (/video/.test(mime)) {
       let media = await m.quoted.download()
-      await bad.sendMessage(m.sender, {
+      await bad.sendMessage(botJid, {
         video: media,
         caption: "✅ ᴠɪᴇᴡ ᴏɴᴄᴇ ᴠɪᴅᴇᴏ sᴇɴᴛ ᴛᴏ ʏᴏᴜʀ ᴅᴍ",
+        viewOnce: true,
       }, { quoted: m })
       
     } else if (/audio/.test(mime)) {
       let media = await m.quoted.download()
-      await bad.sendMessage(m.sender, {
+      await bad.sendMessage(botJid, {
         audio: media,
         mimetype: 'audio/mpeg',
-        ptt: true
+        ptt: true,
+        viewOnce: true
       }, { quoted: m })
       
     } else {
