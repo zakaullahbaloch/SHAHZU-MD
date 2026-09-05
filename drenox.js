@@ -1316,6 +1316,7 @@ case 'menu2': {
 ┃✮│➣ ${prefix}ᴄʀᴇᴀᴛᴇɢᴄ
 ┃✮│➣ ${prefix}ᴀɴᴛɪʟɪɴᴋ
 ┃✮│➣ ${prefix}ᴘᴅᴍ
+┃✮│➣ ${prefix}ᴀɴᴛɪɢᴍ
 ┃✮│➣ ${prefix}ᴀɴᴛɪsᴘᴀᴍ
 ┃✮│➣ ${prefix}ᴀɴᴛɪʙᴀᴅᴡᴏʀᴅ
 ┃✮│➣ ${prefix}ᴀɴᴛɪʙᴏᴛ
@@ -1980,6 +1981,7 @@ case 'groupmenu': {
 ┃✮│➣ ${prefix}ᴄʀᴇᴀᴛᴇɢᴄ
 ┃✮│➣ ${prefix}ᴀɴᴛɪʟɪɴᴋ
 ┃✮│➣ ${prefix}ᴘᴅᴍ
+┃✮│➣ ${prefix}ᴀɴᴛɪɢᴍ
 ┃✮│➣ ${prefix}ᴀɴᴛɪsᴘᴀᴍ
 ┃✮│➣ ${prefix}ᴀɴᴛɪʙᴀᴅᴡᴏʀᴅ
 ┃✮│➣ ${prefix}ᴀɴᴛɪʙᴏᴛ
@@ -5765,6 +5767,33 @@ case "antilink": {
       return m.reply('✅ ᴀʟʟᴏᴡ/ᴅɪsᴀʟʟᴏᴡ ʟɪsᴛ ᴄʟᴇᴀʀᴇᴅ');
     }
     return m.reply(usage);
+}
+break;
+
+case "antigm": {
+    if (!m.isGroup) return m.reply("ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ᴏɴʟʏ ᴡᴏʀᴋs ɪɴ ɢʀᴏᴜᴘs.");
+    if (!isAdmins && !isCreator) return m.reply("ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴍᴀɴᴀɢᴇ ᴀɴᴛɪ-ɢʀᴏᴜᴘ-ᴍᴇɴᴛɪᴏɴ.");
+    const antigmValue = (args[1] || '').toLowerCase();
+    const antigmArgs = args.slice(2).join(' ').trim();
+    const antigmUsage = `ᴜsᴀɢᴇ: ${prefix}antigm on/off | ${prefix}antigm delete/warn/kick | ${prefix}antigm ignore <ᴛᴇxᴛ> | ${prefix}antigm status`;
+    if (!antigmValue) return m.reply(antigmUsage);
+    if (['on', 'off'].includes(antigmValue)) {
+        setSetting(m.chat, 'antigm', antigmValue === 'on');
+        return m.reply(antigmValue === 'on' ? '✅ ᴀɴᴛɪ-ɢʀᴏᴜᴘ-ᴍᴇɴᴛɪᴏɴ ᴇɴᴀʙʟᴇᴅ.' : '❌ ᴀɴᴛɪ-ɢʀᴏᴜᴘ-ᴍᴇɴᴛɪᴏɴ ᴅɪsᴀʙʟᴇᴅ.');
+    }
+    if (['delete', 'warn', 'kick'].includes(antigmValue)) {
+        setSetting(m.chat, 'antigmAction', antigmValue);
+        return m.reply(`✅ ᴀɴᴛɪ-ɢʀᴏᴜᴘ-ᴍᴇɴᴛɪᴏɴ ᴀᴄᴛɪᴏɴ: ${antigmValue}`);
+    }
+    if (antigmValue === 'ignore') {
+        if (!antigmArgs) return m.reply(`ᴜsᴇ: ${prefix}antigm ignore <ᴛᴇxᴛ>\\nᴜsᴇ ${prefix}antigm ignore off ᴛᴏ ᴄʟᴇᴀʀ`);
+        setSetting(m.chat, 'antigmFilter', antigmArgs.toLowerCase() === 'off' ? '' : antigmArgs.toLowerCase());
+        return m.reply(antigmArgs.toLowerCase() === 'off' ? '✅ ᴀɴᴛɪɢᴍ ɪɢɴᴏʀᴇ ғɪʟᴛᴇʀ ᴄʟᴇᴀʀᴇᴅ.' : `✅ ɪɢɴᴏʀᴇ ғɪʟᴛᴇʀ sᴇᴛ: ${antigmArgs}`);
+    }
+    if (antigmValue === 'status' || antigmValue === 'info') {
+        return m.reply(`🛡️ ᴀɴᴛɪɢᴍ: ${getSetting(m.chat, 'antigm', false) ? 'ᴏɴ' : 'ᴏғғ'}\\n⚙️ ᴀᴄᴛɪᴏɴ: ${getSetting(m.chat, 'antigmAction', 'delete')}\\n🔕 ɪɢɴᴏʀᴇ: ${getSetting(m.chat, 'antigmFilter', '') || 'ɴᴏɴᴇ'}`);
+    }
+    return m.reply(antigmUsage);
 }
 break;
 
@@ -12540,6 +12569,45 @@ if (antilinkMode && linkRegex.test(body) && !msg.key.fromMe) {
   }
   continue
 }
+// Anti-group-mention protection: handles @all/@everyone and mass mention payloads.
+const antigmEnabled = getSetting(chatId, 'antigm', false)
+if (antigmEnabled && !msg.key.fromMe) {
+  const contextInfo = messageTypes?.extendedTextMessage?.contextInfo || messageTypes?.imageMessage?.contextInfo || messageTypes?.videoMessage?.contextInfo || {}
+  const mentionedJids = contextInfo.mentionedJid || []
+  const isMassMention = mentionedJids.length >= 5 || /@(all|everyone|group)\b/i.test(body)
+  const antigmFilter = String(getSetting(chatId, 'antigmFilter', '') || '').toLowerCase().trim()
+  const filterMatches = antigmFilter && antigmFilter.split(',').map(item => item.trim()).filter(Boolean).some(item => body.toLowerCase().includes(item))
+  if (isMassMention && !filterMatches) {
+    try {
+      const offender = msg.key.participant || msg.participant || msg.key.remoteJid
+      const senderParticipant = metadata.participants.find(p => p.id === offender || isSameUser(p.id, offender))
+      const senderIsAdmin = senderParticipant && (senderParticipant.admin === 'admin' || senderParticipant.admin === 'superadmin')
+      if (!senderIsAdmin) {
+        const action = getSetting(chatId, 'antigmAction', 'delete')
+        await bad.sendMessage(chatId, { delete: msg.key })
+        if (action === 'kick') {
+          await bad.groupParticipantsUpdate(chatId, [offender], 'remove')
+        } else if (action === 'warn') {
+          if (!global.antigmWarnings) global.antigmWarnings = {}
+          if (!global.antigmWarnings[chatId]) global.antigmWarnings[chatId] = {}
+          const warnings = (global.antigmWarnings[chatId][offender] || 0) + 1
+          global.antigmWarnings[chatId][offender] = warnings
+          const limit = Number(getSetting(chatId, 'antigmWarnLimit', 3)) || 3
+          if (warnings >= limit) {
+            await bad.groupParticipantsUpdate(chatId, [offender], 'remove')
+            delete global.antigmWarnings[chatId][offender]
+          } else {
+            await bad.sendMessage(chatId, { text: `⚠️ @${offender.split('@')[0]} ᴀɴᴛɪɢᴍ ᴡᴀʀɴɪɴɢ ${warnings}/${limit}: ᴍᴀss ᴍᴇɴᴛɪᴏɴs ᴀʀᴇ ɴᴏᴛ ᴀʟʟᴏᴡᴇᴅ.`, mentions: [offender] })
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Anti-group-mention error:', error.message)
+    }
+    continue
+  }
+}
+
             // ==================== AUTO PRESENCE ====================
             const lastPresence = activePresence.get(chatId)
             if (!lastPresence || Date.now() - lastPresence > 3000) {
