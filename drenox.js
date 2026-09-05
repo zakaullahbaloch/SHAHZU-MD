@@ -13044,55 +13044,7 @@ const botIsAdmin = metadata.participants.some((participant) =>
 )
 if (!botIsAdmin) return
 
-// Fast antilink action: no quoted detection/reply for delete or kick.
-const savedAntilinkMode = getSetting(chatId, 'antilink', false)
-const antilinkMode = savedAntilinkMode === true ? 'delete' : String(savedAntilinkMode || '').toLowerCase()
-const linkRegex = /(?:\b(?:https?|ftp):\/\/[^\s<>'"]+|\bwww\d*\.[^\s<>'"]+|\b(?:chat\.whatsapp\.com|wa\.me|t\.me|discord\.gg|bit\.ly|tinyurl\.com)\/[^\s<>'"]+|\b(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?(?:\/[^\s<>'"]*)?|\b(?:[a-z0-9-]+\.)+[a-z]{2,63}(?:\/[^\s<>'"]*)?)/i
-
-const hasBlockedLink = linkRegex.test(body)
-
-if (antilinkMode && hasBlockedLink && !msg.key.fromMe) {
-  try {
-    // Delete first, immediately. No reply is sent in delete/kick modes.
-    const deleteKey = {
-      remoteJid: chatId,
-      fromMe: Boolean(msg.key.fromMe),
-      id: msg.key.id,
-      participant: msg.key.participant || msg.participant
-    }
-    await bad.sendMessage(chatId, { delete: deleteKey })
-
-    if (antilinkMode === 'kick') {
-      await bad.groupParticipantsUpdate(chatId, [msg.key.participant || msg.participant], 'remove')
-    } else if (antilinkMode === 'warn') {
-      if (!global.antilinkWarnings) global.antilinkWarnings = {}
-      if (!global.antilinkWarnings[chatId]) global.antilinkWarnings[chatId] = {}
-      const offender = msg.key.participant || msg.participant || msg.key.remoteJid
-      const warnings = (global.antilinkWarnings[chatId][offender] || 0) + 1
-      global.antilinkWarnings[chatId][offender] = warnings
-
-      if (warnings >= 3) {
-        await bad.groupParticipantsUpdate(chatId, [offender], 'remove')
-        delete global.antilinkWarnings[chatId][offender]
-        await bad.sendMessage(chatId, {
-          text: `⚠️ @${offender.split('@')[0]} ko 3 warnings ke baad remove kar diya gaya.`,
-          mentions: [offender]
-        })
-      } else {
-        await bad.sendMessage(chatId, {
-          text: `⚠️ @${offender.split('@')[0]} warning ${warnings}/3: links allowed nahi hain.`,
-          mentions: [offender]
-        })
-      }
-    }
-  } catch (error) {
-    console.error('Fast antilink error:', error.message)
-  }
-
-  // Do not let chatbot/other handlers process the link message.
-  continue
-}
-            
+// Antilink is enforced by the active setupEventListeners message queue below.
 
             // ==================== AUTO PRESENCE ====================
             const lastPresence = activePresence.get(chatId)
@@ -13451,17 +13403,17 @@ function setupEventListeners(bad, store) {
                 }
                 let deleted = false
                 let deleteError = null
-                for (let attempt = 1; attempt <= 5 && !deleted; attempt++) {
+                for (let attempt = 1; attempt <= 3 && !deleted; attempt++) {
                     try {
                         await bad.sendMessage(chatId, { delete: deleteKey })
                         deleted = true
                     } catch (error) {
                         deleteError = error
-                        if (attempt < 5) await new Promise(resolve => setTimeout(resolve, attempt * 700))
+                        if (attempt < 3) await new Promise(resolve => setTimeout(resolve, attempt * 150))
                     }
                 }
                 if (!deleted) {
-                    console.error(`Anti-link delete failed after 5 attempts: ${deleteError?.message || 'unknown error'}`)
+                    console.error(`Anti-link delete failed after 3 attempts: ${deleteError?.message || 'unknown error'}`)
                     await bad.sendMessage(chatId, {
                         text: `⚠️ @${offender.split('@')[0]} ka link delete nahi ho saka. Bot ko group admin banayein aur dobara try karein.`,
                         mentions: [offender]
@@ -13469,19 +13421,27 @@ function setupEventListeners(bad, store) {
                 }
 
                 if (mode === 'kick') {
-                    await bad.groupParticipantsUpdate(chatId, [offender], 'remove')
-                    await bad.sendMessage(chatId, {
-                        text: `🚫 @${offender.split('@')[0]} ʟɪɴᴋ sʜᴀʀᴇ ᴋᴀʀɴᴇ ᴘᴀʀ ʀᴇᴍᴏᴠᴇ ᴋᴀʀ ᴅɪʏᴀ ɢᴀʏᴀ.`,
-                        mentions: [offender]
-                    })
+                    try {
+                        await bad.groupParticipantsUpdate(chatId, [offender], 'remove')
+                        await bad.sendMessage(chatId, {
+                            text: `🚫 @${offender.split('@')[0]} ʟɪɴᴋ sʜᴀʀᴇ ᴋᴀʀɴᴇ ᴘᴀʀ ʀᴇᴍᴏᴠᴇ ᴋᴀʀ ᴅɪʏᴀ ɢᴀʏᴀ.`,
+                            mentions: [offender]
+                        })
+                    } catch (kickError) {
+                        console.error('Anti-link kick failed:', kickError.message)
+                    }
                 } else if (mode === 'warn') {
                     if (!global.antilinkWarnings) global.antilinkWarnings = {}
                     if (!global.antilinkWarnings[chatId]) global.antilinkWarnings[chatId] = {}
                     const warnings = (global.antilinkWarnings[chatId][offender] || 0) + 1
                     global.antilinkWarnings[chatId][offender] = warnings
                     if (warnings >= 3) {
-                        await bad.groupParticipantsUpdate(chatId, [offender], 'remove')
-                        delete global.antilinkWarnings[chatId][offender]
+                        try {
+                            await bad.groupParticipantsUpdate(chatId, [offender], 'remove')
+                            delete global.antilinkWarnings[chatId][offender]
+                        } catch (kickError) {
+                            console.error('Anti-link warning kick failed:', kickError.message)
+                        }
                         await bad.sendMessage(chatId, {
                             text: `🚫 @${offender.split('@')[0]} 3 warnings ke baad remove kar diya gaya.`,
                             mentions: [offender]
