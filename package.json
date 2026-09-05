@@ -1,7 +1,7 @@
 {
   "name": "SHAHZU-MD",
   "version": "5.0.0",
-  "description": A Simple Bot Made With ❤️ By | S H A H Z U 🩵👑",
+  "description": "A Simple Bot Made With ❤️ By | S H A H Z U 🩵👑",
   "main": "index.js",
   "scripts": {
     "start": "pm2 start index.js --deep-monitoring --attach --name SHAHZU-MD",
