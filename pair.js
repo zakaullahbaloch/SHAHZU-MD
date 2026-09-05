@@ -495,10 +495,15 @@ async function startpairing(kingbadboiNumber) {
         const botModeFile = path.join(__dirname, 'allfunc', 'botmode.txt')
         const savedMode = fs.existsSync(botModeFile)
             ? fs.readFileSync(botModeFile, 'utf8').trim().toLowerCase()
-            : 'public'
-        bad.public = savedMode !== 'private'
+            : 'private'
+        bad.public = savedMode === 'public'
+        if (!fs.existsSync(botModeFile) || !['public', 'private'].includes(savedMode)) {
+            fs.mkdirSync(path.dirname(botModeFile), { recursive: true })
+            fs.writeFileSync(botModeFile, 'private', 'utf8')
+            bad.public = false
+        }
     } catch {
-        bad.public = true
+        bad.public = false
     }
     bad.sendText = (jid, text, quoted = '', options) => bad.sendMessage(jid, { text: text, ...options }, { quoted })
 

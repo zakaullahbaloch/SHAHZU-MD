@@ -880,7 +880,7 @@ if (isBanned && !isBot) {
     }
     
     if (typeof bad.public === 'undefined') {
-      bad.public = true
+      bad.public = false
       
       try {
         const botModeFile = './allfunc/botmode.txt'
@@ -889,10 +889,10 @@ if (isBanned && !isBot) {
           const savedMode = fs.readFileSync(botModeFile, 'utf8').trim()
           bad.public = savedMode === 'public'
         } else {
-          fs.writeFileSync(botModeFile, 'public', 'utf8')
+          fs.writeFileSync(botModeFile, 'private', 'utf8')
         }
       } catch (e) {
-        bad.public = true
+        bad.public = false
       }
     }
 
