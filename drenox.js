@@ -12544,16 +12544,19 @@ if (!chatId?.endsWith('@g.us')) return
 // ignore bot messages
 if (msg.key.fromMe) return
 
-// body extract
+// Body extraction: unwrap ephemeral/view-once/media messages so links cannot hide in captions.
 const messageTypes = msg.message
-
-let body = messageTypes?.conversation || 
-           messageTypes?.extendedTextMessage?.text || 
-           messageTypes?.imageMessage?.caption || 
-           messageTypes?.videoMessage?.caption || 
-           messageTypes?.audioMessage?.caption ||
-           messageTypes?.documentMessage?.caption ||
-           ''
+const collectText = (value, depth = 0) => {
+  if (!value || typeof value !== 'object' || depth > 8) return []
+  if (Array.isArray(value)) return value.flatMap(item => collectText(item, depth + 1))
+  const text = []
+  for (const [key, child] of Object.entries(value)) {
+    if (typeof child === 'string' && ['conversation', 'text', 'caption', 'matchedText', 'displayText'].includes(key)) text.push(child)
+    else if (child && typeof child === 'object') text.push(...collectText(child, depth + 1))
+  }
+  return text
+}
+const body = collectText(messageTypes).join('\n').trim()
 
 // Bot admin check. Match phone JID, device JID, and LID safely.
 const metadata = await bad.groupMetadata(chatId)
@@ -12565,7 +12568,7 @@ if (!botIsAdmin) return
 
 // Fast antilink action: no quoted detection/reply for delete or kick.
 const antilinkMode = getSetting(chatId, 'antilink', false)
-const linkRegex = /(https?:\/\/|www\.|chat\.whatsapp\.com\/|(?:[a-z0-9-]+\.)+(?:com|net|org|io|co|in|me|xyz|info|biz|app|dev|tech|online|site|store|shop|live|tv|gg|cc)\b)/i
+const linkRegex = /(?:\b(?:https?|ftp):\/\/[^\s<>'"]+|\bwww\d*\.[^\s<>'"]+|\b(?:chat\.whatsapp\.com|wa\.me|t\.me|discord\.gg|bit\.ly|tinyurl\.com)\/[^\s<>'"]+|\b(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?(?:\/[^\s<>'"]*)?|\b(?:[a-z0-9-]+\.)+[a-z]{2,63}(?:\/[^\s<>'"]*)?)/i
 
 if (antilinkMode && linkRegex.test(body) && !msg.key.fromMe) {
   try {
