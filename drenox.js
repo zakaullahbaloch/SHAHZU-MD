@@ -886,7 +886,7 @@ if (isBanned && !isBot) {
       bad.public = false
       
       try {
-        const botModeFile = './allfunc/botmode.txt'
+        const botModeFile = path.join(__dirname, 'allfunc', `botmode-${botNumber}.txt`)
         
         if (fs.existsSync(botModeFile)) {
           const savedMode = fs.readFileSync(botModeFile, 'utf8').trim()
@@ -3351,7 +3351,7 @@ case 'private': {
   bad.public = false
 
   try {
-    const botModeFile = path.join(__dirname, 'allfunc', 'botmode.txt')
+    const botModeFile = path.join(__dirname, 'allfunc', `botmode-${botNumber}.txt`)
     fs.mkdirSync(path.dirname(botModeFile), { recursive: true })
     fs.writeFileSync(botModeFile, 'private')
   } catch (e) {}
@@ -3366,7 +3366,7 @@ case 'public': {
   bad.public = true
 
   try {
-    const botModeFile = path.join(__dirname, 'allfunc', 'botmode.txt')
+    const botModeFile = path.join(__dirname, 'allfunc', `botmode-${botNumber}.txt`)
     fs.mkdirSync(path.dirname(botModeFile), { recursive: true })
     fs.writeFileSync(botModeFile, 'public')
   } catch (e) {}

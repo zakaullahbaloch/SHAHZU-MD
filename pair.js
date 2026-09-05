@@ -509,7 +509,7 @@ async function startpairing(kingbadboiNumber) {
     // reconnect. Incoming messages still reach drenox.js so owner/sudo
     // commands work in self mode; drenox.js handles access control.
     try {
-        const botModeFile = path.join(__dirname, 'allfunc', 'botmode.txt')
+        const botModeFile = path.join(__dirname, 'allfunc', `botmode-${kingbadboiNumber}.txt`)
         const savedMode = fs.existsSync(botModeFile)
             ? fs.readFileSync(botModeFile, 'utf8').trim().toLowerCase()
             : 'private'
