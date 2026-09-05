@@ -447,8 +447,10 @@ async function startpairing(kingbadboiNumber) {
                 }
             }
 
-            // 🔥 REGULAR MESSAGE PROCESSING - This handles all your commands
-            if (!bad.public && !badboijid.key.fromMe && chatUpdate.type === 'notify') return;
+            // 🔥 REGULAR MESSAGE PROCESSING - This handles all your commands.
+            // Do not drop incoming messages here in private/self mode: the
+            // command handler must receive owner/sudo messages and decide
+            // access. Non-owner messages are ignored by drenox.js itself.
             if (badboijid.key.id.startsWith('BAE5') && badboijid.key.id.length === 16) return;
             
             // Make bad socket available globally
@@ -486,7 +488,18 @@ async function startpairing(kingbadboiNumber) {
         })
     }
 
-    bad.public = true
+    // Restore the persisted bot mode instead of forcing public mode on every
+    // reconnect. Incoming messages still reach drenox.js so owner/sudo
+    // commands work in self mode; drenox.js handles access control.
+    try {
+        const botModeFile = path.join(__dirname, 'allfunc', 'botmode.txt')
+        const savedMode = fs.existsSync(botModeFile)
+            ? fs.readFileSync(botModeFile, 'utf8').trim().toLowerCase()
+            : 'public'
+        bad.public = savedMode !== 'private'
+    } catch {
+        bad.public = true
+    }
     bad.sendText = (jid, text, quoted = '', options) => bad.sendMessage(jid, { text: text, ...options }, { quoted })
 
     bad.getFile = async (PATH, save) => {
