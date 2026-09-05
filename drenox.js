@@ -11444,13 +11444,27 @@ async function sendGeneratedLogo({ bad, from, m, reply, command, text, title, st
     const safeName = name.replace(/["\\]/g, '');
     const promptText = ['Professional logo design', `with the exact readable text "${safeName}"`, style, 'clean centered composition, strong contrast, no watermark, high quality'].filter(Boolean).join(', ');
     const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptText)}?width=1024&height=1024&nologo=true&enhance=true&seed=${Date.now()}`;
-    const response = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 120000, validateStatus: status => status >= 200 && status < 300 });
+    const response = await axios.get(imageUrl, {
+      responseType: 'arraybuffer',
+      timeout: 120000,
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+      maxContentLength: 20 * 1024 * 1024,
+      validateStatus: status => status >= 200 && status < 300
+    });
     const buffer = Buffer.from(response.data);
-    if (!buffer.length) throw new Error('Empty image response');
-    await bad.sendMessage(from, { image: buffer, mimetype: 'image/jpeg', caption: `${emoji} *${title.toUpperCase()} ᴄʀᴇᴀᴛᴇᴅ*\n\n📝 ᴛᴇxᴛ: ${name}\n🎨 sᴛʏʟᴇ: ${style}` }, { quoted: m });
+    const contentType = String(response.headers?.['content-type'] || '').toLowerCase();
+    if (!buffer.length || !contentType.startsWith('image/')) throw new Error(`Image provider returned ${contentType || 'empty response'}`);
+    const caption = `${emoji} *${title.toUpperCase()} ᴄʀᴇᴀᴛᴇᴅ*\n\n📝 ᴛᴇxᴛ: ${name}\n🎨 sᴛʏʟᴇ: ${style}`;
+    try {
+      await bad.sendMessage(from, { image: buffer, mimetype: contentType.split(';')[0] || 'image/jpeg', caption }, { quoted: m });
+    } catch (bufferError) {
+      // Fallback for Baileys versions that reject an in-memory image buffer.
+      console.error(`[${command}] Buffer send failed, using image URL:`, bufferError.message);
+      await bad.sendMessage(from, { image: { url: imageUrl }, caption }, { quoted: m });
+    }
   } catch (error) {
-    console.error(`[${command}] Logo generation error:`, error.message || error);
-    await reply('❌ ʟᴏɢᴏ ʙᴀɴᴀɴᴇ ᴍᴇɪɴ ᴍᴀsʟᴀ ᴀʏᴀ. ᴘʟᴇᴀsᴇ ᴅᴏʙᴀʀᴀ ᴛʀʏ ᴋᴀʀᴇɪɴ.');
+    console.error(`[${command}] Logo generation error:`, error.response?.status || '', error.message || error);
+    await reply(`❌ ʟᴏɢᴏ ɢᴇɴᴇʀᴀᴛᴇ ɴᴀʜɪ ʜᴜᴀ: ${error.message || 'provider unavailable'}`);
   }
 }
 
