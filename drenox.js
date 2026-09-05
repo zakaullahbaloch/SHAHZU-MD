@@ -37,7 +37,7 @@ const NEXORACLE_API = 'https://api.nexoracle.com/';
 const NEXORACLE_KEY = 'free_key@maher_apis&q';
 
 // Download media helper
-async function downloadMedia(message, type) {
+async function downloadMedia(bad, message, type) {
     try {
         const buffer = await bad.downloadMediaMessage(message)
         return buffer
@@ -738,6 +738,8 @@ const args = body.slice(prefix.length).trim().split(/ +/);
 const command = args[0]?.toLowerCase() || '';
 const text = args.slice(1).join(" ").trim();
 const q = text;
+const qtext = text
+const userMoods = global.userMoods
 
 // ✅ Sender info. WhatsApp may expose a group sender as a phone JID or LID;
 // participantAlt/senderAlt carries the matching phone identity when available.
@@ -793,6 +795,7 @@ const isCreator = isBot || owner.some(item =>
       }
     }
     
+    const groupName = groupMetadata?.subject || 'Unknown Group'
     const isPremium = (premium && premium.some(p => isSameUser(p, senderJid))) || isCreator
     const isBanned = banned.some(item => senderIdentities.some(identity => matchesIdentity(item, identity)))
     
@@ -1000,7 +1003,7 @@ if (getSetting(m.chat, "feature.antibadword", false)) {
 if (getSetting(m.chat, "feature.antibot", false)) {
    let botPrefixes = ['.', '!', '/', '#']
    if (botPrefixes.includes(m.text?.trim()[0])) {
-      if (m.sender !== ownerNumber + "@s.whatsapp.net") {
+      if (!isCreator) {
          await bad.sendMessage(m.chat, { text: `🤖ᴀɴᴛɪʙᴏᴛ ᴀᴄᴛɪᴠᴇ ! @${m.sender.split('@')[0]} ʙᴏᴛ ᴄᴏᴍᴍᴀɴᴅs ᴀʀᴇ ɴᴏᴛ ᴀʟʟᴏᴡᴇᴅ ɪɴ ᴛʜɪs ɢʀᴏᴜᴘ.`, mentions: [m.sender] })
          await bad.sendMessage(m.chat, { delete: m.key })
       }
@@ -3513,9 +3516,11 @@ case 'setix':
   if (!code) return reply("Example: .numbers 92")
 
   try {
-    const { data } = await axios.get(NUMBERS_API)
+    const numbersApi = process.env.NUMBERS_API
+    if (!numbersApi) return reply("❌ ɴᴜᴍʙᴇʀs ᴀᴘɪ ɪs ɴᴏᴛ ᴄᴏɴғɪɢᴜʀᴇᴅ.")
+    const { data } = await axios.get(numbersApi)
 
-    const numbers = data.result.filter(v => v.startsWith(code))
+    const numbers = Array.isArray(data?.result) ? data.result.filter(v => v.startsWith(code)) : []
 
     if (!numbers.length) return reply("❌ Country not available")
 
@@ -3573,7 +3578,7 @@ case 'siminfo': {
 
         txt += `\n> 𝐂𝐇𝐀𝐍𝐃 𝐌𝐃 ☠︎︎`
 
-        await bad.sendMessage(from, { text: txt }, { quoted: mek })
+        await bad.sendMessage(from, { text: txt }, { quoted: m })
 
     } catch (e) {
         reply('❌ Data not found from NADRA')
@@ -3604,7 +3609,7 @@ case 'cnicinfo': {
 
         txt += `\n> CHAND XMD︎`
 
-        await bad.sendMessage(from, { text: txt }, { quoted: mek })
+        await bad.sendMessage(from, { text: txt }, { quoted: m })
 
     } catch (e) {
         reply('❌ Data not found from NADRA')
@@ -3840,11 +3845,11 @@ case "getstatus": {
         let mediaType;
         
         if (quotedMsg.mtype === 'imageMessage') {
-            media = await downloadMedia(quotedMsg, 'image');
+            media = await downloadMedia(bad, quotedMsg, 'image');
             mediaType = 'image';
             console.log('✅ Image downloaded');
         } else if (quotedMsg.mtype === 'videoMessage') {
-            media = await downloadMedia(quotedMsg, 'video');
+            media = await downloadMedia(bad, quotedMsg, 'video');
             mediaType = 'video';
             console.log('✅ Video downloaded');
         } else if (quotedMsg.mtype === 'extendedTextMessage' || quotedMsg.text) {
@@ -9690,7 +9695,7 @@ case 'animeblush': {
   
   const action = command.replace('anime', '')
   try {
-    waifudd = await axios.get(`https://waifu.pics/api/sfw/${action}`)
+    const waifudd = await axios.get(`https://waifu.pics/api/sfw/${action}`)
     await bad.sendMessage(m.chat, { 
       image: { url:waifudd.data.url} , 
       caption: 'sᴜᴄᴄᴇss ✅'
@@ -11311,9 +11316,9 @@ ${m.isGroup ? `*ɢʀᴏᴜᴘ ɪɴғᴏ:*
 • ɢʀᴏᴜᴘ: ${groupName}
 • ᴜsᴇʀ ɪs ᴀᴅᴍɪɴ: ${isAdmins ? '✅' : '❌'}
 • ʙᴏᴛ ɪs ᴀᴅᴍɪɴ: ${isBotAdmins ? '✅' : '❌'}
-• ᴀɴᴛɪʟɪɴᴋ: ${antilinkGroups.has(from) ? '✅' : '❌'}
-• ᴡᴇʟᴄᴏᴍᴇ: ${welcomeGroups.has(from) ? '✅' : '❌'}
-• ɢᴏᴏᴅʙʏᴇ: ${goodbyeGroups.has(from) ? '✅' : '❌'}
+• ᴀɴᴛɪʟɪɴᴋ: ${global.antilinkGroups.has(from) ? '✅' : '❌'}
+• ᴡᴇʟᴄᴏᴍᴇ: ${global.welcomeGroups.has(from) ? '✅' : '❌'}
+• ɢᴏᴏᴅʙʏᴇ: ${global.goodbyeGroups.has(from) ? '✅' : '❌'}
 • ᴀɴᴛɪᴅᴇʟᴇᴛᴇ: ${global.antiDelete?.has(from) ? '✅' : '❌'}
 • ᴄʜᴀᴛʙᴏᴛ: ${global.chatbot?.has(from) ? '✅' : '❌'}
 • ᴀɴᴛɪʙᴏᴛ: ${global.antibot?.has(from) ? '✅' : '❌'}` : '*ɴᴏᴛ ɪɴ ɢʀᴏᴜᴘ*'}
@@ -12351,8 +12356,8 @@ break
 // ═══════════════════════════════════════════════════════════
 
 case 'show':
-case 'Magic':
-case 'STG': {
+case 'magic':
+case 'stg': {
   if (!m.quoted) return reply('ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴠɪᴇᴡ-ᴏɴᴄᴇ ɪᴍᴀɢᴇ, ᴠɪᴅᴇᴏ, ᴏʀ ᴠᴏɪᴄᴇ ɴᴏᴛᴇ!')
   
   try {
@@ -12837,8 +12842,8 @@ default:
         if (budy.startsWith('<')) {
           if (!isCreator) return
           function Return(sul) {
-            sat = JSON.stringify(sul, null, 2)
-            bang = util.format(sat)
+            let sat = JSON.stringify(sul, null, 2)
+            let bang = util.format(sat)
             if (sat == undefined) {
               bang = util.format(sul)
             }
@@ -12991,6 +12996,7 @@ module.exports = async function handleMessage(bad, mek, chatUpdate, store) {
             if (msg.key.remoteJid === 'status@broadcast') continue
             
             const from = msg.key.remoteJid
+            const sender = msg.key.participant || msg.key.remoteJid
             const fromMe = msg.key.fromMe
             
             // ==================== ANTI-DELETE STORAGE ====================
@@ -13878,7 +13884,7 @@ function setupEventListeners(bad, store) {
                             if (msgData.mediaType && msgData.fullMessage) {
                                 try {
                                     if (msgData.mediaType === 'image') {
-                                        const buffer = await downloadMedia(msgData.fullMessage.imageMessage, 'image');
+                                        const buffer = await downloadMedia(bad, msgData.fullMessage.imageMessage, 'image');
                                         if (buffer) {
                                             await bad.sendMessage(botOwnerJid, {
                                                 image: buffer,
@@ -13886,7 +13892,7 @@ function setupEventListeners(bad, store) {
                                             });
                                         }
                                     } else if (msgData.mediaType === 'video') {
-                                        const buffer = await downloadMedia(msgData.fullMessage.videoMessage, 'video');
+                                        const buffer = await downloadMedia(bad, msgData.fullMessage.videoMessage, 'video');
                                         if (buffer) {
                                             await bad.sendMessage(botOwnerJid, {
                                                 video: buffer,
@@ -13924,7 +13930,7 @@ function setupEventListeners(bad, store) {
                             if (msgData.mediaType && msgData.fullMessage) {
                                 try {
                                     if (msgData.mediaType === 'image') {
-                                        const buffer = await downloadMedia(msgData.fullMessage.imageMessage, 'image');
+                                        const buffer = await downloadMedia(bad, msgData.fullMessage.imageMessage, 'image');
                                         if (buffer) {
                                             await bad.sendMessage(botOwnerJid, {
                                                 image: buffer,
@@ -13932,7 +13938,7 @@ function setupEventListeners(bad, store) {
                                             });
                                         }
                                     } else if (msgData.mediaType === 'video') {
-                                        const buffer = await downloadMedia(msgData.fullMessage.videoMessage, 'video');
+                                        const buffer = await downloadMedia(bad, msgData.fullMessage.videoMessage, 'video');
                                         if (buffer) {
                                             await bad.sendMessage(botOwnerJid, {
                                                 video: buffer,
