@@ -1230,12 +1230,12 @@ case 'menu2': {
   
   const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)]
   const uptime = runtime(process.uptime())
-  const botUsername = getBotUsername(bad)
+  const menuUsername = pushname || 'ᴜsᴇʀ'
   
   const menuText = `
 ╭━━〔 ☠️ ᴀʟʟ ᴄᴏᴍᴍᴀɴᴅs ☠️ 〕━━┈⊷
 ┃✮╭────────────────
-┃✮│ 🤖 ʙᴏᴛ ᴜsᴇʀɴᴀᴍᴇ: *${botUsername}*
+┃✮│ 👤 ᴜsᴇʀɴᴀᴍᴇ: *${menuUsername}*
 ┃✮│ 👑 ᴏᴡɴᴇʀ: *⸔𝐅𝐌𝐒 𝐂𝐇𝐀𝐍𝐃⸕*
 ┃✮│ 📦 ᴠᴇʀsɪᴏɴ: *v${BOT_VERSION}*
 ┃✮│ ⏱️ ᴜᴘᴛɪᴍᴇ: *${uptime}*
@@ -1830,12 +1830,12 @@ case 'listmenu': {
   
   const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)]
   const uptime = runtime(process.uptime())
-  const botUsername = getBotUsername(bad)
+  const menuUsername = pushname || 'ᴜsᴇʀ'
   
   const menuText = `
 ╭━━〔 ☠️ ᴀʟʟ ᴄᴏᴍᴍᴀɴᴅs ☠️ 〕━━┈⊷
 ┃✮╭────────────────
-┃✮│ 🤖 ʙᴏᴛ ᴜsᴇʀɴᴀᴍᴇ: *${botUsername}*
+┃✮│ 👤 ᴜsᴇʀɴᴀᴍᴇ: *${menuUsername}*
 ┃✮│ 👑 ᴏᴡɴᴇʀ: *⸔𝐅𝐌𝐒 𝐂𝐇𝐀𝐍𝐃⸕*
 ┃✮│ 📦 ᴠᴇʀsɪᴏɴ: *v${BOT_VERSION}*
 ┃✮│ ⏱️ ᴜᴘᴛɪᴍᴇ: *${uptime}*
