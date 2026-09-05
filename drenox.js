@@ -12603,21 +12603,36 @@ if (antilinkMode && linkRegex.test(body) && !msg.key.fromMe) {
   continue
 }
             
-// Anti-group-mention protection: handles @all/@everyone and mass mention payloads.
+// Anti-group-mention protection: supports nested WhatsApp message wrappers and mass mentions.
 const antigmEnabled = getSetting(chatId, 'antigm', false)
 if (antigmEnabled && !msg.key.fromMe) {
-  const contextInfo = messageTypes?.extendedTextMessage?.contextInfo || messageTypes?.imageMessage?.contextInfo || messageTypes?.videoMessage?.contextInfo || {}
-  const mentionedJids = contextInfo.mentionedJid || []
-  const isMassMention = mentionedJids.length >= 5 || /@(all|everyone|group)\b/i.test(body)
+  const mentioned = new Set()
+  const groupMentionTypes = []
+  const collectMentionData = (value, depth = 0) => {
+    if (!value || typeof value !== 'object' || depth > 8) return
+    if (Array.isArray(value)) {
+      for (const item of value) collectMentionData(item, depth + 1)
+      return
+    }
+    if (Array.isArray(value.mentionedJid)) value.mentionedJid.forEach(jid => mentioned.add(jid))
+    if (Array.isArray(value.groupMentions)) groupMentionTypes.push(...value.groupMentions)
+    for (const [key, child] of Object.entries(value)) {
+      if (key !== 'contextInfo' && typeof child === 'object') collectMentionData(child, depth + 1)
+    }
+  }
+  collectMentionData(messageTypes)
+  const mentionText = String(body || '').toLowerCase()
+  const hasGroupMentionTag = /@(all|everyone|group|allmembers)\b/i.test(mentionText)
+  const isMassMention = mentioned.size >= 3 || groupMentionTypes.length > 0 || hasGroupMentionTag
   const antigmFilter = String(getSetting(chatId, 'antigmFilter', '') || '').toLowerCase().trim()
-  const filterMatches = antigmFilter && antigmFilter.split(',').map(item => item.trim()).filter(Boolean).some(item => body.toLowerCase().includes(item))
+  const filterMatches = antigmFilter && antigmFilter.split(',').map(item => item.trim()).filter(Boolean).some(item => mentionText.includes(item))
   if (isMassMention && !filterMatches) {
     try {
       const offender = msg.key.participant || msg.participant || msg.key.remoteJid
       const senderParticipant = metadata.participants.find(p => p.id === offender || isSameUser(p.id, offender))
       const senderIsAdmin = senderParticipant && (senderParticipant.admin === 'admin' || senderParticipant.admin === 'superadmin')
-      if (!senderIsAdmin) {
-        const action = getSetting(chatId, 'antigmAction', 'delete')
+      if (!senderIsAdmin && offender) {
+        const action = String(getSetting(chatId, 'antigmAction', 'delete')).toLowerCase()
         await bad.sendMessage(chatId, { delete: msg.key })
         if (action === 'kick') {
           await bad.groupParticipantsUpdate(chatId, [offender], 'remove')
