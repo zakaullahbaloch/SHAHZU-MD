@@ -12389,8 +12389,8 @@ if (antigmEnabled && !msg.key.fromMe) {
       hasGroupMentionMetadata = true
     }
     if (Array.isArray(value.groupMentions)) groupMentionTypes.push(...value.groupMentions)
-    for (const [key, child] of Object.entries(value)) {
-      if (key !== 'contextInfo' && typeof child === 'object') collectMentionData(child, depth + 1)
+    for (const child of Object.values(value)) {
+      if (child && typeof child === 'object') collectMentionData(child, depth + 1)
     }
   }
   collectMentionData(messageTypes)
