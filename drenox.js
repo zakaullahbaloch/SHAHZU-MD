@@ -4190,16 +4190,16 @@ case 'setppgc': {
 }
 break
 
-case 'tag':
-case 'totag': {
+case 'tag': {
   if (!m.isGroup) return reply("ɢʀᴏᴜᴘ ᴄᴏᴍᴍᴀɴᴅ ᴏɴʟʏ.")
   if (!isCreator) return reply("ғσя мʏ σωиɛя σиℓʏ.") 
   if (!m.quoted) return reply(`ʀᴇᴘʟʏ ᴡɪᴛʜ ${prefix + command} ᴛᴏ ᴀ ᴍᴇssᴀɢᴇ`)
   
   try {
-    await bad.sendMessage(m.chat, {
-      forward: m.quoted.fakeObj,
-      mentions: participants.map(a => a.id)
+    await bad.copyNForward(m.chat, m.quoted.fakeObj, false, {
+      contextInfo: {
+        mentionedJid: participants.map(a => a.id)
+      }
     })
   } catch (error) {
     reply('❌ ғᴀɪʟᴇᴅ ᴛᴏ ᴛᴀɢ ᴍᴇssᴀɢᴇ')
