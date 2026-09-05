@@ -226,6 +226,23 @@ async function startpairing(kingbadboiNumber) {
     
     const sessionPath = `./kingbadboitimewisher/pairing/${kingbadboiNumber}`;
     ensureDirectoryExists(sessionPath);
+
+    // A missing creds.json means this is a fresh pairing, not a normal
+    // reconnect. Reset only this bot's sudo/owner records so permissions
+    // never survive logout and re-pairing or leak across deployments.
+    const isFreshPairing = !fs.existsSync(path.join(sessionPath, 'creds.json'));
+    if (isFreshPairing) {
+        for (const file of [
+            path.join(__dirname, 'allfunc', `owner-${kingbadboiNumber}.json`),
+            path.join(__dirname, 'allfunc', `botowner-${kingbadboiNumber}.txt`)
+        ]) {
+            try {
+                if (fs.existsSync(file)) fs.unlinkSync(file);
+            } catch (error) {
+                console.log(chalk.yellow(`⚠️ Could not reset ${file}: ${error.message}`));
+            }
+        }
+    }
     
     const {
         state,
