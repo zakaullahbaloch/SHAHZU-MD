@@ -896,9 +896,8 @@ if (isBanned && !isBot) {
       }
     }
 
-    if (!bad.public && !isCreator) {
-      return
-    }
+    // Self/private mode is a mode flag only. Do not stop command processing:
+    // menus and command actions must remain available to bot users.
 if (m.isGroup && !isCreator) {
     const antibillEnabled = getSetting(m.chat, "antibill", false);
     
