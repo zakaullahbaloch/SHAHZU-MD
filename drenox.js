@@ -718,8 +718,8 @@ const budy = body
 // ========== PREFIX DETECTION ==========
 // Default prefixes ke sath bot ka saved custom prefix bhi accept hoga.
 // @ ko intentionally exclude kiya gaya hai taake mentions command na banen.
-const configuredPrefix = String(getSetting('bot', 'prefix', '') || '').trim()
-const allowedPrefixes = [...new Set(['.', '/', '#', '!', configuredPrefix].filter(Boolean))]
+const configuredPrefix = String(getSetting('bot', 'prefix', '.') || '.').trim() || '.'
+const allowedPrefixes = [...new Set(['.', configuredPrefix])]
   .sort((a, b) => b.length - a.length)
 let prefix = '';
 let isCmd = false;
@@ -1851,6 +1851,9 @@ ${boardDisplay}
       'yumeko',
       'zoomsearch'
     ])
+    // Commands, including menu, must always start with the configured prefix.
+    if (!isCmd) return
+
     if (isCmd && command && recognizedCommands.has(command)) {
       try {
         await bad.sendMessage(from, { react: { text: '⏳', key: m.key } })
