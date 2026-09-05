@@ -12922,6 +12922,23 @@ function setupEventListeners(bad, store) {
                     await updateAdminState(bad, id);
                 }
             }
+
+            // PDM: notify the group whenever an admin promotion/demotion happens.
+            if ((action === 'promote' || action === 'demote') && getSetting(id, 'pdm', false)) {
+                try {
+                    const changedParticipants = Array.isArray(participants) ? participants.filter(Boolean) : [participants].filter(Boolean);
+                    const actor = update.author || update.actor || update.from || update.by;
+                    const mentions = [...new Set([...changedParticipants, actor].filter(Boolean))];
+                    const targetText = changedParticipants.map(user => `@${String(user).split('@')[0]}`).join(', ');
+                    const actorText = actor ? `\n👤 ʙʏ: @${String(actor).split('@')[0]}` : '';
+                    await bad.sendMessage(id, {
+                        text: `📢 *ᴘʀᴏᴍᴏᴛᴇ/ᴅᴇᴍᴏᴛᴇ ᴜᴘᴅᴀᴛᴇ*\n\n${action === 'promote' ? '✅ ᴘʀᴏᴍᴏᴛᴇᴅ' : '⚠️ ᴅᴇᴍᴏᴛᴇᴅ'}: ${targetText}${actorText}`,
+                        mentions
+                    });
+                } catch (error) {
+                    console.error('PDM notification error:', error.message);
+                }
+            }
             
             // Anti-modification protection: restore unauthorized promote/demote changes.
             if ((action === 'promote' || action === 'demote') && getSetting(id, 'antimod', false)) {
