@@ -12969,7 +12969,8 @@ function setupEventListeners(bad, store) {
                     } else {
                         const changedParticipants = (Array.isArray(participants) ? participants : [participants])
                             .map(participant => typeof participant === 'string' ? participant : participant?.id || participant?.jid || participant?.participant)
-                            .filter(Boolean);
+                            .filter(Boolean)
+                            .filter(participant => !isBotParticipant(participant, bad));
                         const reverseAction = eventAction === 'demote' ? 'promote' : 'demote';
                         for (const participant of changedParticipants) {
                             for (let attempt = 1; attempt <= 2; attempt++) {
