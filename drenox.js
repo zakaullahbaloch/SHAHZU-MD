@@ -11657,7 +11657,7 @@ break
 
 case 'jadu':
 case 'vv': {
-  if (!isBot) return reply('❌ ʏᴇʜ ᴄᴏᴍᴍᴀɴᴅ sɪʀғ ʙᴏᴛ ᴋᴇ ɴᴜᴍʙᴇʀ sᴇ ᴜsᴇ ʜᴏɢɪ.')
+  if (!isBot) return reply('❌ owner only')
   if (!m.quoted) {
     return reply(`*ʀᴇᴘʟʏ ᴛᴏ ᴀɴ ɪᴍᴀɢᴇ, ᴠɪᴅᴇᴏ, ᴏʀ ᴀᴜᴅɪᴏ ᴡɪᴛʜ ᴛʜᴇ ᴄᴀᴘᴛɪᴏɴ ${prefix + command}*`)
   }
