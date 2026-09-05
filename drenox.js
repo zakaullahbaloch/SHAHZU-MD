@@ -1242,8 +1242,6 @@ ${boardDisplay}
 case 'allmenu':
 case 'info':
 case 'menu2': {
-  await loading()
-  
   const menuImages = [
     'https://files.catbox.moe/74dko4.jpg',
     'https://files.catbox.moe/74dko4.jpg'
@@ -1845,8 +1843,6 @@ break
 // ═══════════════════════════════════════════════════════════
 case 'menu':
 case 'listmenu': {
-  await loading()
-  
   const menuImages = [
     'https://files.catbox.moe/74dko4.jpg',
     'https://files.catbox.moe/74dko4.jpg',
