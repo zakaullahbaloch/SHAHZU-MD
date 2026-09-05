@@ -742,9 +742,9 @@ const senderNumber = normalizeJid(senderJid)
 // ✅ Bot check
 const isBot = m.key.fromMe || isSameUser(senderJid, botJid) || areJidsSameUser(senderJid, botJid)
 
-// ✅ Strict owner check: only the number currently running/deployed as the bot
-// is the owner. owner.json and manually-added owner numbers are not trusted.
-const isCreator = isBot
+// ✅ Owner check: deployed bot number plus explicitly assigned sudo numbers.
+// Only the deployed bot number can grant or revoke sudo.
+const isCreator = isBot || owner.some(item => isSameUser(item, senderJid))
     
     let groupMetadata = null
     let participants = []
@@ -1241,8 +1241,8 @@ case 'menu2': {
 ┃✮│➣ ${prefix}ʙʀᴏᴀᴅᴄᴀsᴛ
 ┃✮│➣ ${prefix}sᴇᴛᴘᴘʙᴏᴛ
 ┃✮│➣ ${prefix}ᴀᴜᴛᴏʙɪᴏ
-┃✮│➣ ${prefix}ᴀᴅᴅᴏᴡɴᴇʀ
-┃✮│➣ ${prefix}ᴅᴇʟᴏᴡɴᴇʀ
+┃✮│➣ ${prefix}sᴇᴛsᴜᴅᴏ
+┃✮│➣ ${prefix}ᴅᴇʟsᴜᴅᴏ
 ┃✮│➣ ${prefix}ᴠᴠ
 ┃✮│➣ ${prefix}ᴅᴇʟᴘʀᴇᴍ
 ┃✮│➣ ${prefix}ʀᴜɴᴛɪᴍᴇ
@@ -1889,8 +1889,8 @@ case 'mymenu': {
 ┃✮│➣ ${prefix}ʙʀᴏᴀᴅᴄᴀsᴛ
 ┃✮│➣ ${prefix}sᴇᴛᴘᴘʙᴏᴛ
 ┃✮│➣ ${prefix}ᴀᴜᴛᴏʙɪᴏ
-┃✮│➣ ${prefix}ᴀᴅᴅᴏᴡɴᴇʀ
-┃✮│➣ ${prefix}ᴅᴇʟᴏᴡɴᴇʀ
+┃✮│➣ ${prefix}sᴇᴛsᴜᴅᴏ
+┃✮│➣ ${prefix}ᴅᴇʟsᴜᴅᴏ
 ┃✮│➣ ${prefix}ᴠᴠ
 ┃✮│➣ ${prefix}ᴅᴇʟᴘʀᴇᴍ
 ┃✮│➣ ${prefix}ʀᴜɴᴛɪᴍᴇ
@@ -2731,6 +2731,7 @@ case 'public': {
 break
 
 case 'fix': {
+  if (!isBot) return reply('❌ sɪʀғ ʙᴏᴛ ɴᴜᴍʙᴇʀ ɪs ᴄᴏᴍᴍᴀɴᴅ ᴋᴏ ᴜsᴇ ᴋᴀʀ sᴀᴋᴛᴀ ʜᴀɪ.')
   try {
     // Force set the sender as owner
     const botOwnerFile = './allfunc/botowner.txt'
@@ -3104,46 +3105,29 @@ case 'broadcast': {
 break
 
 
-case 'addowner':
-case 'setowner': {
-  if (!isCreator) return reply("╭━━〔 ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ 〕━━┈⊷\n┃◈ ᴏᴡɴᴇʀ ᴏɴʟʏ ᴄᴏᴍᴍᴀɴᴅ\n╰━━━━━━━━━━━━━━━┈⊷")
-  if (!args[0]) return reply(`ᴜsᴀɢᴇ: ${prefix}${command} 234xxx`)
-  
-  let number = text.replace(/[^0-9]/g, '')
-  let checkNumber = await bad.onWhatsApp(number + "@s.whatsapp.net")
-  if (!checkNumber.length) return reply("❌ ɪɴᴠᴀʟɪᴅ ɴᴜᴍʙᴇʀ!")
-  
-  const newOwnerJid = number + "@s.whatsapp.net"
-  
-  if (!owner.some(o => isSameUser(o, newOwnerJid))) {
-    owner.push(newOwnerJid)
+case 'setsudo': {
+  if (!isBot) return reply('❌ sɪʀғ ʙᴏᴛ ɴᴜᴍʙᴇʀ sᴇᴛsᴜᴅᴏ ᴋᴀʀ sᴀᴋᴛᴀ ʜᴀɪ.')
+  if (!args[0]) return reply(`ᴜsᴀɢᴇ: ${prefix}setsudo 234xxx`)
+  const number = text.replace(/[^0-9]/g, '')
+  const checkNumber = await bad.onWhatsApp(number + '@s.whatsapp.net')
+  if (!checkNumber.length) return reply('❌ ɪɴᴠᴀʟɪᴅ ɴᴜᴍʙᴇʀ!')
+  const sudoJid = number + '@s.whatsapp.net'
+  if (!owner.some(item => isSameUser(item, sudoJid))) {
+    owner.push(sudoJid)
     fs.writeFileSync('./allfunc/owner.json', JSON.stringify(owner, null, 2))
   }
-  
-  if (!premium.some(p => isSameUser(p, newOwnerJid))) {
-    premium.push(newOwnerJid)
-    fs.writeFileSync('./allfunc/premium.json', JSON.stringify(premium, null, 2))
-  }
-  
-  reply(`✅ *ᴏᴡɴᴇʀ ᴀᴅᴅᴇᴅ!*\n\n👤 @${number}\n\n• ғᴜʟʟ ʙᴏᴛ ᴀᴄᴄᴇss ɢʀᴀɴᴛᴇᴅ\n• ᴘʀᴇᴍɪᴜᴍ ғᴇᴀᴛᴜʀᴇs ᴜɴʟᴏᴄᴋᴇᴅ`)
+  reply(`✅ @${number} ᴋᴏ sᴜᴅᴏ ᴘᴇʀᴍɪssɪᴏɴ ᴅᴇ ᴅɪ ɢᴀɪ.`)
 }
 break
 
-case 'delowner':
-case 'delown': {
-  if (!isCreator) return reply("╭━━〔 ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ 〕━━┈⊷\n┃◈ ᴏᴡɴᴇʀ ᴏɴʟʏ ᴄᴏᴍᴍᴀɴᴅ\n╰━━━━━━━━━━━━━━━┈⊷")
-  if (!args[0]) return reply(`ᴜsᴀɢᴇ: ${prefix}${command} 234xxx`)
-  
-  let number = text.replace(/[^0-9]/g, '')
-  const removeJid = number + "@s.whatsapp.net"
-  
-  owner = owner.filter(o => !isSameUser(o, removeJid))
-  premium = premium.filter(p => !isSameUser(p, removeJid))
-  
+case 'delsudo': {
+  if (!isBot) return reply('❌ sɪʀғ ʙᴏᴛ ɴᴜᴍʙᴇʀ sᴜᴅᴏ ʀᴇᴍᴏᴠᴇ ᴋᴀʀ sᴀᴋᴛᴀ ʜᴀɪ.')
+  if (!args[0]) return reply(`ᴜsᴀɢᴇ: ${prefix}delsudo 234xxx`)
+  const number = text.replace(/[^0-9]/g, '')
+  const sudoJid = number + '@s.whatsapp.net'
+  owner = owner.filter(item => !isSameUser(item, sudoJid))
   fs.writeFileSync('./allfunc/owner.json', JSON.stringify(owner, null, 2))
-  fs.writeFileSync('./allfunc/premium.json', JSON.stringify(premium, null, 2))
-  
-  reply(`✅ *ᴏᴡɴᴇʀ ʀᴇᴍᴏᴠᴇᴅ!*\n\n👤 @${number}\n\n• ʙᴏᴛ ᴀᴄᴄᴇss ʀᴇᴠᴏᴋᴇᴅ\n• ᴘʀᴇᴍɪᴜᴍ ʀᴇᴍᴏᴠᴇᴅ`)
+  reply(`✅ @${number} sᴜᴅᴏ ᴘᴇʀᴍɪssɪᴏɴ ʀᴇᴍᴏᴠᴇᴅ.`)
 }
 break
 
