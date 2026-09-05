@@ -13357,16 +13357,11 @@ function setupEventListeners(bad, store) {
                             })
                             await bad.groupParticipantsUpdate(groupId, [offender], 'remove')
                         } else if (action === 'delete') {
-                            // WhatsApp does not allow a bot to delete another user's status.
-                            // Enforce delete mode by deleting any available mention message
-                            // and notifying the group about the violation.
-                            try {
-                                if (msg.key.id) await bad.sendMessage(groupId, { delete: msg.key })
-                            } catch (deleteError) {
-                                console.error('Status mention delete unavailable:', deleteError.message)
-                            }
+                            // WhatsApp does not expose a supported API to delete another
+                            // user's status. Do not send an invalid delete request; notify
+                            // the group instead so delete mode never causes a runtime error.
                             await bad.sendMessage(groupId, {
-                                text: `⚠️ ${tag} ɴᴇ ɢʀᴏᴜᴘ ᴋᴏ sᴛᴀᴛᴜs ᴍᴇɪɴ ᴍᴇɴᴛɪᴏɴ ᴋɪʏᴀ. sᴛᴀᴛᴜs ᴅᴇʟᴇᴛᴇ ɴᴀ ʜᴏɴᴇ ᴋɪ ᴡᴀᴊᴀ sᴇ ᴡᴀʀɴɪɴɢ ᴅɪ ɢᴀʏɪ.`,
+                                text: `⚠️ ${tag} ɴᴇ ɢʀᴏᴜᴘ ᴋᴏ sᴛᴀᴛᴜs ᴍᴇɪɴ ᴍᴇɴᴛɪᴏɴ ᴋɪʏᴀ. ᴡʜᴀᴛsᴀᴘᴘ ʟɪᴍɪᴛᴀᴛɪᴏɴ ᴋɪ ᴡᴀᴊᴀ sᴇ sᴛᴀᴛᴜs ᴅᴇʟᴇᴛᴇ ɴᴀʜɪ ʜᴏ sᴀᴋᴛᴀ; ᴡᴀʀɴɪɴɢ ᴅɪ ɢᴀʏɪ.`,
                                 mentions: [offender]
                             })
                         } else {
