@@ -5587,32 +5587,21 @@ case 'checkadmin':
 case "antilink": {
     if (!isAdmins && !isCreator) return m.reply("ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴇɴᴀʙʟᴇ/ᴅɪsᴀʙʟᴇ ᴀɴᴛɪʟɪɴᴋ.");
     if (!m.isGroup) return m.reply("ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ᴏɴʟʏ ᴡᴏʀᴋs ɪɴ ɢʀᴏᴜᴘs.");
-    if (!args[1]) return m.reply("ᴜsᴀɢᴇ: ᴀɴᴛɪʟɪɴᴋ ᴡᴀʀɴ ᴏɴ/ᴏғғ | ᴀɴᴛɪʟɪɴᴋ ᴋɪᴄᴋ ᴏɴ/ᴏғғ | ᴀɴᴛɪʟɪɴᴋ ᴅᴇʟᴇᴛᴇ ᴏɴ/ᴏғғ");
-
-    const mode = args[1].toLowerCase();      // Changed from args[0]
-    const action = args[2] ? args[2].toLowerCase() : null;  // Changed from args[1]
-
-    if (!action) return m.reply("ᴜsᴀɢᴇ: ᴀɴᴛɪʟɪɴᴋ ᴡᴀʀɴ ᴏɴ/ᴏғғ | ᴀɴᴛɪʟɪɴᴋ ᴋɪᴄᴋ ᴏɴ/ᴏғғ | ᴀɴᴛɪʟɪɴᴋ ᴅᴇʟᴇᴛᴇ ᴏɴ/ᴏғғ");
-
-    if (action === "on") {
-        if (mode === "warn") {
-            setSetting(m.chat, "antilink", "warn");
-            m.reply("🛡️ ᴀɴᴛɪʟɪɴᴋ ᴇɴᴀʙʟᴇᴅ ɪɴ *ᴡᴀʀɴ ᴍᴏᴅᴇ*\n\n⚠️ ᴜsᴇʀs ᴡɪʟʟ ʙᴇ ᴋɪᴄᴋᴇᴅ ᴀғᴛᴇʀ 3 ᴡᴀʀɴɪɴɢs");
-        } else if (mode === "kick") {
-            setSetting(m.chat, "antilink", "kick");
-            m.reply("🛡️ ᴀɴᴛɪʟɪɴᴋ ᴇɴᴀʙʟᴇᴅ ɪɴ *ᴋɪᴄᴋ ᴍᴏᴅᴇ*\n\n⚠️ ᴜsᴇʀs ᴡɪʟʟ ʙᴇ ɪɴsᴛᴀɴᴛʟʏ ᴋɪᴄᴋᴇᴅ");
-        } else if (mode === "delete") {
-            setSetting(m.chat, "antilink", "delete");
-            m.reply("🛡️ ᴀɴᴛɪʟɪɴᴋ ᴇɴᴀʙʟᴇᴅ ɪɴ *ᴅᴇʟᴇᴛᴇ ᴍᴏᴅᴇ*\n\n⚠️ ʟɪɴᴋs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ᴏɴʟʏ");
-        } else {
-            m.reply("ɪɴᴠᴀʟɪᴅ ᴍᴏᴅᴇ. ᴜsᴇ: ᴡᴀʀɴ, ᴋɪᴄᴋ, ᴏʀ ᴅᴇʟᴇᴛᴇ");
-        }
-    } else if (action === "off") {
-        setSetting(m.chat, "antilink", false);
-        m.reply("🚫 ᴀɴᴛɪʟɪɴᴋ ᴅɪsᴀʙʟᴇᴅ ғᴏʀ ᴛʜɪs ɢʀᴏᴜᴘ");
-    } else {
-        m.reply("ɪɴᴠᴀʟɪᴅ ᴀᴄᴛɪᴏɴ. ᴜsᴇ: ᴏɴ ᴏʀ ᴏғғ");
+    const mode = String(args[1] || '').toLowerCase();
+    const action = String(args[2] || '').toLowerCase();
+    const usage = `ᴜsᴀɢᴇ: ${prefix}antilink on/off | ${prefix}antilink delete on/off | ${prefix}antilink warn on/off | ${prefix}antilink kick on/off`;
+    if (!mode) return m.reply(usage);
+    if (mode === 'on') {
+        setSetting(m.chat, 'antilink', 'delete');
+        return m.reply('✅ ᴀɴᴛɪʟɪɴᴋ ᴏɴ: ᴀʟʟ ʟɪɴᴋs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ.');
     }
+    if (mode === 'off') {
+        setSetting(m.chat, 'antilink', false);
+        return m.reply('🚫 ᴀɴᴛɪʟɪɴᴋ ᴅɪsᴀʙʟᴇᴅ ғᴏʀ ᴛʜɪs ɢʀᴏᴜᴘ.');
+    }
+    if (!['delete', 'warn', 'kick'].includes(mode) || !['on', 'off'].includes(action)) return m.reply(usage);
+    setSetting(m.chat, 'antilink', action === 'on' ? mode : false);
+    return m.reply(action === 'on' ? `✅ ᴀɴᴛɪʟɪɴᴋ ${mode} ᴍᴏᴅᴇ ᴇɴᴀʙʟᴇᴅ.` : '🚫 ᴀɴᴛɪʟɪɴᴋ ᴅɪsᴀʙʟᴇᴅ.');
 }
 break;
 
@@ -12323,13 +12312,20 @@ const botIsAdmin = metadata.participants.some((participant) =>
 if (!botIsAdmin) return
 
 // Fast antilink action: no quoted detection/reply for delete or kick.
-const antilinkMode = getSetting(chatId, 'antilink', false)
+const savedAntilinkMode = getSetting(chatId, 'antilink', false)
+const antilinkMode = savedAntilinkMode === true ? 'delete' : String(savedAntilinkMode || '').toLowerCase()
 const linkRegex = /(?:\b(?:https?|ftp):\/\/[^\s<>'"]+|\bwww\d*\.[^\s<>'"]+|\b(?:chat\.whatsapp\.com|wa\.me|t\.me|discord\.gg|bit\.ly|tinyurl\.com)\/[^\s<>'"]+|\b(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?(?:\/[^\s<>'"]*)?|\b(?:[a-z0-9-]+\.)+[a-z]{2,63}(?:\/[^\s<>'"]*)?)/i
 
 if (antilinkMode && linkRegex.test(body) && !msg.key.fromMe) {
   try {
     // Delete first, immediately. No reply is sent in delete/kick modes.
-    await bad.sendMessage(chatId, { delete: msg.key })
+    const deleteKey = {
+      remoteJid: chatId,
+      fromMe: Boolean(msg.key.fromMe),
+      id: msg.key.id,
+      participant: msg.key.participant || msg.participant
+    }
+    await bad.sendMessage(chatId, { delete: deleteKey })
 
     if (antilinkMode === 'kick') {
       await bad.groupParticipantsUpdate(chatId, [msg.key.participant || msg.participant], 'remove')
