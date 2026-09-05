@@ -716,8 +716,9 @@ async function handleMessage(bad, m, chatUpdate, store) {
 const budy = body
 
 // ========== PREFIX DETECTION ==========
-// Sirf ye 5 prefixes kaam karenge: . / # ! @
-const allowedPrefixes = ['.', '/', '#', '!', '@'];
+// Sirf ye command prefixes kaam karenge: . / # !
+// @ ko intentionally exclude kiya gaya hai taake mentions command na banen.
+const allowedPrefixes = ['.', '/', '#', '!'];
 let prefix = '';
 let isCmd = false;
 
