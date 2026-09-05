@@ -19,6 +19,10 @@ const axios = require('axios')
 const os = require('os')
 const moment = require('moment-timezone')
 const { exec, execFile } = require('child_process')
+const FFMPEG_PATH = (() => {
+  if (process.env.FFMPEG_PATH) return process.env.FFMPEG_PATH
+  try { return require('@ffmpeg-installer/ffmpeg').path } catch { return 'ffmpeg' }
+})()
 const BOT_VERSION = (() => {
   try { return require('./package.json').version || 'unknown' } catch { return 'unknown' }
 })()
@@ -9870,7 +9874,7 @@ case 'toimg': {
     outputPath = path.join(os.tmpdir(), `${base}.png`)
     fs.writeFileSync(inputPath, media)
     await new Promise((resolve, reject) => {
-      execFile('ffmpeg', ['-y', '-i', inputPath, '-frames:v', '1', outputPath], (error, stdout, stderr) => {
+      execFile(FFMPEG_PATH, ['-y', '-i', inputPath, '-frames:v', '1', outputPath], (error, stdout, stderr) => {
         if (error) return reject(new Error(stderr?.trim() || error.message))
         resolve()
       })

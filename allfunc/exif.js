@@ -2,6 +2,12 @@ const fs = require('fs')
 const { tmpdir } = require("os")
 const Crypto = require("crypto")
 const ff = require('fluent-ffmpeg')
+try {
+    const ffmpegPath = process.env.FFMPEG_PATH || require('@ffmpeg-installer/ffmpeg').path
+    ff.setFfmpegPath(ffmpegPath)
+} catch (error) {
+    console.warn('Bundled FFmpeg unavailable; using system ffmpeg:', error.message)
+}
 const webp = require("node-webpmux")
 const path = require("path")
 

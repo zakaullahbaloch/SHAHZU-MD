@@ -25,11 +25,12 @@
   "dependencies": {
     "@adiwajshing/keyed-db": "^0.2.4",
     "@colors/colors": "^1.5.0",
+    "@distube/ytdl-core": "^4.14.4",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@hapi/boom": "^10.0.0",
-    "@whiskeysockets/baileys": "^7.0.0-rc14",
     "@vitalets/google-translate-api": "^9.2.0",
     "@vreden/youtube_scraper": "^1.2.0",
-    "@distube/ytdl-core": "^4.14.4",
+    "@whiskeysockets/baileys": "^7.0.0-rc14",
     "api-dylux": "^1.4.4",
     "awesome-phonenumber": "^2.64.0",
     "axios": "^1.7.7",
@@ -92,9 +93,9 @@
     "uuid": "^10.0.0",
     "wa-sticker-formatter": "^4.4.4",
     "yargs": "^17.7.2",
-    "yt-search": "^2.12.1",
     "youtube-yts": "^2.0.0",
     "youtubedl-core": "^4.11.4",
+    "yt-search": "^2.12.1",
     "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
