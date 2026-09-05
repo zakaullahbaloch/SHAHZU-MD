@@ -5418,8 +5418,8 @@ case 'luxurygold': case 'multicoloredneon': case 'underwatertext': case 'galaxyw
 case 'royaltext': case 'summerbeach': case 'writetext': case 'typographytext':
 case 'advancedglow': case 'gradienttext': case 'cartoonstyle': case 'papercutstyle':
 case 'watercolortext': case 'lighteffects': case 'galaxystyle': case 'flagtext':
-case 'flag3dtext': case 'deletingtext': case 'logomaker': case 'effectclouds':
-case 'blackpinklogo': case 'sandsummer': case 'style1917': case 'freecreate': {
+case 'flag3dtext': case 'deletingtext': case 'effectclouds':
+case 'sandsummer': case 'style1917': case 'freecreate': {
   if (!text) return reply(`ᴇxᴀᴍᴘʟᴇ: ${prefix + command} Your Text`)
   
   await loading()
@@ -10969,7 +10969,7 @@ async function sendGeneratedLogo({ bad, from, m, reply, command, text, title, st
   }
 }
 
-case 'logo': case 'logo1': case 'logo2': case 'makelogo': case 'makelogo2': case 'logomaker': case 'createlogo': {
+case 'logo': case 'logo1': case 'logo2': case 'makelogo': case 'makelogo2': case 'logomaker': case 'createlogo': case 'blackpinklogo': {
   return sendGeneratedLogo({ bad, from, m, reply, command, text, title: 'logo', style: 'modern minimalist brand mark, professional typography' });
 }
 case 'gaming': case 'gaminglogo': case 'esportslogo': {
