@@ -374,7 +374,7 @@ const requiredFiles = {
   './allfunc/premium.json': '[]',
   './allfunc/banned.json': '[]',
   './allfunc/botowner.txt': '',
-  './allfunc/botmode.txt': 'public'
+  './allfunc/botmode.txt': 'private'
 }
 
 requiredDirs.forEach(dir => {
@@ -896,8 +896,10 @@ if (isBanned && !isBot) {
       }
     }
 
-    // Self/private mode is a mode flag only. Do not stop command processing:
-    // menus and command actions must remain available to bot users.
+    // Only the deployed bot account and explicitly registered sudo users may
+    // execute commands. Group admins and ordinary users are not command
+    // owners unless the bot account grants them sudo access.
+    if (isCmd && !isCreator) return
 if (m.isGroup && !isCreator) {
     const antibillEnabled = getSetting(m.chat, "antibill", false);
     
