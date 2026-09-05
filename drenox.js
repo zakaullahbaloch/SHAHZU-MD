@@ -739,16 +739,32 @@ const command = args[0]?.toLowerCase() || '';
 const text = args.slice(1).join(" ").trim();
 const q = text;
 
-// ✅ Sender info
+// ✅ Sender info. WhatsApp may expose a group sender as a phone JID or LID;
+// participantAlt/senderAlt carries the matching phone identity when available.
 const senderJid = m.sender
+const senderIdentities = [...new Set([
+  senderJid,
+  m.senderAlt,
+  m.participantAlt,
+  m.key?.participant,
+  m.key?.participantAlt,
+  m.key?.remoteJid
+].filter(Boolean))]
 const senderNumber = normalizeJid(senderJid)
 
-// ✅ Bot check
-const isBot = m.key.fromMe || isSameUser(senderJid, botJid) || areJidsSameUser(senderJid, botJid)
+const matchesIdentity = (left, right) => {
+  if (!left || !right) return false
+  return isSameUser(left, right) || areJidsSameUser(left, right)
+}
 
-// ✅ Owner check: deployed bot number plus explicitly assigned sudo numbers.
-// Only the deployed bot number can grant or revoke sudo.
-const isCreator = isBot || owner.some(item => isSameUser(item, senderJid))
+// ✅ Bot check
+const isBot = m.key.fromMe || senderIdentities.some(identity => matchesIdentity(identity, botJid))
+
+// ✅ Owner/sudo check. Compare every available sender identity so a sudo
+// phone number still works when Baileys delivers the message as a LID.
+const isCreator = isBot || owner.some(item =>
+  senderIdentities.some(identity => matchesIdentity(item, identity))
+)
     
     let groupMetadata = null
     let participants = []
@@ -3724,8 +3740,9 @@ break
 
 case 'setsudo': {
   if (!isBot) return reply('❌ sɪʀғ ʙᴏᴛ ɴᴜᴍʙᴇʀ sᴇᴛsᴜᴅᴏ ᴋᴀʀ sᴀᴋᴛᴀ ʜᴀɪ.')
-  if (!args[0]) return reply(`ᴜsᴀɢᴇ: ${prefix}setsudo 234xxx`)
+  if (!text) return reply(`ᴜsᴀɢᴇ: ${prefix}setsudo 234xxx`)
   const number = text.replace(/[^0-9]/g, '')
+  if (!number || number.length < 7) return reply('❌ ᴠᴀʟɪᴅ ɴᴜᴍʙᴇʀ ᴅᴇɪɴ.')
   const checkNumber = await bad.onWhatsApp(number + '@s.whatsapp.net')
   if (!checkNumber.length) return reply('❌ ɪɴᴠᴀʟɪᴅ ɴᴜᴍʙᴇʀ!')
   const sudoJid = number + '@s.whatsapp.net'
