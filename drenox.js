@@ -3669,14 +3669,15 @@ case 'goodbye': {
 }
 break
   
-case 'runtime':
+case 'runtime': {
+  const uptime = runtime(process.uptime())
+  reply(`⏱️ UPTIME | ${uptime}`)
+}
+break;
+
 case 'alive': {
   const uptime = runtime(process.uptime())
-  reply(
-`🟢 *Bot Status:* ONLINE
-👑 *Owner:* ⸔𝐅𝐌𝐒 𝐂𝐇𝐀𝐍𝐃⸕
-⏱️ *Uptime:* ${uptime}`
-  );
+  reply(`CHAND MD IS ALIVE ✅\nUPTIME | ${uptime}`)
 }
 break;
 
