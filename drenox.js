@@ -197,6 +197,22 @@ const isBotParticipant = (participant, sock) => {
   )
 }
 
+const resolvePhoneJid = async (jid, sock, alternatives = []) => {
+  const candidates = [...alternatives, jid].filter(Boolean)
+  for (const candidate of candidates) {
+    const value = String(candidate)
+    if (/^\d+$/.test(value)) return `${value}@s.whatsapp.net`
+    if (value.endsWith('@s.whatsapp.net')) return value
+    if (value.endsWith('@lid')) {
+      try {
+        const mapped = await sock?.signalRepository?.lidMapping?.getPNForLID(value)
+        if (mapped) return String(mapped).includes('@') ? String(mapped) : `${mapped}@s.whatsapp.net`
+      } catch {}
+    }
+  }
+  return candidates.find(Boolean) || ''
+}
+
 const pickRandom = (arr) => {
   if (!Array.isArray(arr) || arr.length === 0) return null
   return arr[Math.floor(Math.random() * arr.length)]
@@ -3785,9 +3801,12 @@ break
 
 case 'sudolist': {
   if (!isCreator) return reply('❌ ᴏᴡɴᴇʀ ᴏʀ sᴜᴅᴏ ᴏɴʟʏ.')
-  const sudoNumbers = [...new Set(owner
+  const resolvedSudoJids = await Promise.all(owner
     .filter(item => !isSameUser(item, botJid) && !areJidsSameUser(item, botJid))
-    .map(item => normalizeJid(item))
+    .map(item => resolvePhoneJid(item, bad)))
+  const sudoNumbers = [...new Set(resolvedSudoJids
+    .filter(jid => String(jid).endsWith('@s.whatsapp.net'))
+    .map(jid => normalizeJid(jid))
     .filter(number => /^\d+$/.test(number)))]
   if (!sudoNumbers.length) return reply('📋 ɪs ʙᴏᴛ ᴋɪ sᴜᴅᴏ ʟɪsᴛ ᴍᴇɪɴ ᴋᴏɪ ɴᴜᴍʙᴇʀ ɴᴀʜɪ ʜᴀɪ.')
   const lines = sudoNumbers.map((number, index) => `${index + 1}. ${number}`)
@@ -3802,8 +3821,20 @@ case 'setsudo': {
   const mentionedTarget = m.mentionedJid?.[0]
   const quotedTarget = m.quoted?.sender
   const number = text.replace(/[^0-9]/g, '')
-  const sudoJid = mentionedTarget || quotedTarget || (number ? number + '@s.whatsapp.net' : '')
-  if (!sudoJid) return reply(`ᴜsᴀɢᴇ: ${prefix}setsudo 234xxx\nᴏʀ ɢʀᴏᴜᴘ ᴍᴇɴᴛɪᴏɴ/ʀᴇᴘʟʏ ᴛᴏ ᴛʜᴇ ᴜsᴇʀ`)
+  const rawTarget = mentionedTarget || quotedTarget || (number ? number + '@s.whatsapp.net' : '')
+  if (!rawTarget) return reply(`ᴜsᴀɢᴇ: ${prefix}setsudo 234xxx\nᴏʀ ɢʀᴏᴜᴘ ᴍᴇɴᴛɪᴏɴ/ʀᴇᴘʟʏ ᴛᴏ ᴛʜᴇ ᴜsᴇʀ`)
+  const groupParticipant = m.isGroup && String(rawTarget).endsWith('@lid')
+    ? (await bad.groupMetadata(m.chat).catch(() => null))?.participants?.find(participant =>
+        isSameUser(participant?.id, rawTarget) || areJidsSameUser(participant?.id, rawTarget))
+    : null
+  const quotedAlternatives = [
+    groupParticipant?.phoneNumber,
+    groupParticipant?.participantAlt,
+    m.quoted?.key?.participantAlt,
+    m.quoted?.participantAlt,
+    m.quoted?.msg?.contextInfo?.participantAlt
+  ]
+  const sudoJid = await resolvePhoneJid(rawTarget, bad, quotedAlternatives)
   if (!mentionedTarget && !quotedTarget) {
     if (!number || number.length < 7) return reply('❌ ᴠᴀʟɪᴅ ɴᴜᴍʙᴇʀ ᴅᴇɪɴ.')
     const checkNumber = await bad.onWhatsApp(sudoJid)
