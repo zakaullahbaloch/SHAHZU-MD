@@ -13566,22 +13566,24 @@ function setupEventListeners(bad, store) {
                     ]
                     let deleted = false
                     let deleteError = null
-                    // Maximum practical retry window without flooding WhatsApp.
-                    // Refresh the admin cache after a failed round so a stale
-                    // permission result cannot suppress the next link.
-                    for (let attempt = 1; attempt <= 12 && !deleted; attempt++) {
+                    // Keep retrying long enough to survive WhatsApp notify/
+                    // sync races. Refresh admin cache during the retry window;
+                    // never send a failure warning into the group.
+                    for (let attempt = 1; attempt <= 30 && !deleted; attempt++) {
                         const deleteKey = deleteKeys[(attempt - 1) % deleteKeys.length]
                         try {
                             await bad.sendMessage(chatId, { delete: deleteKey })
                             deleted = true
                         } catch (error) {
                             deleteError = error
-                            if (attempt === 4 || attempt === 8) global.antiLinkAdminCache?.delete(chatId)
-                            if (attempt < 12) await new Promise(resolve => setTimeout(resolve, Math.min(80 * attempt, 600)))
+                            if (attempt === 6 || attempt === 15 || attempt === 24) {
+                                global.antiLinkAdminCache?.delete(chatId)
+                            }
+                            if (attempt < 30) await new Promise(resolve => setTimeout(resolve, Math.min(100 * attempt, 1000)))
                         }
                     }
                     if (!deleted) {
-                        console.error(`Anti-link delete failed after 12 attempts: ${deleteError?.message || 'unknown error'}`)
+                        console.error(`Anti-link delete failed after 30 attempts: ${deleteError?.message || 'unknown error'}`)
                     }
 
                     if (mode === 'kick') {
