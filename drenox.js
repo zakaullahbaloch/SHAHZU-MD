@@ -12558,37 +12558,49 @@ case 'vv': {
   if (!m.quoted) {
     return reply(`*ʀᴇᴘʟʏ ᴛᴏ ᴀɴ ɪᴍᴀɢᴇ, ᴠɪᴅᴇᴏ, ᴏʀ ᴀᴜᴅɪᴏ ᴡɪᴛʜ ᴛʜᴇ ᴄᴀᴘᴛɪᴏɴ ${prefix + command}*`)
   }
-
   try {
-    const quotedMedia = m.quoted.msg || m.quoted
-    const mime = String(quotedMedia.mimetype || m.quoted.mimetype || '').split(';')[0].toLowerCase()
-    const media = await m.quoted.download().catch(() => bad.downloadMediaMessage(m.quoted))
+    // WhatsApp may wrap view-once media in ephemeralMessage,
+    // viewOnceMessage, viewOnceMessageV2, or viewOnceMessageV2Extension.
+    const unwrapMedia = value => {
+      let current = value
+      for (let depth = 0; current && depth < 8; depth++) {
+        const wrapper = current.ephemeralMessage ||
+          current.viewOnceMessage ||
+          current.viewOnceMessageV2 ||
+          current.viewOnceMessageV2Extension
+        if (wrapper?.message) {
+          current = wrapper.message
+          continue
+        }
+        break
+      }
+      return current || {}
+    }
+
+    const quotedRoot = m.quoted.fakeObj?.message || m.quoted.message || m.quoted.msg || m.quoted
+    const mediaMessage = unwrapMedia(quotedRoot)
+    const mediaType = ['imageMessage', 'videoMessage', 'audioMessage'].find(type => mediaMessage?.[type])
+    if (!mediaType) {
+      return reply(`❌ ᴠɪᴇᴡ-ᴏɴᴄᴇ ɪᴍᴀɢᴇ/ᴠɪᴅᴇᴏ/ᴀᴜᴅɪᴏ ᴘʜᴏᴛᴏ ᴘᴀʀ ʀᴇᴘʟʏ ᴋᴀʀᴋᴇ ${prefix + command} ᴜsᴇ ᴋᴀʀᴇɪɴ.`)
+    }
+
+    // Download the unwrapped message with its original key, then always send
+    // the result to the same chat where the command was issued.
+    const downloadMessage = m.quoted.fakeObj
+      ? { ...m.quoted.fakeObj, message: mediaMessage }
+      : { ...m.quoted, message: mediaMessage }
+    const media = await bad.downloadMediaMessage(downloadMessage)
     if (!media) throw new Error('media download failed')
 
-    // Send the view-once media back to the same chat where .vv was used.
-    // Never redirect it to the bot owner's private DM.
     const targetChat = m.chat
-    if (mime.startsWith('image/')) {
-      await bad.sendMessage(targetChat, {
-        image: media,
-        caption: '✅ ᴠɪᴇᴡ ᴏɴᴄᴇ ɪᴍᴀɢᴇ',
-        viewOnce: true
-      }, { quoted: m })
-    } else if (mime.startsWith('video/')) {
-      await bad.sendMessage(targetChat, {
-        video: media,
-        caption: '✅ ᴠɪᴇᴡ ᴏɴᴄᴇ ᴠɪᴅᴇᴏ',
-        viewOnce: true
-      }, { quoted: m })
-    } else if (mime.startsWith('audio/')) {
-      // WhatsApp does not support viewOnce on audio payloads reliably.
-      await bad.sendMessage(targetChat, {
-        audio: media,
-        mimetype: mime || 'audio/ogg; codecs=opus',
-        ptt: true
-      }, { quoted: m })
+    const payload = mediaMessage[mediaType]
+    const mime = String(payload?.mimetype || '').split(';')[0].toLowerCase()
+    if (mediaType === 'imageMessage') {
+      await bad.sendMessage(targetChat, { image: media, caption: '✅ ᴠɪᴇᴡ ᴏɴᴄᴇ ɪᴍᴀɢᴇ', viewOnce: true }, { quoted: m })
+    } else if (mediaType === 'videoMessage') {
+      await bad.sendMessage(targetChat, { video: media, caption: '✅ ᴠɪᴇᴡ ᴏɴᴄᴇ ᴠɪᴅᴇᴏ', viewOnce: true }, { quoted: m })
     } else {
-      return reply(`❌ ᴜɴsᴜᴘᴘᴏʀᴛᴇᴅ ᴍᴇᴅɪᴀ ᴛʏᴘᴇ!\nʀᴇᴘʟʏ ᴛᴏ ᴀɴ ɪᴍᴀɢᴇ, ᴠɪᴅᴇᴏ, ᴏʀ ᴀᴜᴅɪᴏ ᴡɪᴛʜ *${prefix + command}*`)
+      await bad.sendMessage(targetChat, { audio: media, mimetype: mime || 'audio/ogg; codecs=opus', ptt: true }, { quoted: m })
     }
   } catch (err) {
     console.error('ᴠᴠ ᴍᴇᴅɪᴀ ᴇʀʀᴏʀ:', err)
