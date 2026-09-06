@@ -6578,14 +6578,31 @@ case 'warn': {
     const remainingWarns = Math.max(0, 3 - warnCount)
     setSetting(m.chat, 'warns', groupWarns)
 
-    // Delete the exact message being warned when this command is used as a reply.
-    if (m.quoted?.key && isBotAdmins) {
-        await bad.sendMessage(m.chat, { delete: m.quoted.key }).catch(error =>
-            console.error('Warn message delete failed:', error.message)
-        )
+        const warningText = `WARN FROM CHAND MD ⚠️\n*@${user.split('@')[0]}* : don't break policy ❌\n*Warn* : ${warnCount}\n*Last warn* : ${remainingWarns}\n> Chand Xmd 👑`
+    await bad.sendMessage(m.chat, {
+        text: warningText,
+        contextInfo: { mentionedJid: [user] }
+    }, { quoted: m })
+
+    // m.quoted.key is not always exposed by the normalized message object.
+    // Use the original fake object's key, with a safe fallback, so the exact
+    // message being warned is removed from the same group.
+    if (m.quoted && isBotAdmins) {
+        const warnedMessageKey = m.quoted.fakeObj?.key || {
+            remoteJid: m.quoted.chat || m.chat,
+            fromMe: Boolean(m.quoted.fromMe),
+            id: m.quoted.id,
+            participant: m.quoted.sender || m.quoted.participant
+        }
+        if (warnedMessageKey.id) {
+            try {
+                await bad.sendMessage(m.chat, { delete: warnedMessageKey })
+            } catch (error) {
+                console.error('Warn message delete failed:', error.message)
+            }
+        }
     }
 
-    const warningText = `WARN FROM CHAND MD ⚠️\n*@${user.split('@')[0]}* : don't break policy ❌\n*Warn* : ${warnCount}\n*Last warn* : ${remainingWarns}\n> Chand Xmd 👑`
     if (warnCount >= 3) {
         if (isBotAdmins) {
             await bad.groupParticipantsUpdate(m.chat, [user], 'remove').catch(error =>
@@ -6595,10 +6612,6 @@ case 'warn': {
             setSetting(m.chat, 'warns', groupWarns)
         }
     }
-    await bad.sendMessage(m.chat, {
-        text: warningText,
-        contextInfo: { mentionedJid: [user] }
-    }, { quoted: m })
 }
 break
 
