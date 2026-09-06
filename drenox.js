@@ -3671,13 +3671,13 @@ break
   
 case 'runtime': {
   const uptime = runtime(process.uptime())
-  reply(`⏱️ UPTIME | ${uptime}`)
+  reply(`CHAND MD | ${uptime}`)
 }
 break;
 
 case 'alive': {
   const uptime = runtime(process.uptime())
-  reply(`CHAND MD IS ALIVE ✅\nUPTIME | ${uptime}`)
+  reply(`CHAND MD IS ALIVE ✅\nCHAND MD | ${uptime}`)
 }
 break;
 
