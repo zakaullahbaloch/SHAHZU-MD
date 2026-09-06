@@ -13602,6 +13602,8 @@ function setupEventListeners(bad, store) {
                         if (!global.antilinkWarnings[chatId]) global.antilinkWarnings[chatId] = {}
                         const warnings = (global.antilinkWarnings[chatId][offender] || 0) + 1
                         global.antilinkWarnings[chatId][offender] = warnings
+                        const remainingWarns = Math.max(0, 3 - warnings)
+                        const warningText = `⚠️ WARNING ⚠\n*@${offender.split('@')[0]}* : Links allow ni hain ❌\n*Warn* : ${warnings}\n*Last warn* : ${remainingWarns}`
                         if (warnings >= 3) {
                             try {
                                 await bad.groupParticipantsUpdate(chatId, [offender], 'remove')
@@ -13609,16 +13611,11 @@ function setupEventListeners(bad, store) {
                             } catch (kickError) {
                                 console.error('Anti-link warning kick failed:', kickError.message)
                             }
-                            await bad.sendMessage(chatId, {
-                                text: `🚫 @${offender.split('@')[0]} 3 warnings ke baad remove kar diya gaya.`,
-                                mentions: [offender]
-                            })
-                        } else {
-                            await bad.sendMessage(chatId, {
-                                text: `⚠️ @${offender.split('@')[0]} warning ${warnings}/3: group mein links allowed nahi hain.`,
-                                mentions: [offender]
-                            })
                         }
+                        await bad.sendMessage(chatId, {
+                            text: warningText,
+                            mentions: [offender]
+                        })
                     }
                 }
                 // Start now; do not await, otherwise the next incoming link waits.
