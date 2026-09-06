@@ -11587,22 +11587,43 @@ async function sendGeneratedLogo({ bad, from, m, reply, command, text, title, st
     await reply(`${emoji} ᴄʀᴇᴀᴛɪɴɢ ${title.toLowerCase()}...`);
     const safeName = name.replace(/["\\]/g, '');
     const promptText = ['Professional logo design', `with the exact readable text "${safeName}"`, style, 'clean centered composition, strong contrast, no watermark, high quality'].filter(Boolean).join(', ');
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptText)}?width=1024&height=1024&nologo=true&enhance=true&seed=${Date.now()}`;
-    const response = await axios.get(imageUrl, {
-      responseType: 'arraybuffer',
-      timeout: 120000,
-      headers: { 'User-Agent': 'Mozilla/5.0' },
-      maxContentLength: 20 * 1024 * 1024,
-      validateStatus: status => status >= 200 && status < 300
-    });
-    const buffer = Buffer.from(response.data);
-    const contentType = String(response.headers?.['content-type'] || '').toLowerCase();
-    if (!buffer.length || !contentType.startsWith('image/')) throw new Error(`Image provider returned ${contentType || 'empty response'}`);
+    const encodedPrompt = encodeURIComponent(promptText);
+    const encodedName = encodeURIComponent(name);
+    const imageUrls = [
+      `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&enhance=true&seed=${Date.now()}`,
+      `https://api.dicebear.com/9.x/initials/png?seed=${encodedName}&backgroundType=gradientLinear&fontSize=42&fontWeight=700&radius=18&size=1024`,
+      `https://ui-avatars.com/api/?name=${encodedName}&size=1024&background=random&bold=true&format=png`
+    ];
+    let buffer;
+    let contentType = '';
+    let imageUrl = '';
+    let lastError;
+    for (let index = 0; index < imageUrls.length && !buffer; index++) {
+      const providerUrl = imageUrls[index];
+      try {
+        const response = await axios.get(providerUrl, {
+          responseType: 'arraybuffer',
+          timeout: index === 0 ? 120000 : 30000,
+          headers: { 'User-Agent': 'Mozilla/5.0' },
+          maxContentLength: 20 * 1024 * 1024,
+          validateStatus: status => status >= 200 && status < 300
+        });
+        const candidateType = String(response.headers?.['content-type'] || '').toLowerCase();
+        const candidateBuffer = Buffer.from(response.data);
+        if (!candidateBuffer.length || !candidateType.startsWith('image/')) throw new Error(`provider returned ${candidateType || 'non-image'}`);
+        buffer = candidateBuffer;
+        contentType = candidateType;
+        imageUrl = providerUrl;
+      } catch (providerError) {
+        lastError = providerError;
+        if (providerError.response?.status === 429) await new Promise(resolve => setTimeout(resolve, 1200));
+      }
+    }
+    if (!buffer) throw lastError || new Error('all logo providers unavailable');
     const caption = `${emoji} *${title.toUpperCase()} ᴄʀᴇᴀᴛᴇᴅ*\n\n📝 ᴛᴇxᴛ: ${name}\n🎨 sᴛʏʟᴇ: ${style}`;
     try {
-      await bad.sendMessage(from, { image: buffer, mimetype: contentType.split(';')[0] || 'image/jpeg', caption }, { quoted: m });
+      await bad.sendMessage(from, { image: buffer, mimetype: contentType.split(';')[0] || 'image/png', caption }, { quoted: m });
     } catch (bufferError) {
-      // Fallback for Baileys versions that reject an in-memory image buffer.
       console.error(`[${command}] Buffer send failed, using image URL:`, bufferError.message);
       await bad.sendMessage(from, { image: { url: imageUrl }, caption }, { quoted: m });
     }
