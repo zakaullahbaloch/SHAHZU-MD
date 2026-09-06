@@ -3685,9 +3685,9 @@ break;
 case 'ping':
 case 'speed': {
   const start = process.hrtime();
-  await reply('Testing...');
   const [s, ns] = process.hrtime(start);
-  reply(`Speed: ${((s * 1e9 + ns) / 1e6).toFixed(2)} ms`);
+  const latency = ((s * 1e9 + ns) / 1e6).toFixed(2)
+  reply(`CHAND MD SPEED\n${latency} ms`)
 }
 break;
 
