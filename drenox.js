@@ -13637,14 +13637,15 @@ function setupEventListeners(bad, store) {
                 const offender = msg.key.participant || msg.participant
                 if (!offender) continue
 
-                // Do not serialize a whole group behind one slow delete. Each link
-                // is handled immediately and independently, while this key prevents
-                // duplicate upserts/retries from deleting the same message twice.
+                // Deduplicate repeated upserts, then serialize each group’s link
+                // deletions. This prevents WhatsApp rate limits from causing a
+                // later link in the same burst to be silently skipped.
                 if (!global.antiLinkProcessing) global.antiLinkProcessing = new Set()
+                if (!global.antiLinkQueues) global.antiLinkQueues = new Map()
                 const messageKey = `${chatId}:${msg.key.id}`
                 if (!msg.key.id || global.antiLinkProcessing.has(messageKey)) continue
                 global.antiLinkProcessing.add(messageKey)
-                setTimeout(() => global.antiLinkProcessing.delete(messageKey), 120000)
+                setTimeout(() => global.antiLinkProcessing.delete(messageKey), 300000)
 
                 const enforceAntiLink = async () => {
                     // Preserve Baileys' original key fields. Rebuilding a group
@@ -13710,8 +13711,19 @@ function setupEventListeners(bad, store) {
                         })
                     }
                 }
-                // Start now; do not await, otherwise the next incoming link waits.
-                enforceAntiLink().catch(error => console.error('Anti-link enforcement error:', error.message))
+                // Queue the message per group. Incoming bursts are retained and
+                // processed one-by-one instead of racing the delete endpoint.
+                const previousTask = global.antiLinkQueues.get(chatId) || Promise.resolve()
+                const currentTask = previousTask
+                    .catch(() => undefined)
+                    .then(() => enforceAntiLink())
+                    .catch(error => console.error('Anti-link enforcement error:', error.message))
+                    .finally(() => {
+                        if (global.antiLinkQueues.get(chatId) === currentTask) {
+                            global.antiLinkQueues.delete(chatId)
+                        }
+                    })
+                global.antiLinkQueues.set(chatId, currentTask)
             } catch (error) {
                 console.error('Active anti-link error:', error.message)
             }
