@@ -6307,18 +6307,19 @@ case "antilink": {
     if (!isAdmins && !isCreator) return m.reply("ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴍᴀɴᴀɢᴇ ᴀɴᴛɪʟɪɴᴋ.");
 
     const action = String(args[1] || '').toLowerCase();
-    const usage = `ᴜsᴀɢᴇ: ${prefix}antilink delete | warn | kick | off`;
+    const usage = `ᴜsᴀɢᴇ: ${prefix}antilink null | warn | kick | off`;
     if (!action || action === 'status' || action === 'info') {
         const current = getSetting(m.chat, 'antilink', false);
         return m.reply(`🛡️ ᴀɴᴛɪʟɪɴᴋ: ${current || 'off'}
-⚙️ ᴀᴄᴛɪᴏɴs: delete / warn / kick`);
+⚙️ ᴀᴄᴛɪᴏɴs: null / warn / kick`);
     }
-    if (!['delete', 'warn', 'kick', 'off'].includes(action)) return m.reply(usage);
+    if (!['null', 'delete', 'warn', 'kick', 'off'].includes(action)) return m.reply(usage);
 
-    setSetting(m.chat, 'antilink', action === 'off' ? false : action);
+    const selectedAction = action === 'delete' ? 'null' : action;
+    setSetting(m.chat, 'antilink', selectedAction === 'off' ? false : selectedAction);
     return m.reply(action === 'off'
         ? '🚫 ᴀɴᴛɪʟɪɴᴋ ᴅɪsᴀʙʟᴇᴅ.'
-        : `✅ ᴀɴᴛɪʟɪɴᴋ ${action} ᴀᴄᴛɪᴏɴ ᴇɴᴀʙʟᴇᴅ.`);
+        : `✅ ᴀɴᴛɪʟɪɴᴋ ${selectedAction} ᴀᴄᴛɪᴏɴ ᴇɴᴀʙʟᴇᴅ.`);
 }
 break;
 
@@ -13519,7 +13520,7 @@ function setupEventListeners(bad, store) {
                 // bypass anti-link moderation.
                 const body = collectText(msg.message).join('\n').trim()
                 const modeValue = getSetting(chatId, 'antilink', false)
-                const mode = modeValue === true ? 'delete' : String(modeValue || '').toLowerCase()
+                const mode = modeValue === true ? 'null' : String(modeValue || '').toLowerCase()
                 if (!mode || !body) continue
 
                 const linkRegex = /(?:\b(?:https?|ftp):\/\/[^\s<>'"]+|\bwww\d*\.[^\s<>'"]+|\b(?:chat\.whatsapp\.com|whatsapp\.com|wa\.me|t\.me|telegram\.me|discord\.gg|bit\.ly|tinyurl\.com|goo\.gl|lnkd\.in)\/[^\s<>'"]+|\b(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?(?:\/[^\s<>'"]*)?|\b(?:[a-z0-9-]+\.)+[a-z]{2,63}(?:\/[^\s<>'"]*)?)/iu
