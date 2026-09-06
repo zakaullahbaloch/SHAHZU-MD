@@ -741,10 +741,11 @@ const budy = body
 // ========== PREFIX DETECTION ==========
 // Default prefixes ke sath bot ka saved custom prefix bhi accept hoga.
 // @ ko intentionally exclude kiya gaya hai taake mentions command na banen.
-const savedPrefix = String(getSetting('bot', 'prefix', '') || '').trim()
-// Default prefix is '.', but a custom prefix replaces it completely.
+const prefixSettingKey = `bot:${botNumber}`
+const savedPrefix = String(getSetting(prefixSettingKey, 'prefix', '') || '').trim()
+// Default prefix is '.', but a custom prefix replaces it completely for this bot only.
 const configuredPrefix = savedPrefix || '.'
-const allowedPrefixes = savedPrefix ? [configuredPrefix] : ['.']
+const allowedPrefixes = [configuredPrefix]
 let prefix = '';
 let isCmd = false;
 
@@ -3521,18 +3522,9 @@ case 'setix':
         
         if (text.length > 1) return reply('❌ ᴘʀᴇғɪx ᴍᴜsᴛ ʙᴇ ᴏɴʟʏ 1 ᴄʜᴀʀᴀᴄᴛᴇʀ!')
         
-        try {
-          global.prefix = text
-          global.prefa = false
-          
-          const configPath = './setting/config.js'
-          if (fs.existsSync(configPath)) {
-            let config = fs.readFileSync(configPath, 'utf8')
-            config = config.replace(/global\.prefix\s*=\s*['"][^'"]*['"]/g, `global.prefix = '${text}'`)
-            fs.writeFileSync(configPath, config)
-          }
-          
-          reply(`✅ ᴘʀᴇғɪx ᴄʜᴀɴɢᴇᴅ ᴛᴏ: *${text}*\n\n✨ ɴᴇᴡ ᴘʀᴇғɪx ᴀᴄᴛɪᴠᴇ ɪᴍᴍᴇᴅɪᴀᴛᴇʟʏ!`)
+                try {
+          setSetting(`bot:${botNumber}`, 'prefix', text)
+          reply(`✅ ᴘʀᴇғɪx ᴄʜᴀɴɢᴇᴅ ᴛᴏ: *${text}*\n\n✨ ɴᴇᴡ ᴘʀᴇғɪx ɪs ᴀᴄᴛɪᴠᴇ ғᴏʀ ᴛʜɪs ʙᴏᴛ ᴏɴʟʏ!`)
         } catch (error) {
           reply('❌ ᴇʀʀᴏʀ: ' + error.message)
         }
@@ -3867,7 +3859,7 @@ case 'setprefix': {
   if (!newPrefix || newPrefix.length > 3 || /[\s@A-Za-z0-9]/.test(newPrefix)) {
     return reply(`ᴜsᴀɢᴇ: ${prefix}setprefix <prefix>\nᴇxᴀᴍᴘʟᴇ: ${prefix}setprefix ?`)
   }
-  setSetting('bot', 'prefix', newPrefix)
+  setSetting(`bot:${botNumber}`, 'prefix', newPrefix)
   return reply(`✅ ᴘʀᴇғɪx sᴇᴛ ᴛᴏ: ${newPrefix}\n\nᴀʙ ${newPrefix}menu ᴜsᴇ ᴋᴀʀᴇɪɴ.`)
 }
 break
