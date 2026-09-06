@@ -6516,35 +6516,38 @@ break
 case 'warn': {
     if (!m.isGroup) return reply('ɢʀᴏᴜᴘ ᴄᴏᴍᴍᴀɴᴅ ᴏɴʟʏ.')
     if (!isAdmins && !isCreator) return reply('ᴀᴅᴍɪɴs ᴏɴʟʏ.')
-    
     if (!m.mentionedJid[0] && !m.quoted) return reply('ᴍᴇɴᴛɪᴏɴ ᴏʀ ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴜsᴇʀ.')
-    
+
     const user = m.mentionedJid[0] || m.quoted.sender
-    const reason = args.slice(1).join(' ') || 'ɴᴏ ʀᴇᴀsᴏɴ'
-    
-    // Get current warnings from settings
-    let groupWarns = getSetting(m.chat, "warns", {})
+    const reason = args.slice(1).join(' ') || 'ᴘᴏʟɪᴄʏ ᴠɪᴏʟᴀᴛɪᴏɴ'
+    let groupWarns = getSetting(m.chat, 'warns', {})
     if (!groupWarns[user]) groupWarns[user] = []
-    
     groupWarns[user].push(reason)
     const warnCount = groupWarns[user].length
-    
-    // Save updated warnings
-    setSetting(m.chat, "warns", groupWarns)
-    
+    const remainingWarns = Math.max(0, 3 - warnCount)
+    setSetting(m.chat, 'warns', groupWarns)
+
+    // Delete the exact message being warned when this command is used as a reply.
+    if (m.quoted?.key && isBotAdmins) {
+        await bad.sendMessage(m.chat, { delete: m.quoted.key }).catch(error =>
+            console.error('Warn message delete failed:', error.message)
+        )
+    }
+
+    const warningText = `WARN FROM CHAND MD ⚠️\n*@${user.split('@')[0]}* : don't break policy ❌\n*Warn* : ${warnCount}\n*Last warn* : ${remainingWarns}\n> Chand Xmd 👑`
     if (warnCount >= 3) {
         if (isBotAdmins) {
-            await bad.groupParticipantsUpdate(m.chat, [user], 'remove')
-            reply(`⚠️ @${user.split('@')[0]} ʜᴀs ʙᴇᴇɴ ᴋɪᴄᴋᴇᴅ ᴀғᴛᴇʀ 3 ᴡᴀʀɴɪɴɢs!`)
-            // Reset warnings
+            await bad.groupParticipantsUpdate(m.chat, [user], 'remove').catch(error =>
+                console.error('Warn kick failed:', error.message)
+            )
             delete groupWarns[user]
-            setSetting(m.chat, "warns", groupWarns)
-        } else {
-            reply(`⚠️ @${user.split('@')[0]} ʀᴇᴀᴄʜᴇᴅ 3 ᴡᴀʀɴɪɴɢs!\n⚠️ ʙᴏᴛ ɴᴇᴇᴅs ᴀᴅᴍɪɴ ᴛᴏ ᴋɪᴄᴋ.`)
+            setSetting(m.chat, 'warns', groupWarns)
         }
-    } else {
-        reply(`⚠️ ᴡᴀʀɴɪɴɢ ${warnCount}/3 ғᴏʀ @${user.split('@')[0]}\nʀᴇᴀsᴏɴ: ${reason}`)
     }
+    await bad.sendMessage(m.chat, {
+        text: warningText,
+        contextInfo: { mentionedJid: [user] }
+    }, { quoted: m })
 }
 break
 
