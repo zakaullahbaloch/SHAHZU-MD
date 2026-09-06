@@ -3842,14 +3842,53 @@ break
 
 case 'delsudo': {
   if (!isBot) return reply('❌ sɪʀғ ʙᴏᴛ ɴᴜᴍʙᴇʀ sᴜᴅᴏ ʀᴇᴍᴏᴠᴇ ᴋᴀʀ sᴀᴋᴛᴀ ʜᴀɪ.')
+
   const mentionedTarget = m.mentionedJid?.[0]
-  const quotedTarget = m.quoted?.sender
+  const quotedTarget = m.quoted?.sender || m.quoted?.participant
   const number = text.replace(/[^0-9]/g, '')
-  const sudoJid = mentionedTarget || quotedTarget || (number ? number + '@s.whatsapp.net' : '')
-  if (!sudoJid) return reply(`ᴜsᴀɢᴇ: ${prefix}delsudo 234xxx\nᴏʀ ɢʀᴏᴜᴘ ᴍᴇɴᴛɪᴏɴ/ʀᴇᴘʟʏ ᴛᴏ ᴛʜᴇ ᴜsᴇʀ`)
-  owner = owner.filter(item => !isSameUser(item, sudoJid))
+  const rawTarget = mentionedTarget || quotedTarget || (number ? `${number}@s.whatsapp.net` : '')
+  if (!rawTarget) return reply(`ᴜsᴀɢᴇ: ${prefix}delsudo 234xxx\nᴏʀ ɢʀᴏᴜᴘ ᴍᴇɴᴛɪᴏɴ/ʀᴇᴘʟʏ ᴛᴏ ᴛʜᴇ ᴜsᴇʀ`)
+
+  // Mentions/replies can contain a WhatsApp LID. Resolve it to the phone JID,
+  // matching the format used when the sudo user was originally added.
+  const groupParticipant = m.isGroup && String(rawTarget).endsWith('@lid')
+    ? (await bad.groupMetadata(m.chat).catch(() => null))?.participants?.find(participant =>
+        isSameUser(participant?.id, rawTarget) || areJidsSameUser(participant?.id, rawTarget))
+    : null
+  const targetAlternatives = [
+    groupParticipant?.phoneNumber,
+    groupParticipant?.participantAlt,
+    m.quoted?.key?.participantAlt,
+    m.quoted?.participantAlt,
+    m.quoted?.msg?.contextInfo?.participantAlt
+  ]
+  const sudoJid = await resolvePhoneJid(rawTarget, bad, targetAlternatives)
+
+  const sudoEntries = await Promise.all(owner.map(async item => ({
+    original: item,
+    resolved: await resolvePhoneJid(item, bad)
+  })))
+  const removed = sudoEntries.some(entry =>
+    isSameUser(entry.original, sudoJid) ||
+    areJidsSameUser(entry.original, sudoJid) ||
+    isSameUser(entry.resolved, sudoJid) ||
+    areJidsSameUser(entry.resolved, sudoJid)
+  )
+  owner = sudoEntries
+    .filter(entry => !(
+      isSameUser(entry.original, sudoJid) ||
+      areJidsSameUser(entry.original, sudoJid) ||
+      isSameUser(entry.resolved, sudoJid) ||
+      areJidsSameUser(entry.resolved, sudoJid)
+    ))
+    .map(entry => entry.original)
+
+  if (!removed) return reply(`❌ @${normalizeJid(sudoJid)} sᴜᴅᴏ ʟɪsᴛ ᴍᴇɪɴ ɴᴀʜɪɴ ʜᴀɪ.`)
   fs.writeFileSync(ownerStoreFile, JSON.stringify(owner, null, 2))
-  reply(`✅ @${normalizeJid(sudoJid)} sᴜᴅᴏ ᴘᴇʀᴍɪssɪᴏɴ ʀᴇᴍᴏᴠᴇᴅ.`)
+  return bad.sendMessage(m.chat, {
+    text: `✅ @${normalizeJid(sudoJid)} sᴜᴅᴏ ᴘᴇʀᴍɪssɪᴏɴ ʀᴇᴍᴏᴠᴇᴅ.`,
+    mentions: [sudoJid]
+  }, { quoted: m })
 }
 break
 
