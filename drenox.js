@@ -12472,28 +12472,28 @@ case 'vv': {
     const media = await m.quoted.download().catch(() => bad.downloadMediaMessage(m.quoted))
     if (!media) throw new Error('media download failed')
 
-    // Always target the logged-in bot account's normal DM JID. Do not quote
-    // the original group message because cross-chat quoted keys are rejected.
-    const botDm = jidNormalizedUser(botJid) || botJid
+    // Send the view-once media back to the same chat where .vv was used.
+    // Never redirect it to the bot owner's private DM.
+    const targetChat = m.chat
     if (mime.startsWith('image/')) {
-      await bad.sendMessage(botDm, {
+      await bad.sendMessage(targetChat, {
         image: media,
-        caption: '✅ ᴠɪᴇᴡ ᴏɴᴄᴇ ɪᴍᴀɢᴇ sᴇɴᴛ ᴛᴏ ʙᴏᴛ ᴅᴍ',
+        caption: '✅ ᴠɪᴇᴡ ᴏɴᴄᴇ ɪᴍᴀɢᴇ',
         viewOnce: true
-      })
+      }, { quoted: m })
     } else if (mime.startsWith('video/')) {
-      await bad.sendMessage(botDm, {
+      await bad.sendMessage(targetChat, {
         video: media,
-        caption: '✅ ᴠɪᴇᴡ ᴏɴᴄᴇ ᴠɪᴅᴇᴏ sᴇɴᴛ ᴛᴏ ʙᴏᴛ ᴅᴍ',
+        caption: '✅ ᴠɪᴇᴡ ᴏɴᴄᴇ ᴠɪᴅᴇᴏ',
         viewOnce: true
-      })
+      }, { quoted: m })
     } else if (mime.startsWith('audio/')) {
       // WhatsApp does not support viewOnce on audio payloads reliably.
-      await bad.sendMessage(botDm, {
+      await bad.sendMessage(targetChat, {
         audio: media,
         mimetype: mime || 'audio/ogg; codecs=opus',
         ptt: true
-      })
+      }, { quoted: m })
     } else {
       return reply(`❌ ᴜɴsᴜᴘᴘᴏʀᴛᴇᴅ ᴍᴇᴅɪᴀ ᴛʏᴘᴇ!\nʀᴇᴘʟʏ ᴛᴏ ᴀɴ ɪᴍᴀɢᴇ, ᴠɪᴅᴇᴏ, ᴏʀ ᴀᴜᴅɪᴏ ᴡɪᴛʜ *${prefix + command}*`)
     }
