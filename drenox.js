@@ -13830,8 +13830,10 @@ function setupEventListeners(bad, store) {
                                 console.error('Anti-mod actor demotion failed:', error.message)
                             );
                         }
+                        const actorMention = actor || changedParticipants[0] || '';
                         await bad.sendMessage(id, {
-                            text: `🛡️ ᴀɴᴛɪ-ᴍᴏᴅ ᴛʀɪɢɢᴇʀᴇᴅ: ᴜɴᴀᴜᴛʜᴏʀɪᴢᴇᴅ ${eventAction} ʀᴇᴠᴇʀᴛᴇᴅ.`
+                            text: `*Anti-Demote Triggered!*\n\n*Actor:* @${actorMention.split('@')[0]}\n*Action:* Unauthorized demotion reversed and actor demoted.`,
+                            contextInfo: { mentionedJid: [actorMention, ...changedParticipants].filter(Boolean) }
                         });
                         await updateAdminState(bad, id);
                     }
