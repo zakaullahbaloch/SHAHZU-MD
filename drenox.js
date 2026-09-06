@@ -13781,10 +13781,11 @@ function setupEventListeners(bad, store) {
                     const actor = toJid(update.author || update.actor || update.from || update.by);
                     const mentions = [...new Set([...changedParticipants, actor].filter(Boolean))];
                     const targetText = changedParticipants.map(user => `@${String(user).split('@')[0]}`).join(', ');
-                    const actorText = actor ? `\n👤 ʙʏ: @${String(actor).split('@')[0]}` : '';
+                    const actorText = actor ? `@${String(actor).split('@')[0]}` : '@unknown';
+                    const actionText = eventAction === 'promote' ? 'Promoted' : 'Demoted';
                     await bad.sendMessage(id, {
-                        text: `📢 *ᴘʀᴏᴍᴏᴛᴇ/ᴅᴇᴍᴏᴛᴇ ᴜᴘᴅᴀᴛᴇ*\n\n${eventAction === 'promote' ? '✅ ᴘʀᴏᴍᴏᴛᴇᴅ' : '⚠️ ᴅᴇᴍᴏᴛᴇᴅ'}: ${targetText}${actorText}`,
-                        mentions
+                        text: `${actorText} ${actionText} ${targetText}`,
+                        contextInfo: { mentionedJid: mentions }
                     });
                 } catch (error) {
                     console.error('PDM notification error:', error.message);
