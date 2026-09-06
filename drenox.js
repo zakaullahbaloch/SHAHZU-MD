@@ -53,7 +53,21 @@ async function downloadMedia(bad, message, type) {
 // ═══════════════════════════════════════════════════════════
 // CACHE MAPS & STORAGE
 // ═══════════════════════════════════════════════════════════
-const { getSetting, setSetting } = require("./Settings.js")
+const { getSetting: readSetting, setSetting: writeSetting } = require("./Settings.js")
+// Every settings key is isolated by the connected bot account. This prevents
+// one deployed bot from changing another bot's prefix or group features.
+let activeBotScope = 'default'
+const botSettingsKey = jid => {
+  const value = String(jid || '')
+  if (activeBotScope === 'default') return value
+  return `${activeBotScope}:${value}`
+}
+const getSetting = (jid, key, defaultValue = false) => readSetting(botSettingsKey(jid), key, defaultValue)
+const setSetting = (jid, key, value) => writeSetting(botSettingsKey(jid), key, value)
+const setBotSettingsScope = botJid => {
+  const number = normalizeJid(botJid)
+  if (number) activeBotScope = `bot-${number}`
+}
 const groupCache = new Map(); // Cache group metadata
 const groupMetadataCache = new Map();
 const loadingAnimations = new Map()
@@ -699,6 +713,7 @@ async function handleMessage(bad, m, chatUpdate, store) {
     
     const botJid = bad.user.id
     const botNumber = normalizeJid(botJid)
+    setBotSettingsScope(botJid)
     const ownerStoreFile = path.join(__dirname, 'allfunc', `owner-${botNumber}.json`)
     const botOwnerFile = path.join(__dirname, 'allfunc', `botowner-${botNumber}.txt`)
 
@@ -13497,6 +13512,7 @@ if (!botIsAdmin) return
 
 // ==================== SETUP EVENT LISTENERS ====================
 function setupEventListeners(bad, store) {
+    setBotSettingsScope(bad?.user?.id)
     // Serialize moderation per group so bursts of links are never skipped or
     // processed concurrently before the previous delete has completed.
     if (!global.antiLinkQueues) global.antiLinkQueues = new Map()
