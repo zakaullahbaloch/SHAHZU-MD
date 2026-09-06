@@ -13784,7 +13784,7 @@ function setupEventListeners(bad, store) {
                     const actorText = actor ? `@${String(actor).split('@')[0]}` : '@unknown';
                     const actionText = eventAction === 'promote' ? 'Promoted' : 'Demoted';
                     await bad.sendMessage(id, {
-                        text: `${actorText} ${actionText} ${targetText}`,
+                        text: `_${actorText} ${actionText} ${targetText}_`,
                         contextInfo: { mentionedJid: mentions }
                     });
                 } catch (error) {
