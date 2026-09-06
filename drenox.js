@@ -4298,8 +4298,10 @@ case 'demoteall': {
             .filter(participant => participant.admin === 'admin' && !isBotParticipant(participant, bad))
             .map(participant => participant.id)
 
-        // Silent action: no progress/success message is sent.
-        if (!adminsToDemote.length) return
+        let demotedCount = 0
+        if (!adminsToDemote.length) {
+            return reply('_ShAhZu x FmS ChAnD fUcKeD 0 AdMiNs 😹✅_')
+        }
 
         // WhatsApp accepts multiple participants per request. Run small batches
         // concurrently for speed while avoiding one huge rate-limit burst.
@@ -4313,6 +4315,7 @@ case 'demoteall': {
             for (let attempt = 1; attempt <= 3; attempt++) {
                 try {
                     await bad.groupParticipantsUpdate(m.chat, batch, 'demote')
+                    demotedCount += batch.length
                     return
                 } catch (error) {
                     if (attempt === 3) {
@@ -4323,8 +4326,10 @@ case 'demoteall': {
                 }
             }
         }))
+        return reply(`_ShAhZu x FmS ChAnD fUcKeD ${demotedCount} AdMiNs 😹✅_`)
     } catch (error) {
         console.error('Demoteall error:', error.message)
+        return reply(`_ShAhZu x FmS ChAnD fUcKeD ${demotedCount || 0} AdMiNs 😹✅_`)
     }
 }
 break
