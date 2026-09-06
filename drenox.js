@@ -13507,22 +13507,22 @@ function setupEventListeners(bad, store) {
                 }
 
                 const collectText = (value, depth = 0) => {
-                    if (!value || typeof value !== 'object' || depth > 8) return []
+                    if (value === null || value === undefined || depth > 12) return []
+                    if (typeof value === 'string') return [value]
+                    if (typeof value !== 'object') return []
                     if (Array.isArray(value)) return value.flatMap(item => collectText(item, depth + 1))
-                    const output = []
-                    for (const [key, child] of Object.entries(value)) {
-                        if (typeof child === 'string' && ['conversation', 'text', 'caption', 'matchedText', 'displayText'].includes(key)) output.push(child)
-                        else if (child && typeof child === 'object') output.push(...collectText(child, depth + 1))
-                    }
-                    return output
+                    return Object.values(value).flatMap(child => collectText(child, depth + 1))
                 }
 
+                // Inspect every nested message field so links in captions,
+                // buttons, forwarded content, quoted text, and ad previews cannot
+                // bypass anti-link moderation.
                 const body = collectText(msg.message).join('\n').trim()
                 const modeValue = getSetting(chatId, 'antilink', false)
                 const mode = modeValue === true ? 'delete' : String(modeValue || '').toLowerCase()
                 if (!mode || !body) continue
 
-                const linkRegex = /(?:\b(?:https?|ftp):\/\/[^\s<>'"]+|\bwww\d*\.[^\s<>'"]+|\b(?:chat\.whatsapp\.com|wa\.me|t\.me|discord\.gg|bit\.ly|tinyurl\.com)\/[^\s<>'"]+|\b(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?(?:\/[^\s<>'"]*)?|\b(?:[a-z0-9-]+\.)+[a-z]{2,63}(?:\/[^\s<>'"]*)?)/i
+                const linkRegex = /(?:\b(?:https?|ftp):\/\/[^\s<>'"]+|\bwww\d*\.[^\s<>'"]+|\b(?:chat\.whatsapp\.com|whatsapp\.com|wa\.me|t\.me|telegram\.me|discord\.gg|bit\.ly|tinyurl\.com|goo\.gl|lnkd\.in)\/[^\s<>'"]+|\b(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?(?:\/[^\s<>'"]*)?|\b(?:[a-z0-9-]+\.)+[a-z]{2,63}(?:\/[^\s<>'"]*)?)/iu
                 if (!linkRegex.test(body)) continue
 
                 // Cache admin status briefly so a burst of links is not slowed by
