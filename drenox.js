@@ -3715,7 +3715,8 @@ case 'setwelcome': {
     }
     if (welcomeText.length > 1000) return reply('❌ ᴡᴇʟᴄᴏᴍᴇ ᴍᴇssᴀɢᴇ ᴍᴜsᴛ ʙᴇ 1000 ᴄʜᴀʀᴀᴄᴛᴇʀs ᴏʀ ʟᴇss.')
     setSetting(m.chat, 'welcomeMessage', welcomeText)
-    return reply(`✅ ᴄᴜsᴛᴏᴍ ᴡᴇʟᴄᴏᴍᴇ sᴀᴠᴇᴅ.\nᴜsᴇ ${prefix}welcome on ᴛᴏ ᴇɴᴀʙʟᴇ ᴡᴇʟᴄᴏᴍᴇs.\nᴘʟᴀᴄᴇʜᴏʟᴅᴇʀs: {user} ᴏʀ {mention}`)
+    setSetting(m.chat, 'welcome', true)
+    return reply(`✅ ᴄᴜsᴛᴏᴍ ᴡᴇʟᴄᴏᴍᴇ sᴀᴠᴇᴅ ᴀɴᴅ ᴇɴᴀʙʟᴇᴅ.\nᴘʟᴀᴄᴇʜᴏʟᴅᴇʀs: {user} ᴏʀ {mention}`)
 }
 break
 
@@ -14117,9 +14118,9 @@ function setupEventListeners(bad, store) {
             for (const rawParticipant of (Array.isArray(participants) ? participants : [participants])) {
                 const participant = typeof rawParticipant === 'string'
                     ? rawParticipant
-                    : rawParticipant?.id || rawParticipant?.jid || rawParticipant?.participant;
+                    : rawParticipant?.id || rawParticipant?.jid || rawParticipant?.participant || rawParticipant?.phoneNumber;
                 if (!participant) continue;
-                if (eventAction === 'add' || eventAction === 'added') {
+                if (['add', 'added', 'join'].includes(eventAction)) {
                     if (getSetting(id, 'welcome', false)) {
                         try {
                             const mention = `@${participant.split('@')[0]}`;
@@ -14129,10 +14130,19 @@ function setupEventListeners(bad, store) {
                                     .replace(/\{mention\}/gi, mention)
                                     .replace(/\{user\}/gi, mention)
                                 : `${mention}\nWelcome ho gaya apka 🌚💗`;
-                            await bad.sendMessage(id, {
-                                text: welcomeText,
-                                mentions: [participant]
-                            });
+                            let sent = false
+                            for (let attempt = 1; attempt <= 3 && !sent; attempt++) {
+                                try {
+                                    await bad.sendMessage(id, {
+                                        text: welcomeText,
+                                        mentions: [participant]
+                                    });
+                                    sent = true
+                                } catch (sendError) {
+                                    if (attempt === 3) throw sendError
+                                    await new Promise(resolve => setTimeout(resolve, attempt * 700))
+                                }
+                            }
                         } catch (error) {
                             console.error('❌ Welcome error:', error.message);
                         }
