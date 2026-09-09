@@ -4676,16 +4676,11 @@ case 'tagall':
           const participants = groupMetadata.participants.map(p => p.id)
           const customMessage = text || 'ωнαтƨ ʋρ Яɛαρɛяƨ'
           
-          // Build clean tag format
+          // Build the visible message only; member JIDs stay hidden in metadata.
           let tagText = `*╭━━〔 ᴛᴀɢ ᴀʟʟ 〕━━┈⊷*\n`
           tagText += `┃✮│ *${customMessage}*\n`
           tagText += `┃✮│\n`
-          
-          // Add each participant on separate line
-          participants.forEach(p => {
-            tagText += `┃✮│ @${normalizeJid(p)}\n`
-          })
-          
+
           tagText += `*╰━━━━━━━━━━━━━━━┈⊷*`
           
           await bad.sendMessage(from, {
@@ -5092,14 +5087,12 @@ case 'tag': {
       const quotedMessage = unwrap(quotedRoot)
       const mediaType = ['imageMessage', 'videoMessage', 'audioMessage', 'stickerMessage', 'documentMessage']
         .find(type => quotedMessage?.[type])
-      const mentionLine = memberJids.map(jid => `@${normalizeJid(jid)}`).join(' ')
-
       if (mediaType && typeof m.quoted.download === 'function') {
         const media = await m.quoted.download()
         if (!media) throw new Error('media download failed')
         const payload = quotedMessage[mediaType]
         const caption = String(payload?.caption || '').trim()
-        const taggedCaption = [caption, mentionLine].filter(Boolean).join('\n')
+        const taggedCaption = caption
         if (mediaType === 'imageMessage') {
           await bad.sendMessage(m.chat, { image: media, caption: taggedCaption, mentions: memberJids })
         } else if (mediaType === 'videoMessage') {
@@ -5114,23 +5107,22 @@ case 'tag': {
           })
         } else if (mediaType === 'audioMessage') {
           await bad.sendMessage(m.chat, { audio: media, mimetype: payload?.mimetype || 'audio/ogg', ptt: Boolean(payload?.ptt) })
-          await bad.sendMessage(m.chat, { text: mentionLine, mentions: memberJids })
+          await bad.sendMessage(m.chat, { text: '\u200b', mentions: memberJids })
         } else {
           await bad.sendMessage(m.chat, { sticker: media })
-          await bad.sendMessage(m.chat, { text: mentionLine, mentions: memberJids })
+          await bad.sendMessage(m.chat, { text: '\u200b', mentions: memberJids })
         }
       } else {
         const quotedText = String(m.quoted.text || m.quoted.caption || m.quoted.body || '').trim()
         if (!quotedText) return reply('❌ ʀᴇᴘʟɪᴇᴅ ᴍᴇssᴀɢᴇ ᴍᴜsᴛ ᴄᴏɴᴛᴀɪɴ ᴛᴇxᴛ ᴏʀ ᴍᴇᴅɪᴀ.')
         await bad.sendMessage(m.chat, {
-          text: `${quotedText}\n${mentionLine}`,
+          text: quotedText,
           mentions: memberJids
         })
       }
     } else {
-      const mentionLine = memberJids.map(jid => `@${normalizeJid(jid)}`).join(' ')
       await bad.sendMessage(m.chat, {
-        text: `${text.trim()}\n${mentionLine}`,
+        text: text.trim(),
         mentions: memberJids
       })
     }
