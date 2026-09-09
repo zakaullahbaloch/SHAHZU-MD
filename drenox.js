@@ -6972,6 +6972,7 @@ case 'listprotect': {
 break
 
 case 'antimod': {
+    const sendAntiModResponse = response => bad.sendMessage(m.chat, { text: response });
     if (!m.isGroup) return reply('ɢʀᴏᴜᴘ ᴄᴏᴍᴍᴀɴᴅ ᴏɴʟʏ.')
     if (!isAdmins && !isCreator) return reply('ᴀᴅᴍɪɴs ᴏɴʟʏ.')
 
@@ -6989,7 +6990,7 @@ case 'antimod': {
         
         setSetting(m.chat, "antimod", true)
         
-        await reply(`✅ *ᴀɴᴛɪ-ᴍᴏᴅɪғɪᴄᴀᴛɪᴏɴ ᴀᴄᴛɪᴠᴇ!*\n\n🛡️ ᴀɴʏ ᴘʀᴏᴍᴏᴛɪᴏɴ ᴏʀ ᴅᴇᴍᴏᴛɪᴏɴ ᴡɪʟʟ ʙᴇ ʀᴇᴠᴇʀsᴇᴅ.\n\n• ᴜɴᴀᴜᴛʜᴏʀɪᴢᴇᴅ ᴘʀᴏᴍᴏᴛᴇs ᴡɪʟʟ ʙᴇ ᴅᴇᴍᴏᴛᴇᴅ\n• ᴜɴᴀᴜᴛʜᴏʀɪᴢᴇᴅ ᴅᴇᴍᴏᴛᴇs ᴡɪʟʹ ʙᴇ ᴘʀᴏᴍᴏᴛᴇᴅ`)
+        await sendAntiModResponse('⚠️ Anti-modification activated | Chand md will detect every moment ⚠️')
     } else {
         if (!getSetting(m.chat, "antimod", false)) {
             return reply('⚠️ ᴀɴᴛɪ-ᴍᴏᴅɪғɪᴄᴀᴛɪᴏɴ ɪs ᴀʟʀᴇᴀᴅʏ ᴅɪsᴀʙʟᴇᴅ!')
