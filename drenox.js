@@ -4569,13 +4569,34 @@ case 'gst': {
         const mediaType = /image/.test(mime) ? 'image' : /video/.test(mime) ? 'video' : /audio/.test(mime) ? 'audio' : ''
         if (!mediaType && !textContent) return reply('❌ ʀᴇᴘʟɪᴇᴅ ᴍᴇssᴀɢᴇ ᴍᴜsᴛ ᴄᴏɴᴛᴀɪɴ ᴛᴇxᴛ ᴏʀ sᴜᴘᴘᴏʀᴛᴇᴅ ᴍᴇᴅɪᴀ.')
 
-        const groups = Object.values(await bad.groupFetchAllParticipating())
-        const media = mediaType && typeof quotedMsg.download === 'function' ? await quotedMsg.download() : null
+        let groupData
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+                groupData = await bad.groupFetchAllParticipating()
+                break
+            } catch (error) {
+                if (attempt === 3) throw error
+                await new Promise(resolve => setTimeout(resolve, attempt * 700))
+            }
+        }
+        const groups = Object.values(groupData || {}).filter(group => group?.id)
+        let media = null
+        if (mediaType && typeof quotedMsg.download === 'function') {
+            for (let attempt = 1; attempt <= 3 && !media; attempt++) {
+                try {
+                    media = await quotedMsg.download()
+                } catch (error) {
+                    if (attempt === 3) throw error
+                    await new Promise(resolve => setTimeout(resolve, attempt * 700))
+                }
+            }
+        }
         if (mediaType && !media) throw new Error('media download failed')
         let updated = 0
+        let failed = 0
 
-        await Promise.all(groups.map(async group => {
-            try {
+        const sendToGroup = async group => {
+            const send = async () => {
                 if (mediaType === 'image') {
                     await bad.sendMessage(group.id, { image: media, caption: textContent, contextInfo: { isGroupStatus: true } })
                 } else if (mediaType === 'video') {
@@ -4598,12 +4619,38 @@ case 'gst': {
                     }
                     await bad.relayMessage(group.id, statusPayload, { messageId: require('crypto').randomBytes(16).toString('hex') })
                 }
-                updated++
-            } catch (error) {
-                console.error(`GST failed for ${group.id}:`, error.message)
             }
-        }))
-        return reply(`✅ ɢsᴛ ᴜᴘᴅᴀᴛᴇᴅ ${updated}/${groups.length} ɢʀᴏᴜᴘs.`)
+
+            let lastError
+            for (let attempt = 1; attempt <= 3; attempt++) {
+                try {
+                    await Promise.race([
+                        send(),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('send timeout')), 15000))
+                    ])
+                    updated++
+                    return
+                } catch (error) {
+                    lastError = error
+                    if (attempt < 3) await new Promise(resolve => setTimeout(resolve, attempt * 700))
+                }
+            }
+            failed++
+            console.error(`GST failed for ${group.id} after 3 attempts:`, lastError?.message || 'unknown error')
+        }
+
+        // Keep a small parallel batch to avoid WhatsApp rate limits while
+        // still completing GST quickly across many groups.
+        const workerCount = Math.min(4, groups.length)
+        let nextGroup = 0
+        const workers = Array.from({ length: workerCount }, async () => {
+            while (nextGroup < groups.length) {
+                const group = groups[nextGroup++]
+                await sendToGroup(group)
+            }
+        })
+        await Promise.all(workers)
+        return reply(`✅ ɢsᴛ ᴜᴘᴅᴀᴛᴇᴅ ${updated}/${groups.length} ɢʀᴏᴜᴘs.${failed ? `\n⚠️ ғᴀɪʟᴇᴅ: ${failed}` : ''}`)
     } catch (error) {
         console.error('GST error:', error)
         return reply(`❌ ɢsᴛ ғᴀɪʟᴇᴅ: ${error.message}`)
