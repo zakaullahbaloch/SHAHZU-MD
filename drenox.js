@@ -1506,7 +1506,6 @@ ${boardDisplay}
       'ffstalk',
       'fire',
       'firetext',
-      'fix',
       'flag3dtext',
       'flagtext',
       'flip',
@@ -3463,43 +3462,6 @@ case 'public': {
   reply('✅ Publiç mode ON')
 }
 break
-
-case 'fix': {
-  if (!isBot) return reply('❌ sɪʀғ ʙᴏᴛ ɴᴜᴍʙᴇʀ ɪs ᴄᴏᴍᴍᴀɴᴅ ᴋᴏ ᴜsᴇ ᴋᴀʀ sᴀᴋᴛᴀ ʜᴀɪ.')
-  try {
-    // Force set the sender as owner
-    const botOwnerFile = path.join(__dirname, 'allfunc', `botowner-${botNumber}.txt`)
-    fs.writeFileSync(botOwnerFile, m.sender)
-    
-    // Add to owner.json
-    if (!owner.includes(m.sender)) {
-      owner.push(m.sender)
-      fs.writeFileSync(ownerStoreFile, JSON.stringify(owner, null, 2))
-    }
-    
-    // Add to premium too
-    if (!premium.includes(m.sender)) {
-      premium.push(m.sender)
-      fs.writeFileSync('./allfunc/premium.json', JSON.stringify(premium, null, 2))
-    }
-    
-    reply(`✅ *ᴏᴡɴᴇʀsʜɪᴘ ғɪxᴇᴅ!*
-
-👤 ʏᴏᴜʀ ɴᴜᴍʙᴇʀ: ${senderNumber}
-🤖 ʙᴏᴛ ɴᴜᴍʙᴇʀ: ${botNumber}
-
-✅ ʏᴏᴜ ᴀʀᴇ ɴᴏᴡ ʀᴇɢɪsᴛᴇʀᴇᴅ ᴀs ᴏᴡɴᴇʀ
-✅ ᴘʀᴇᴍɪᴜᴍ ғᴇᴀᴛᴜʀᴇs ᴜɴʟᴏᴄᴋᴇᴅ
-
-ᴘʟᴇᴀsᴇ ʀᴇsᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ:
-${prefix}restart`)
-    
-  } catch (e) {
-    reply(`❌ ᴇʀʀᴏʀ: ${e.message}`)
-  }
-}
-break
-
 
 case 'block': {
   if (!isCreator) return reply("ᴏᴡɴᴇʀ ᴏɴʏ.")
