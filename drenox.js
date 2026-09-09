@@ -13943,7 +13943,10 @@ function setupEventListeners(bad, store) {
                     // participant on the message rather than inside key; an
                     // incomplete delete key is silently rejected by the server.
                     const participant = msg.key.participant || msg.participant || msg.key.participantAlt || msg.key.participantAlt?.jid || undefined
-                    const participantAlt = msg.key.participantAlt || msg.participantAlt || undefined
+                    const participantAltValue = msg.key.participantAlt || msg.participantAlt || undefined
+                    const participantAlt = typeof participantAltValue === 'string'
+                        ? participantAltValue
+                        : participantAltValue?.jid || participantAltValue?.id || undefined
                     const normalizedDeleteKey = {
                         ...msg.key,
                         remoteJid: msg.key.remoteJid || chatId,
@@ -13957,7 +13960,14 @@ function setupEventListeners(bad, store) {
                     const deleteKeys = [
                         msg.key,
                         normalizedDeleteKey,
-                        { remoteJid: chatId, fromMe: Boolean(msg.key.fromMe), id: msg.key.id, participant, ...(participantAlt ? { participantAlt } : {}) }
+                        { remoteJid: chatId, fromMe: Boolean(msg.key.fromMe), id: msg.key.id, participant, ...(participantAlt ? { participantAlt } : {}) },
+                        ...(participantAlt ? [{
+                            remoteJid: chatId,
+                            fromMe: Boolean(msg.key.fromMe),
+                            id: msg.key.id,
+                            participant: participantAlt,
+                            participantAlt: participant
+                        }] : [])
                     ]
                     let deleted = false
                     let deleteError = null
@@ -13978,7 +13988,7 @@ function setupEventListeners(bad, store) {
                         }
                     }
                     if (!deleted) {
-                        console.error(`Anti-link delete failed after 30 attempts: ${deleteError?.message || 'unknown error'}`)
+                        console.error(`Anti-link delete failed after 30 attempts for ${chatId}/${msg.key.id}. Bot must be a group admin. Last error: ${deleteError?.message || 'unknown error'}`)
                     }
 
                     if (mode === 'kick') {
