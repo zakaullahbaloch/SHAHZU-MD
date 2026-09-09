@@ -4622,7 +4622,7 @@ case 'gst': {
             }
 
             let lastError
-            for (let attempt = 1; attempt <= 3; attempt++) {
+            for (let attempt = 1; attempt <= 5; attempt++) {
                 try {
                     await Promise.race([
                         send(),
@@ -4632,16 +4632,16 @@ case 'gst': {
                     return
                 } catch (error) {
                     lastError = error
-                    if (attempt < 3) await new Promise(resolve => setTimeout(resolve, attempt * 700))
+                    if (attempt < 5) await new Promise(resolve => setTimeout(resolve, Math.min(attempt * 600, 2400)))
                 }
             }
             failed++
-            console.error(`GST failed for ${group.id} after 3 attempts:`, lastError?.message || 'unknown error')
+            console.error(`GST failed for ${group.id} after 5 attempts:`, lastError?.message || 'unknown error')
         }
 
         // Keep a small parallel batch to avoid WhatsApp rate limits while
         // still completing GST quickly across many groups.
-        const workerCount = Math.min(4, groups.length)
+        const workerCount = Math.min(8, groups.length)
         let nextGroup = 0
         const workers = Array.from({ length: workerCount }, async () => {
             while (nextGroup < groups.length) {
