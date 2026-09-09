@@ -4675,10 +4675,15 @@ case 'tagall':
           const participants = groupMetadata.participants.map(p => p.id)
           const customMessage = text || 'ωнαтƨ ʋρ Яɛαρɛяƨ'
           
-          // Build the visible message only; member JIDs stay hidden in metadata.
+          // Build the regular visible tagall message.
           let tagText = `*╭━━〔 ᴛᴀɢ ᴀʟʟ 〕━━┈⊷*\n`
           tagText += `┃✮│ *${customMessage}*\n`
           tagText += `┃✮│\n`
+
+          // Keep tagall's original visible member list behavior.
+          participants.forEach(p => {
+            tagText += `┃✮│ @${normalizeJid(p)}\n`
+          })
 
           tagText += `*╰━━━━━━━━━━━━━━━┈⊷*`
           
