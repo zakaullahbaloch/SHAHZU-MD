@@ -6651,6 +6651,7 @@ allowed: ${allowlist.join(', ') || 'none'}`);
 break;
 
 case "antigm": {
+    const sendAntiGroupMentionResponse = response => bad.sendMessage(m.chat, { text: response });
     if (!m.isGroup) return m.reply("ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ᴏɴʟʏ ᴡᴏʀᴋs ɪɴ ɢʀᴏᴜᴘs.");
     if (!isAdmins && !isCreator) return m.reply("ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴍᴀɴᴀɢᴇ ᴀɴᴛɪ-ɢʀᴏᴜᴘ-ᴍᴇɴᴛɪᴏɴ.");
     const antigmValue = (args[1] || '').toLowerCase();
@@ -6662,15 +6663,14 @@ case "antigm": {
         if (antigmValue === 'on' && antigmArgs) setSetting(m.chat, 'antigmAction', antigmArgs);
         if (antigmValue === 'on' && !getSetting(m.chat, 'antigmAction', '')) setSetting(m.chat, 'antigmAction', 'null');
         setSetting(m.chat, 'antigm', antigmValue === 'on');
-        const selectedAction = String(getSetting(m.chat, 'antigmAction', 'null')).toLowerCase();
-        return m.reply(antigmValue === 'on'
-            ? `✅ ᴀɴᴛɪ-ɢʀᴏᴜᴘ-ᴍᴇɴᴛɪᴏɴ ᴇɴᴀʙʟᴇᴅ.\n⚙️ ᴀᴄᴛɪᴏɴ: ${selectedAction}`
-            : '❌ ᴀɴᴛɪ-ɢʀᴏᴜᴘ-ᴍᴇɴᴛɪᴏɴ ᴅɪsᴀʙʟᴇᴅ.');
+        return sendAntiGroupMentionResponse(antigmValue === 'on'
+            ? 'anti group mention active | chand md watching now ! 👀'
+            : 'anti group mention disabled');
     }
     if (['null', 'delete', 'warn', 'kick'].includes(antigmValue)) {
         setSetting(m.chat, 'antigmAction', antigmValue);
         setSetting(m.chat, 'antigm', true);
-        return m.reply(`✅ ᴀɴᴛɪ-ɢʀᴏᴜᴘ-ᴍᴇɴᴛɪᴏɴ ᴀᴄᴛɪᴏɴ: ${antigmValue}\n🟢 ᴀɴᴛɪɢᴍ ᴀᴜᴛᴏ-ᴇɴᴀʙʟᴇᴅ`);
+        return sendAntiGroupMentionResponse('anti group mention active | chand md watching now ! 👀');
     }
     if (antigmValue === 'ignore') {
         if (!antigmArgs) return m.reply(`ᴜsᴇ: ${prefix}antigm ignore <ᴛᴇxᴛ>\nᴜsᴇ: ${prefix}antigm ignore off ᴛᴏ ᴄʟᴇᴀʀ`);
