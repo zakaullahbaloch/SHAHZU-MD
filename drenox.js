@@ -5110,9 +5110,19 @@ case 'tag': {
   try {
     const metadata = groupMetadata || await bad.groupMetadata(m.chat)
     const memberJids = [...new Set((metadata.participants || [])
-      .map(participant => participant.id)
+      .map(participant => [participant.phoneNumber, participant.participantAlt, participant.id]
+        .find(jid => typeof jid === 'string' && /@(s\.whatsapp\.net|lid)$/.test(jid)))
       .filter(Boolean))]
     if (!memberJids.length) return reply('❌ ɴᴏ ɢʀᴏᴜᴘ ᴍᴇᴍʙᴇʀs ғᴏᴜɴᴅ.')
+
+    const sendTagMessage = async (content, options = {}) => {
+      try {
+        return await bad.sendMessage(m.chat, { ...content, mentions: memberJids }, options)
+      } catch (firstError) {
+        console.error('Tag send retry:', firstError.message)
+        return await bad.sendMessage(m.chat, { ...content, mentions: memberJids.slice(0, 100) })
+      }
+    }
 
     if (m.quoted && (!text || !text.trim())) {
       const quotedRoot = m.quoted.fakeObj?.message || m.quoted.message || m.quoted.msg || m.quoted
@@ -5136,41 +5146,33 @@ case 'tag': {
         const caption = String(payload?.caption || '').trim()
         const taggedCaption = caption
         if (mediaType === 'imageMessage') {
-          await bad.sendMessage(m.chat, { image: media, caption: taggedCaption, mentions: memberJids })
+          await sendTagMessage({ image: media, caption: taggedCaption }, { quoted: m })
         } else if (mediaType === 'videoMessage') {
-          await bad.sendMessage(m.chat, { video: media, caption: taggedCaption, mentions: memberJids })
+          await sendTagMessage({ video: media, caption: taggedCaption }, { quoted: m })
         } else if (mediaType === 'documentMessage') {
-          await bad.sendMessage(m.chat, {
+          await sendTagMessage({
             document: media,
             mimetype: payload?.mimetype || 'application/octet-stream',
             fileName: payload?.fileName || 'tagged-file',
-            caption: taggedCaption,
-            mentions: memberJids
+            caption: taggedCaption
           })
         } else if (mediaType === 'audioMessage') {
-          await bad.sendMessage(m.chat, { audio: media, mimetype: payload?.mimetype || 'audio/ogg', ptt: Boolean(payload?.ptt) })
-          await bad.sendMessage(m.chat, { text: '\u200b', mentions: memberJids })
+          await sendTagMessage({ audio: media, mimetype: payload?.mimetype || 'audio/ogg', ptt: Boolean(payload?.ptt) })
+          await sendTagMessage({ text: '\u200b' })
         } else {
           await bad.sendMessage(m.chat, { sticker: media })
-          await bad.sendMessage(m.chat, { text: '\u200b', mentions: memberJids })
+          await sendTagMessage({ text: '\u200b' })
         }
       } else {
         const quotedText = String(m.quoted.text || m.quoted.caption || m.quoted.body || '').trim()
         if (!quotedText) return reply('❌ ʀᴇᴘʟɪᴇᴅ ᴍᴇssᴀɢᴇ ᴍᴜsᴛ ᴄᴏɴᴛᴀɪɴ ᴛᴇxᴛ ᴏʀ ᴍᴇᴅɪᴀ.')
-        await bad.sendMessage(m.chat, {
-          text: quotedText,
-          mentions: memberJids
-        })
+        await sendTagMessage({ text: quotedText })
       }
     } else {
-      await bad.sendMessage(m.chat, {
-        text: text.trim(),
-        mentions: memberJids
-      })
+      await sendTagMessage({ text: text.trim() })
     }
   } catch (error) {
     console.error('Tag error:', error)
-    reply('❌ ғᴀɪʟᴇᴅ ᴛᴏ ᴛᴀɢ ɢʀᴏᴜᴘ ᴍᴇᴍʙᴇʀs.')
   }
 }
 break
