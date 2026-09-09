@@ -4816,7 +4816,6 @@ case 'close': {
     if (!isAdmins && !isCreator) return reply("╭━━〔 ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ 〕━━┈⊷\n┃◈ ᴀᴅᴍɪɴs ᴏɴʟʏ ᴄᴏᴍᴍᴀɴᴅ\n╰━━━━━━━━━━━━━━━┈⊷")
 
     await bad.groupSettingUpdate(m.chat, 'announcement')
-    reply("✅ *ɢʀᴏᴜᴘ ᴄʟᴏsᴇᴅ!*\n\n🔒 ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ sᴇɴᴅ ᴍᴇssᴀɢᴇs ɴᴏᴡ.")
 }
 break
 
@@ -4827,7 +4826,6 @@ case 'open': {
 
     
     await bad.groupSettingUpdate(m.chat, 'not_announcement')
-    reply("✅ *ɢʀᴏᴜᴘ ᴏᴘᴇɴᴇᴅ!*\n\n🔊 ᴀʟʟ ᴍᴇᴍʙᴇʀs ᴄᴀɴ sᴇɴᴅ ᴍᴇssᴀɢᴇs ɴᴏᴡ.")
 }
 break
 
