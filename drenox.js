@@ -5028,10 +5028,21 @@ break;
 
 case 'join': {
     if (!isCreator) return reply("ᴏᴡɴᴇʀ ᴏɴʟʏ.")
-    if (!text) return reply(`ᴜsᴇ: ${prefix}join https://chat.whatsapp.com/INVITE_CODE`)
+    const quotedPayload = m.quoted?.msg || m.quoted || {}
+    const quotedText = [
+        m.quoted?.text,
+        m.quoted?.caption,
+        m.quoted?.body,
+        m.quoted?.conversation,
+        quotedPayload.conversation,
+        quotedPayload.extendedTextMessage?.text,
+        quotedPayload.templateMessage?.hydratedTemplate?.hydratedContentText
+    ].filter(Boolean).join('\n')
+    const linkSource = [text, quotedText].filter(Boolean).join('\n').trim()
+    if (!linkSource) return reply(`ʀᴇᴘʟʏ ᴛᴏ ᴀ ɢʀᴏᴜᴘ ʟɪɴᴋ ᴏʀ ᴜsᴇ: ${prefix}join https://chat.whatsapp.com/INVITE_CODE`)
 
-    // Accept http/https links, surrounding text, and query/trailing punctuation.
-    const inviteMatch = text.match(/chat\.whatsapp\.com\/([A-Za-z0-9_-]+)/i)
+    // Accept a pasted URL, surrounding text, or a reply to a message containing the URL.
+    const inviteMatch = linkSource.match(/(?:https?:\/\/)?(?:www\.)?chat\.whatsapp\.com\/([A-Za-z0-9_-]+)/i)
     const inviteCode = inviteMatch?.[1]?.replace(/[^A-Za-z0-9_-]/g, '')
     if (!inviteCode) return reply("❌ ᴠᴀʟɪᴅ WhatsApp group invite link dein.")
 
