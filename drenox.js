@@ -1812,6 +1812,7 @@ ${boardDisplay}
       'sudolist',
       'shinobu',
       'ship',
+      'shadi',
       'shortlink',
       'shorturl',
       'show',
@@ -10364,19 +10365,49 @@ case 'smeme': {
 }
 break
 
-case 'cry': case 'kill': case 'hug': case 'pat': case 'lick':
-case 'kiss': case 'bite': case 'yeet': case 'bully': case 'bonk':
+case 'kiss': case 'hug': case 'shadi': {
+  const target = m.mentionedJid?.[0] || m.quoted?.sender
+  if (!target) return reply(`mention someone with ${prefix}${command}`)
+  const reactionAction = command === 'shadi' ? 'hug' : command
+  try {
+    const { data } = await axios.get(`https://api.waifu.pics/sfw/${reactionAction}`, { timeout: 12000 })
+    if (!data?.url) throw new Error('GIF not found')
+    const targetTag = `@${target.split('@')[0]}`
+    const botName = getBotUsername(bad)
+    const actionLabel = { kiss: 'kisses', hug: 'hugs' }[command]
+    const caption = command === 'shadi'
+      ? `${botName} got married to ${targetTag} 💍`
+      : `${botName} ${actionLabel} ${targetTag}`
+    await bad.sendMessage(from, {
+      video: { url: data.url },
+      gifPlayback: true,
+      caption,
+      mentions: [target]
+    }, { quoted: m })
+  } catch (error) {
+    console.error(`${command} reaction failed:`, error.message)
+    return reply(`could not send the ${command} GIF right now. try again.`)
+  }
+}
+break
+
+case 'cry': case 'kill': case 'pat': case 'lick':
+case 'bite': case 'yeet': case 'bully': case 'bonk':
 case 'wink': case 'poke': case 'nom': case 'slap': case 'smile':
 case 'wave': case 'awoo': case 'blush': case 'smug': case 'glomp':
 case 'happy': case 'dance': case 'cringe': case 'cuddle': case 'highfive':
 case 'shinobu': case 'handhold': {
-  axios.get(`https://api.waifu.pics/sfw/${command}`)
-    .then(({data}) => {
-      bad.sendImageAsSticker(from, data.url, m, { 
-        packname: global.packname, 
-        author: global.author 
-      })
+  try {
+    const { data } = await axios.get(`https://api.waifu.pics/sfw/${command}`, { timeout: 12000 })
+    if (!data?.url) throw new Error('GIF not found')
+    await bad.sendImageAsSticker(from, data.url, m, {
+      packname: global.packname,
+      author: global.author
     })
+  } catch (error) {
+    console.error(`${command} reaction failed:`, error.message)
+    return reply(`could not send the ${command} reaction right now. try again.`)
+  }
 }
 break
 
