@@ -1621,6 +1621,7 @@ ${boardDisplay}
       'japanese',
       'jennie',
       'jennie1',
+      'jid',
       'jisoo',
       'join',
       'joke',
