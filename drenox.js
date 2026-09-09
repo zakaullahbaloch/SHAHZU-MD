@@ -6600,8 +6600,9 @@ case 'checkadmin':
       break
 
 case "antilink": {
-    if (!m.isGroup) return m.reply("ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ᴏɴʟʏ ᴡᴏʀᴋs ɪɴ ɢʀᴏᴜᴘs.");
-    if (!isAdmins && !isCreator) return m.reply("ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴍᴀɴᴀɢᴇ ᴀɴᴛɪʟɪɴᴋ.");
+    const sendAntiLinkResponse = response => bad.sendMessage(m.chat, { text: response });
+    if (!m.isGroup) return sendAntiLinkResponse('this command only works in groups.');
+    if (!isAdmins && !isCreator) return sendAntiLinkResponse('only admins can manage antilink.');
 
     // Support both documented forms: `.antilink kick` and
     // `.antilink action kick`. Older deployments used the latter syntax.
@@ -6609,41 +6610,43 @@ case "antilink": {
     const actionArgs = args.slice(2).join(' ').trim();
     const allowlist = getAntiLinkAllowlist(m.chat);
     const action = rawAction === 'action' ? String(args[2] || '').toLowerCase().trim() : rawAction;
-    const usage = `ᴜsᴀɢᴇ: ${prefix}antilink null | warn | kick | off\nᴏʀ: ${prefix}antilink action warn | kick\n${prefix}antilink allow/disallow domain.com\n${prefix}antilink list | clear`;
+    const usage = `usage: ${prefix}antilink on | warn | kick | off\n${prefix}antilink allow/disallow domain.com\n${prefix}antilink list | clear`;
     if (rawAction === 'allow' || rawAction === 'disallow') {
         const domains = actionArgs.split(',').map(normalizeAntiLinkHost).filter(Boolean);
-        if (!domains.length) return m.reply(`ᴜsᴀɢᴇ: ${prefix}antilink ${rawAction} example.com,example.org`);
+        if (!domains.length) return sendAntiLinkResponse(`usage: ${prefix}antilink ${rawAction} example.com,example.org`);
         const next = rawAction === 'allow'
             ? [...new Set([...allowlist, ...domains])]
             : allowlist.filter(domain => !domains.includes(domain));
         setSetting(m.chat, 'antilinkAllowed', next);
-        return m.reply(rawAction === 'allow'
-            ? `✅ ᴀʟʟᴏᴡᴇᴅ ʟɪɴᴋs: ${next.join(', ')}`
-            : `✅ ʀᴇᴍᴏᴠᴇᴅ ғʀᴏᴍ ᴀʟʟᴏᴡʟɪsᴛ: ${domains.join(', ')}\nᴄᴜʀʀᴇɴᴛ: ${next.join(', ') || 'none'}`);
+        return sendAntiLinkResponse(rawAction === 'allow'
+            ? `allowed links: ${next.join(', ')}`
+            : `removed from allowlist: ${domains.join(', ')}\ncurrent: ${next.join(', ') || 'none'}`);
     }
     if (rawAction === 'list' || rawAction === 'info') {
         const current = getSetting(m.chat, 'antilink', false);
-        return m.reply(`🛡️ ᴀɴᴛɪʟɪɴᴋ: ${current || 'off'}\n✅ ᴀʟʟᴏᴡᴇᴅ: ${allowlist.join(', ') || 'none'}`);
+        return sendAntiLinkResponse(`antilink: ${current || 'off'}\nallowed: ${allowlist.join(', ') || 'none'}`);
     }
     if (rawAction === 'clear') {
         setSetting(m.chat, 'antilinkAllowed', []);
-        return m.reply('✅ ᴀɴᴛɪʟɪɴᴋ ᴀʟʟᴏᴡʟɪsᴛ ᴄʟᴇᴀʀᴇᴅ.');
+        return sendAntiLinkResponse('antilink allowlist cleared.');
     }
     if (!action || action === 'status' || action === 'info') {
         const current = getSetting(m.chat, 'antilink', false);
-        return m.reply(`🛡️ ᴀɴᴛɪʟɪɴᴋ: ${current || 'off'}
-⚙️ ᴀᴄᴛɪᴏɴs: null / warn / kick
-✅ ᴀʟʟᴏᴡᴇᴅ: ${allowlist.join(', ') || 'none'}`);
+        return sendAntiLinkResponse(`antilink: ${current || 'off'}
+actions: on / warn / kick
+allowed: ${allowlist.join(', ') || 'none'}`);
     }
-    if (!['null', 'delete', 'warn', 'kick', 'off', 'on'].includes(action)) return m.reply(usage);
+    if (!['null', 'delete', 'warn', 'kick', 'off', 'on'].includes(action)) return sendAntiLinkResponse(usage);
 
     // `on` is a safe alias for delete-only mode; `delete` remains compatible
     // with older commands while the listener stores the canonical `null` mode.
     const selectedAction = ['delete', 'on'].includes(action) ? 'null' : action;
     setSetting(m.chat, 'antilink', selectedAction === 'off' ? false : selectedAction);
-    return m.reply(action === 'off'
-        ? '🚫 ᴀɴᴛɪʟɪɴᴋ ᴅɪsᴀʙʟᴇᴅ.'
-        : `✅ ᴀɴᴛɪʟɪɴᴋ ${selectedAction} ᴀᴄᴛɪᴏɴ ᴇɴᴀʙʟᴇᴅ.`);
+    return sendAntiLinkResponse(action === 'off'
+        ? 'antilink disabled'
+        : action === 'on' || action === 'null' || action === 'delete'
+            ? 'antilink enabled'
+            : `antilink action set to ${selectedAction}`);
 }
 break;
 
