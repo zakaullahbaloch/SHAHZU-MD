@@ -13802,6 +13802,8 @@ if (!botIsAdmin) return
 
 // ==================== SETUP EVENT LISTENERS ====================
 function setupEventListeners(bad, store) {
+    if (bad.__chandEventListenersInitialized) return
+    bad.__chandEventListenersInitialized = true
     setBotSettingsScope(bad?.user?.id)
     // Serialize moderation per group so bursts of links are never skipped or
     // processed concurrently before the previous delete has completed.

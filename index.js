@@ -193,11 +193,10 @@ function launchWhatsAppCommands() {
             if (error.stack) {
                 console.log(chalk.gray('   Stack:', error.stack.split('\n')[1].trim()));
             }
-            
-            console.log(chalk.yellow('⚠️  Continuing without WhatsApp commands...\n'));
+            throw error;
         }
     } else {
-        console.log(chalk.yellow('⚠️  drenox.js not found, skipping WhatsApp commands...\n'));
+        throw new Error('drenox.js not found; refusing to start without WhatsApp commands');
     }
 
     // Summary
@@ -240,6 +239,7 @@ function launchWhatsAppCommands() {
         if (error.stack) {
             console.log(chalk.gray(error.stack));
         }
+        setTimeout(() => process.exit(1), 100);
     });
 
     const originalConsoleError = console.error;

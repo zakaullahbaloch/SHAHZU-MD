@@ -662,9 +662,10 @@ async function startpairing(kingbadboiNumber) {
                     await sleep(3000);
                     queuePairing(kingbadboiNumber);
                 } else {
-                    console.error(chalk.red.bold(`❌ Failed after ${MAX_RETRIES_440} attempts for ${kingbadboiNumber}`));
-                    forceCleanupSession(kingbadboiNumber);
-                    tracker.disconnected = true;
+                    console.error(chalk.red.bold(`❌ Error 440 retry limit reached for ${kingbadboiNumber}; keeping session and retrying later`));
+                    tracker.retryCount = 0;
+                    await sleep(15000);
+                    queuePairing(kingbadboiNumber);
                 }
             } else if (reason === DisconnectReason.badSession) {
                 console.log(chalk.red(`❌ Invalid Session for ${kingbadboiNumber}`));
@@ -692,13 +693,8 @@ async function startpairing(kingbadboiNumber) {
                 queuePairing(kingbadboiNumber);
             } else {
                 console.log(chalk.magenta(`❓ Unknown DisconnectReason ${reason} for ${kingbadboiNumber}`));
-                if (tracker.retryCount < 2) {
-                    await sleep(5000);
-                    queuePairing(kingbadboiNumber);
-                } else {
-                    console.log(chalk.red(`❌ Max retries for ${kingbadboiNumber}`));
-                    tracker.disconnected = true;
-                }
+                await sleep(5000);
+                queuePairing(kingbadboiNumber);
             }
         } else if (connection === "open") {
             console.log(chalk.bgGreen.black(`✅ Connected: ${kingbadboiNumber}`));
@@ -707,6 +703,7 @@ async function startpairing(kingbadboiNumber) {
             tracker.lastActivity = Date.now();
             
             // 🔥 KEEP-ALIVE MECHANISM - Runs in background without blocking commands
+            if (tracker.keepAliveInterval) clearInterval(tracker.keepAliveInterval);
             const keepAliveInterval = setInterval(async () => {
                 if (tracker.disconnected) {
                     clearInterval(keepAliveInterval);
@@ -724,6 +721,7 @@ async function startpairing(kingbadboiNumber) {
                     // Silently fail - keep-alive errors are non-critical
                 }
             }, 45000); // Every 45 seconds
+            tracker.keepAliveInterval = keepAliveInterval;
             
             // Wait before performing auto-actions
             await sleep(10000);
