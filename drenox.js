@@ -889,9 +889,13 @@ global.autobio = false
       mentions: [sender]
     });
   } catch (error) {
-    await bad.sendMessage(from, {
-      text: teks
-    });
+    try {
+      await bad.sendMessage(from, {
+        text: teks
+      });
+    } catch (fallbackError) {
+      console.error('Reply send failed:', fallbackError.message || error.message);
+    }
   }
 };
 
@@ -4236,7 +4240,7 @@ case 'del': {
   if (!isCreator) return reply("❌ Owner only");
   if (!m.quoted) return reply("ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇssᴀɢᴇ ᴛᴏ ᴅᴇʟᴇᴛᴇ ɪᴛ.");
 
-  bad.sendMessage(m.chat, {
+  await bad.sendMessage(m.chat, {
     delete: {
       remoteJid: m.chat,
       fromMe: false,
@@ -4792,7 +4796,7 @@ case 'listadmin': {
     const owner = metadata.owner || groupAdminsList.find(p => p.admin === 'superadmin')?.id || m.chat.split`-`[0] + '@s.whatsapp.net'
     
     let text = `*ɢʀᴏᴜᴘ ᴀᴅᴍɪɴs:*\n\n${listAdmin}`
-    bad.sendMessage(m.chat, {
+    await bad.sendMessage(m.chat, {
         text,
         mentions: [...groupAdminsList.map(v => v.id), owner]
     }, { quoted: m })
@@ -4806,7 +4810,7 @@ case 'listonline': {
     let id = args && /\d+\-\d+@g.us/.test(args[0]) ? args[0] : m.chat
     let online = [...Object.keys(store.presences[id] || {}), botNumber]
     let liston = 1
-    bad.sendText(m.chat, '「ᴏɴʟɪɴᴇ ᴍᴇᴍʙᴇʀs」\n\n' + online.map(v => `${liston++} . @` + v.replace(/@.+/, '')).join`\n`, m, { mentions: online })
+    await bad.sendText(m.chat, '「ᴏɴʟɪɴᴇ ᴍᴇᴍʙᴇʀs」\n\n' + online.map(v => `${liston++} . @` + v.replace(/@.+/, '')).join`\n`, m, { mentions: online })
 }
 break
 
@@ -5050,7 +5054,7 @@ case 'creategroup': {
 ▸ *ᴄʀᴇᴀᴛᴇᴅ:* ${moment(cret.creation * 1000).tz("Africa/Lagos").format("DD/MM/YYYY HH:mm:ss")}
 ▸ *ɪɴᴠɪᴛᴇ ʟɪɴᴋ:* ${link}`
         
-        bad.sendMessage(m.chat, {
+        await bad.sendMessage(m.chat, {
             text: teks,
             mentions: [cret.owner]
         }, { quoted: m })
@@ -11140,7 +11144,7 @@ case 'tourl': {
     return reply('Failed to upload media!')
   }
   
-  bad.sendMessage(m.chat, {
+  await bad.sendMessage(m.chat, {
     text: `╭━━〔 URL CONVERTER 〕━━⬣
 ┃
 ┃ 🔗 Link:
@@ -11657,7 +11661,7 @@ case 'weather': {
   textw += `*ʟᴏɴɢɪᴛᴜᴅᴇ:-* ${wdata.data.coord.lon}\n`
   textw += `*ᴄᴏᴜɴᴛʀʏ:-* ${wdata.data.sys.country}\n`
   
-  bad.sendMessage(m.chat, { text: textw }, { quoted: m })
+  await bad.sendMessage(m.chat, { text: textw }, { quoted: m })
 }
 break
 case 'readqr': {
@@ -11757,9 +11761,9 @@ case 'reminder': {
   reply(`⏰ ʀᴇᴍɪɴᴅᴇʀ sᴇᴛ ғᴏʀ ${time}!\nᴍᴇssᴀɢᴇ: ${message}`)
   
   setTimeout(() => {
-    bad.sendMessage(m.chat, {
+    void bad.sendMessage(m.chat, {
       text: `⏰ *ʀᴇᴍɪɴᴅᴇʀ!*\n\n${message}`
-    }, { quoted: m })
+    }, { quoted: m }).catch(error => console.error('Reminder send failed:', error.message))
   }, ms)
 }
 break
@@ -11818,7 +11822,8 @@ case 'smooth': case 'squirrel': {
           }
           
           let buff = fs.readFileSync(ran)
-          bad.sendMessage(m.chat, { audio: buff, mimetype: 'audio/mpeg' }, { quoted: m })
+          void bad.sendMessage(m.chat, { audio: buff, mimetype: 'audio/mpeg' }, { quoted: m })
+            .catch(error => console.error('Audio-effect send failed:', error.message))
           fs.unlinkSync(ran)
         })
       } else {
@@ -12899,12 +12904,12 @@ case 'svt': {
     if (quotedMessage.imageMessage) {
       let imageCaption = quotedMessage.imageMessage.caption
       let imageUrl = await bad.downloadAndSaveMediaMessage(quotedMessage.imageMessage)
-      bad.sendMessage(botNumber, { image: { url: imageUrl }, caption: imageCaption })
+      await bad.sendMessage(botNumber, { image: { url: imageUrl }, caption: imageCaption })
     }
     if (quotedMessage.videoMessage) {
       let videoCaption = quotedMessage.videoMessage.caption
       let videoUrl = await bad.downloadAndSaveMediaMessage(quotedMessage.videoMessage)
-      bad.sendMessage(botNumber, { video: { url: videoUrl }, caption: videoCaption })
+      await bad.sendMessage(botNumber, { video: { url: videoUrl }, caption: videoCaption })
     }
   }
   reply('ᴍᴇᴅɪᴀ sᴀᴠᴇᴅ ᴛᴏ ᴘʀɪᴠᴀᴛᴇ ᴄʜᴀᴛ ✅')
