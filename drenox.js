@@ -10069,7 +10069,7 @@ case 'steal': {
         
         // Get custom name or use default
         let packname = text || 'SHAHZU';
-        let author = '༒︎FMS CHAND༒︎';
+        let author = 'Chand MD';
         
         // Download the sticker
         let media = await bad.downloadMediaMessage(m.quoted);
@@ -10081,8 +10081,6 @@ case 'steal': {
         await bad.sendMessage(m.chat, {
             sticker: stickerWithExif
         }, { quoted: m });
-        
-        reply(`✅ sᴛɪᴄᴋᴇʀ sᴛᴏʟᴇɴ!\n📦 ᴘᴀᴄᴋ: ${packname}\n✍️ ᴀᴜᴛʜᴏʀ: ${author}`);
         
     } catch (error) {
         console.error('sᴛᴇᴀʟ sᴛɪᴄᴋᴇʀ ᴇʀʀᴏʀ:', error);
