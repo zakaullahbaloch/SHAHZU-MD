@@ -23,6 +23,19 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 const pairingRequests = new Set();
 const recentPairRequests = new Map();
 
+function getRuntimeStatus() {
+    const base = {
+        runtimeSeconds: Math.floor(process.uptime()),
+        runtime: `${Math.floor(process.uptime() / 86400)}d ${Math.floor(process.uptime() % 86400 / 3600)}h ${Math.floor(process.uptime() % 3600 / 60)}m ${Math.floor(process.uptime() % 60)}s`
+    };
+    try {
+        const pairing = getStartPairing();
+        return { ...base, ...(pairing.getRuntimeStatus?.() || {}) };
+    } catch (error) {
+        return { ...base, deployedUsers: 0, aliveUsers: 0, reconnectingUsers: 0, statusError: error.message };
+    }
+}
+
 function startApiServer() {
     const app = express();
     const allowedOrigins = String(process.env.CORS_ORIGIN || '*')
@@ -38,11 +51,15 @@ function startApiServer() {
     app.use(express.json({ limit: '16kb' }));
 
     app.get('/', (_req, res) => {
-        res.json({ ok: true, service: 'Shahzu pairing API', status: 'online' });
+        res.json({ ok: true, service: 'Shahzu pairing API', status: 'online', ...getRuntimeStatus() });
     });
 
     app.get('/health', (_req, res) => {
-        res.json({ ok: true, status: 'online' });
+        res.json({ ok: true, status: 'online', ...getRuntimeStatus() });
+    });
+
+    app.get('/api/status', (_req, res) => {
+        res.json({ ok: true, status: 'online', ...getRuntimeStatus() });
     });
 
     app.post('/api/pair', async (req, res) => {

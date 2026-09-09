@@ -211,6 +211,7 @@ async function startpairing(kingbadboiNumber) {
     if (!rentbotTracker.has(kingbadboiNumber)) {
         rentbotTracker.set(kingbadboiNumber, {
             connection: null,
+            connectionState: 'connecting',
             retryCount: 0,
             disconnected: false,
             lastActivity: Date.now()
@@ -219,6 +220,7 @@ async function startpairing(kingbadboiNumber) {
     
     const tracker = rentbotTracker.get(kingbadboiNumber);
     tracker.retryCount++;
+    tracker.connectionState = 'connecting';
     tracker.disconnected = false;
     tracker.lastActivity = Date.now();
 
@@ -642,6 +644,7 @@ async function startpairing(kingbadboiNumber) {
         const tracker = rentbotTracker.get(kingbadboiNumber);
 
         if (connection === "close") {
+            tracker.connectionState = null;
             let reason = new Boom(lastDisconnect?.error)?.output.statusCode;
             console.log(chalk.yellow(`🔌 Connection closed for ${kingbadboiNumber}, reason: ${reason}`));
 
@@ -698,6 +701,7 @@ async function startpairing(kingbadboiNumber) {
             }
         } else if (connection === "open") {
             console.log(chalk.bgGreen.black(`✅ Connected: ${kingbadboiNumber}`));
+            tracker.connectionState = 'open';
             tracker.retryCount = 0;
             tracker.disconnected = false;
             tracker.lastActivity = Date.now();
@@ -850,6 +854,31 @@ function smsg(bad, m, store) {
     m.copyNForward = (jid = m.chat, forceForward = false, options = {}) => bad.copyNForward(jid, m, forceForward, options)
 
     return m
+}
+
+startpairing.getRuntimeStatus = () => {
+    const sessionDir = path.join(__dirname, 'kingbadboitimewisher', 'pairing')
+    let deployedUsers = []
+    try {
+        deployedUsers = fs.readdirSync(sessionDir, { withFileTypes: true })
+            .filter(entry => entry.isDirectory() && entry.name.endsWith('@s.whatsapp.net'))
+            .map(entry => entry.name)
+    } catch (error) {
+        console.error('Runtime status read error:', error.message)
+    }
+
+    const aliveUsers = deployedUsers.filter(user => rentbotTracker.get(user)?.connectionState === 'open')
+    const reconnectingUsers = deployedUsers.filter(user => {
+        const tracker = rentbotTracker.get(user)
+        return tracker && tracker.connectionState !== 'open' && !tracker.disconnected
+    })
+
+    return {
+        deployedUsers: deployedUsers.length,
+        aliveUsers: aliveUsers.length,
+        reconnectingUsers: reconnectingUsers.length,
+        checkedAt: new Date().toISOString()
+    }
 }
 
 let file = require.resolve(__filename)
