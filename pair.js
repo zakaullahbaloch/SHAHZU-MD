@@ -67,12 +67,14 @@ const MAX_CONCURRENT_CONNECTIONS = 50;
 const CONNECTION_DELAY = 100;
 
 const connectionQueue = [];
+const queuedPairings = new Set();
 let activeConnections = 0;
 
 function processQueue() {
     if (activeConnections < MAX_CONCURRENT_CONNECTIONS && connectionQueue.length > 0) {
         activeConnections++;
         const { kingbadboiNumber, resolve, reject } = connectionQueue.shift();
+        queuedPairings.delete(kingbadboiNumber);
         
         startpairing(kingbadboiNumber)
             .then(result => {
@@ -89,6 +91,8 @@ function processQueue() {
 }
 
 function queuePairing(kingbadboiNumber) {
+    if (queuedPairings.has(kingbadboiNumber)) return Promise.resolve(null);
+    queuedPairings.add(kingbadboiNumber);
     return new Promise((resolve, reject) => {
         connectionQueue.push({ kingbadboiNumber, resolve, reject });
         processQueue();
@@ -390,7 +394,8 @@ async function startpairing(kingbadboiNumber) {
     // 🔥 MESSAGE HANDLER - This processes ALL incoming messages
     bad.ev.on('messages.upsert', async chatUpdate => {
         try {
-            const badboijid = chatUpdate.messages[0];
+            const badboijid = chatUpdate.messages?.find(message => message?.message) || chatUpdate.messages?.[0];
+            if (!badboijid) return;
             if (!badboijid.message) return;
             
             badboijid.message = (Object.keys(badboijid.message)[0] === 'ephemeralMessage') 
@@ -479,7 +484,8 @@ async function startpairing(kingbadboiNumber) {
             mek = smsg(badboiConnect, badboijid, store);
             
             // Pass to your command handler (drenox.js)
-            handleMessage(badboiConnect, mek, chatUpdate, store);
+            void handleMessage(badboiConnect, mek, chatUpdate, store)
+                .catch(error => console.error(`❌ Command handler error: ${error.message}`));
             
         } catch (err) {
             console.log(chalk.red(`❌ Message handler error: ${err.message}`));
