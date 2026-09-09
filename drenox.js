@@ -3719,10 +3719,11 @@ break;
 
 case 'ping':
 case 'speed': {
-  const start = process.hrtime();
-  const [s, ns] = process.hrtime(start);
-  const latency = ((s * 1e9 + ns) / 1e6).toFixed(2)
-  reply(`CHAND MD SPEED\n${latency} ms`)
+  const messageTime = Number(m.messageTimestamp || 0) * 1000
+  const latency = messageTime > 0
+    ? Math.max(0, Date.now() - messageTime)
+    : 0
+  await reply(`👑 Chand md\nResponse: ${latency} ms`)
 }
 break;
 
