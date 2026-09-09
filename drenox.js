@@ -6896,7 +6896,7 @@ case 'antimod': {
     if (!m.isGroup) return reply('ɢʀᴏᴜᴘ ᴄᴏᴍᴍᴀɴᴅ ᴏɴʟʏ.')
     if (!isAdmins && !isCreator) return reply('ᴀᴅᴍɪɴs ᴏɴʟʏ.')
 
-    const action = args[1]?.toLowerCase()
+    const action = String(args?.[1] || text || '').trim().toLowerCase()
     
     if (!action || !['on', 'off'].includes(action)) {
         const status = getSetting(m.chat, "antimod", false) ? '🟢 ᴀᴄᴛɪᴠᴇ' : '🔴 ɪɴᴀᴄᴛɪᴠᴇ'
@@ -14211,8 +14211,12 @@ function setupEventListeners(bad, store) {
                             );
                         }
                         const actorMention = actor || changedParticipants[0] || '';
+                        const actionLabel = eventAction === 'promote' ? 'Anti-Promote' : 'Anti-Demote';
+                        const actionDescription = eventAction === 'promote'
+                            ? 'Unauthorized promotion reversed and actor demoted.'
+                            : 'Unauthorized demotion reversed and actor demoted.';
                         await bad.sendMessage(id, {
-                            text: `*Anti-Demote Triggered!*\n\n*Actor:* @${actorMention.split('@')[0]}\n*Action:* Unauthorized demotion reversed and actor demoted.`,
+                            text: `*${actionLabel} Triggered!*\n\n*Actor:* @${actorMention.split('@')[0]}\n*Action:* ${actionDescription}`,
                             contextInfo: { mentionedJid: [actorMention, ...changedParticipants].filter(Boolean) }
                         });
                         await updateAdminState(bad, id);
