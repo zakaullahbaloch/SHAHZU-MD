@@ -10120,7 +10120,7 @@ case 'takefull': {
             author = split[1].trim() || '⏤͟͞❮❮ 𝐹𝑀𝑆 𝐶𝐻𝐴𝑁𝐷ᬊ';
         } else {
             packname = text || '⏤͟͞❮❮ 𝐹𝑀𝑆 𝐶𝐻𝐴𝑁𝐷ᬊ͞';
-            author = '⏤͟͞❮❮ 𝐹𝑀𝑆 𝐶𝐻𝐴𝑁𝐷ᬊ͟͞';
+            author = '⏤͟͞❮❮ CHAND MDXᬊ';
         }
         
         await reply('✨ ᴄʀᴇᴀᴛɪɴɢ sᴛɪᴄᴋᴇʀ...');
@@ -13214,8 +13214,8 @@ break;
 case 'repo': {
     reply(`So Funny 😆 
  REALLY WANT REPO? 😔😹
- Pair Link : https://t.me/Shahzada_720_bot
- 📞 Contact : https://t.me/shahzu_404`);
+ Pair Link : https://chand-md-pairing.vercel.app/
+ 📞 Contact tg : https://t.me/shahzu_404`);
 }
 break;
 
