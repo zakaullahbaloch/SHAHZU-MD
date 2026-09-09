@@ -1429,7 +1429,6 @@ ${boardDisplay}
       'checkbot',
       'checkidch',
       'checkstatus',
-      'chid',
       'chiho',
       'china',
       'chinese',
@@ -1622,7 +1621,6 @@ ${boardDisplay}
       'japanese',
       'jennie',
       'jennie1',
-      'jid',
       'jisoo',
       'join',
       'joke',
@@ -4733,24 +4731,37 @@ case 'groupjid': {
 }
 break
 
-case 'jid': 
+case 'jid':
 case 'chid': {
-    if (!text) return reply("Example: .jid https://whatsapp.com/channel/XXXX");
+    const input = String(text || '').trim();
 
-    const linkPrefix = "https://whatsapp.com/channel/";
-    if (!text.includes(linkPrefix)) return reply("❌ Invalid channel link.");
+    // No argument: return the exact JID of the group where the command was sent.
+    if (!input) {
+        if (!m.isGroup) return reply('❌ ɢʀᴏᴜᴘ ᴍᴇssᴀɢᴇ ᴍᴇɪɴ ᴜsᴇ ᴋᴀʀᴇɪɴ ʏᴀ ɢʀᴏᴜᴘ/ᴄʜᴀɴɴᴇʟ ʟɪɴᴋ ᴅᴇɪɴ.')
+        return reply(`📌 *ɢʀᴏᴜᴘ ᴊɪᴅ:*\n\n${m.chat}`)
+    }
 
     try {
-        const channelCode = text.split(linkPrefix)[1];
-        if (!channelCode) return reply("❌ Channel code not found.");
+        const channelMatch = input.match(/(?:https?:\/\/)?(?:www\.)?whatsapp\.com\/channel\/([A-Za-z0-9_-]+)/i)
+        if (channelMatch) {
+            const result = await bad.newsletterMetadata('invite', channelMatch[1])
+            return reply(`📌 *ᴄʜᴀɴɴᴇʟ ᴊɪᴅ:*\n\n${result.id}`)
+        }
 
-        const res = await bad.newsletterMetadata("invite", channelCode);
+        const groupMatch = input.match(/(?:https?:\/\/)?chat\.whatsapp\.com\/([A-Za-z0-9_-]+)/i)
+        if (groupMatch) {
+            const result = await bad.groupGetInviteInfo(groupMatch[1])
+            return reply(`📌 *ɢʀᴏᴜᴘ ᴊɪᴅ:*\n\n${result.id}`)
+        }
 
-        reply(res.id);
+        if (/^\d{10,}-\d+@g\.us$/i.test(input) || /^\d+@newsletter$/i.test(input)) {
+            return reply(`📌 *ᴊɪᴅ:*\n\n${input}`)
+        }
 
+        return reply('❌ ᴠᴀʟɪᴅ ᴡʜᴀᴛsᴀᴘᴘ ɢʀᴏᴜᴘ ʏᴀ ᴄʜᴀɴɴᴇʟ ʟɪɴᴋ ᴅᴇɪɴ.')
     } catch (err) {
-        console.error("Channel JID Error:", err);
-        reply("⚠️ Failed to get channel JID.");
+        console.error('JID lookup error:', err.message)
+        return reply('⚠️ ɪs ʟɪɴᴋ sᴇ ᴊɪᴅ ɴᴀʜɪ ᴍɪʟ sᴀᴋɪ. ʟɪɴᴋ ᴄʜᴇᴄᴋ ᴋᴀʀᴇɪɴ.')
     }
 }
 break
