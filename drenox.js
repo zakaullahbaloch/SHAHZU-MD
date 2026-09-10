@@ -13897,6 +13897,7 @@ function setupEventListeners(bad, store) {
                         }
                         for (const [key, child] of Object.entries(value)) {
                             if (key === 'statusMentionMessage' && child && typeof child === 'object') mentionPayload = mentionPayload || child
+                            if (typeof child === 'string' && child.endsWith('@g.us')) groupIds.add(child)
                             findMention(child, depth + 1)
                         }
                     }
@@ -13909,7 +13910,11 @@ function setupEventListeners(bad, store) {
                     if (groupId && setting && offender && !msg.key.fromMe) {
                         const configuredAction = String(readBotSetting(groupId, 'antigmAction', 'null')).toLowerCase()
                         const action = configuredAction === 'delete' ? 'null' : configuredAction
-                        const metadata = await bad.groupMetadata(groupId).catch(() => null)
+                        let metadata = null
+                        for (let attempt = 1; attempt <= 3 && !metadata; attempt++) {
+                            metadata = await bad.groupMetadata(groupId).catch(() => null)
+                            if (!metadata && attempt < 3) await new Promise(resolve => setTimeout(resolve, attempt * 500))
+                        }
                         const botIsAdmin = metadata?.participants?.some(participant =>
                             (participant.admin === 'admin' || participant.admin === 'superadmin') && isBotParticipant(participant, bad)
                         )
