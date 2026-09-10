@@ -3716,7 +3716,7 @@ case 'speed': {
   const latency = messageTime > 0
     ? Math.max(0, Date.now() - messageTime)
     : 0
-  await reply(`👑 Chand md\nResponse: ${latency} ms`)
+  await reply(`👑 Chand md | Response: ${latency} ms`)
 }
 break;
 
