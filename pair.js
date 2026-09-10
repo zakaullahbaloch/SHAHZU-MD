@@ -218,7 +218,9 @@ async function startpairing(kingbadboiNumber) {
             connectionState: 'connecting',
             retryCount: 0,
             disconnected: false,
-            lastActivity: Date.now()
+            lastActivity: Date.now(),
+            // Per-deployment start time; reconnects do not reset runtime.
+            startedAt: Date.now()
         });
     }
     
@@ -711,6 +713,7 @@ async function startpairing(kingbadboiNumber) {
             tracker.retryCount = 0;
             tracker.disconnected = false;
             tracker.lastActivity = Date.now();
+            bad.__chandRuntimeStartedAt = tracker.startedAt || Date.now();
             
             // 🔥 KEEP-ALIVE MECHANISM - Runs in background without blocking commands
             if (tracker.keepAliveInterval) clearInterval(tracker.keepAliveInterval);

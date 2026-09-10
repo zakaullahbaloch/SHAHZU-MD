@@ -1988,7 +1988,8 @@ case 'menu2': {
   ]
   
   const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)]
-  const uptime = runtime(process.uptime())
+  const runtimeSeconds = Math.max(0, (Date.now() - (bad.__chandRuntimeStartedAt || Date.now())) / 1000)
+  const uptime = runtime(runtimeSeconds)
   const menuUsername = pushname || 'ᴜsᴇʀ'
   
   const menuText = `
@@ -2568,7 +2569,8 @@ case 'listmenu': {
   ]
   
   const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)]
-  const uptime = runtime(process.uptime())
+  const runtimeSeconds = Math.max(0, (Date.now() - (bad.__chandRuntimeStartedAt || Date.now())) / 1000)
+  const uptime = runtime(runtimeSeconds)
   const menuUsername = pushname || 'ᴜsᴇʀ'
   
   const menuText = `
@@ -3694,13 +3696,15 @@ case 'goodbye': {
 break
   
 case 'runtime': {
-  const uptime = runtime(process.uptime())
+  const runtimeSeconds = Math.max(0, (Date.now() - (bad.__chandRuntimeStartedAt || Date.now())) / 1000)
+  const uptime = runtime(runtimeSeconds)
   reply(`CHAND MD | ${uptime}`)
 }
 break;
 
 case 'alive': {
-  const uptime = runtime(process.uptime())
+  const runtimeSeconds = Math.max(0, (Date.now() - (bad.__chandRuntimeStartedAt || Date.now())) / 1000)
+  const uptime = runtime(runtimeSeconds)
   reply(`CHAND MD IS ALIVE ✅\nCHAND MD | ${uptime}`)
 }
 break;
