@@ -1111,7 +1111,7 @@ if (getSetting(m.chat, "feature.antibot", false) && m.isGroup) {
    }
 }
 
-if (getSetting(m.chat, "autoReact", false) && !antibotActionTaken) {
+if (getSetting(m.chat, "autoReact", false) && !antibotActionTaken && !isAdmins && !isCreator) {
     const emojis = [
         "😁", "😂", "🤣", "😃", "😄", "😅", "😆", "😉", "😊",
         "😍", "😘", "😎", "🤩", "🤔", "😏", "😣", "😥", "😮", "🤐",
@@ -1972,18 +1972,6 @@ ${boardDisplay}
     // Commands, including menu, must always start with the configured prefix.
     if (!isCmd) return
 
-    if (isCmd && command && recognizedCommands.has(command)) {
-      try {
-        await bad.sendMessage(from, { react: { text: '⏳', key: m.key } })
-        // Remove only the reaction after a short delay. This uses Baileys'
-        // reaction-clear payload and never sends a standalone text message.
-        setTimeout(() => {
-          bad.sendMessage(from, { react: { text: '', key: m.key } }).catch(() => {})
-        }, 3000)
-      } catch (reactionError) {
-        console.error('Command loading reaction error:', reactionError.message)
-      }
-    }
     switch(command) {
 
 
@@ -14014,11 +14002,23 @@ function setupEventListeners(bad, store) {
                 // current participant list instead of relying on a cached
                 // bot-admin check, because promotions can happen at any time.
                 const offenderMetadata = await bad.groupMetadata(chatId).catch(() => null)
-                const offenderIsAdmin = offenderMetadata?.participants?.some(participant =>
-                    (participant.admin === 'admin' || participant.admin === 'superadmin') &&
-                    (isSameUser(participant.id, offender) || areJidsSameUser(participant.id, offender) ||
-                     isSameUser(participant.phoneNumber, offender) || areJidsSameUser(participant.phoneNumber, offender))
-                )
+                const offenderIdentities = [
+                    offender,
+                    msg.key.participantAlt,
+                    msg.participantAlt,
+                    msg.key?.participant?.jid,
+                    msg.participant?.jid
+                ].filter(Boolean)
+                const offenderIsAdmin = offenderMetadata?.participants?.some(participant => {
+                    if (participant.admin !== 'admin' && participant.admin !== 'superadmin') return false
+                    const adminIdentities = [participant.id, participant.phoneNumber, participant.participantAlt]
+                        .filter(Boolean)
+                    return offenderIdentities.some(offenderIdentity =>
+                        adminIdentities.some(adminIdentity =>
+                            isSameUser(adminIdentity, offenderIdentity) || areJidsSameUser(adminIdentity, offenderIdentity)
+                        )
+                    )
+                })
                 if (offenderIsAdmin) continue
 
                 // Deduplicate repeated upserts, then serialize each group’s link
@@ -14068,21 +14068,21 @@ function setupEventListeners(bad, store) {
                     // Keep retrying long enough to survive WhatsApp notify/
                     // sync races. Refresh admin cache during the retry window;
                     // never send a failure warning into the group.
-                    for (let attempt = 1; attempt <= 30 && !deleted; attempt++) {
+                    for (let attempt = 1; attempt <= 40 && !deleted; attempt++) {
                         const deleteKey = deleteKeys[(attempt - 1) % deleteKeys.length]
                         try {
                             await bad.sendMessage(chatId, { delete: deleteKey })
                             deleted = true
                         } catch (error) {
                             deleteError = error
-                            if (attempt === 6 || attempt === 15 || attempt === 24) {
+                            if (attempt === 10 || attempt === 20 || attempt === 30) {
                                 global.antiLinkAdminCache?.delete(chatId)
                             }
-                            if (attempt < 30) await new Promise(resolve => setTimeout(resolve, Math.min(100 * attempt, 1000)))
+                            if (attempt < 40) await new Promise(resolve => setTimeout(resolve, 100))
                         }
                     }
                     if (!deleted) {
-                        console.error(`Anti-link delete failed after 30 attempts for ${chatId}/${msg.key.id}. Bot must be a group admin. Last error: ${deleteError?.message || 'unknown error'}`)
+                        console.error(`Anti-link delete failed after 40 attempts for ${chatId}/${msg.key.id}. Bot must be a group admin. Last error: ${deleteError?.message || 'unknown error'}`)
                     }
 
                     if (mode === 'kick') {
