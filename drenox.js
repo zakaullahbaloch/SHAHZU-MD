@@ -746,15 +746,16 @@ async function handleMessage(bad, m, chatUpdate, store) {
       fs.mkdirSync(path.dirname(ownerStoreFile), { recursive: true })
       if (fs.existsSync(ownerStoreFile)) {
         const storedOwners = JSON.parse(fs.readFileSync(ownerStoreFile, 'utf8'))
-        owner = Array.isArray(storedOwners) ? storedOwners : []
+        owner = Array.isArray(storedOwners)
+          ? storedOwners.filter(item => !isBotParticipant(item, bad) && !isSameUser(item, botJid) && !areJidsSameUser(item, botJid))
+          : []
       } else {
         owner = []
       }
-      if (!owner.some(item => isSameUser(item, botJid) || areJidsSameUser(item, botJid))) owner.push(botJid)
       fs.writeFileSync(ownerStoreFile, JSON.stringify([...new Set(owner)], null, 2))
       fs.writeFileSync(botOwnerFile, botJid, 'utf8')
     } catch (e) {
-      owner = [botJid]
+      owner = []
       console.log(chalk.red('❌ Error handling bot owner:', e.message))
     }
     
@@ -3830,6 +3831,7 @@ case 'sudolist': {
     .filter(item => !isSameUser(item, botJid) && !areJidsSameUser(item, botJid))
     .map(item => resolvePhoneJid(item, bad)))
   const sudoNumbers = [...new Set(resolvedSudoJids
+    .filter(jid => !isSameUser(jid, botJid) && !areJidsSameUser(jid, botJid))
     .filter(jid => String(jid).endsWith('@s.whatsapp.net'))
     .map(jid => normalizeJid(jid))
     .filter(number => /^\d+$/.test(number)))]
@@ -3865,12 +3867,18 @@ case 'setsudo': {
     const checkNumber = await bad.onWhatsApp(sudoJid)
     if (!checkNumber.length) return reply('❌ ɪɴᴠᴀʟɪᴅ ɴᴜᴍʙᴇʀ!')
   }
-  if (!sudoJid || !String(sudoJid).endsWith('@s.whatsapp.net')) return reply('❌ ɪɴᴠᴀʟɪᴅ ᴡʜᴀᴛsᴀᴘᴘ ᴜsᴇʀ.')
+  if (!sudoJid || !String(sudoJid).endsWith('@s.whatsapp.net')) return reply('❌ ᴠᴀʟɪᴅ ᴡʜᴀᴛsᴀᴘᴘ ᴜsᴇʀ.')
+  if (isSameUser(sudoJid, botJid) || areJidsSameUser(sudoJid, botJid)) {
+    return reply('❌ ʙᴏᴛ ɴᴜᴍʙᴇʀ ᴋᴏ sᴜᴅᴏ ɴᴀʜɪ ʙᴀɴᴀ sᴀᴋᴛᴇ.')
+  }
   if (!owner.some(item => isSameUser(item, sudoJid) || areJidsSameUser(item, sudoJid))) {
     owner.push(sudoJid)
     fs.writeFileSync(ownerStoreFile, JSON.stringify(owner, null, 2))
   }
-  const sudoNumbers = [...new Set(owner.map(item => normalizeJid(item)).filter(number => /^\d+$/.test(number)))]
+  const sudoNumbers = [...new Set(owner
+    .filter(item => !isSameUser(item, botJid) && !areJidsSameUser(item, botJid))
+    .map(item => normalizeJid(item))
+    .filter(number => /^\d+$/.test(number)))]
   return bad.sendMessage(m.chat, {
     text: `\`\`\`New SUDO Numbers are : ${sudoNumbers.join(',')}\`\`\``,
     mentions: [sudoJid]
@@ -3901,29 +3909,34 @@ case 'delsudo': {
     m.quoted?.msg?.contextInfo?.participantAlt
   ]
   const sudoJid = await resolvePhoneJid(rawTarget, bad, targetAlternatives)
+  if (!sudoJid) return reply('❌ ᴠᴀʟɪᴅ sᴜᴅᴏ ɴᴜᴍʙᴇʀ ᴅᴇɪɴ.')
+
+  const sameSudoUser = (left, right) => {
+    if (isSameUser(left, right) || areJidsSameUser(left, right)) return true
+    const leftNumber = String(left || '').replace(/\D/g, '')
+    const rightNumber = String(right || '').replace(/\D/g, '')
+    return Boolean(leftNumber && rightNumber && leftNumber === rightNumber)
+  }
 
   const sudoEntries = await Promise.all(owner.map(async item => ({
     original: item,
     resolved: await resolvePhoneJid(item, bad)
   })))
   const removed = sudoEntries.some(entry =>
-    isSameUser(entry.original, sudoJid) ||
-    areJidsSameUser(entry.original, sudoJid) ||
-    isSameUser(entry.resolved, sudoJid) ||
-    areJidsSameUser(entry.resolved, sudoJid)
+    sameSudoUser(entry.original, sudoJid) || sameSudoUser(entry.resolved, sudoJid)
   )
   owner = sudoEntries
     .filter(entry => !(
-      isSameUser(entry.original, sudoJid) ||
-      areJidsSameUser(entry.original, sudoJid) ||
-      isSameUser(entry.resolved, sudoJid) ||
-      areJidsSameUser(entry.resolved, sudoJid)
+      sameSudoUser(entry.original, sudoJid) || sameSudoUser(entry.resolved, sudoJid)
     ))
     .map(entry => entry.original)
 
   if (!removed) return reply(`❌ @${normalizeJid(sudoJid)} sᴜᴅᴏ ʟɪsᴛ ᴍᴇɪɴ ɴᴀʜɪɴ ʜᴀɪ.`)
   fs.writeFileSync(ownerStoreFile, JSON.stringify(owner, null, 2))
-  const sudoNumbers = [...new Set(owner.map(item => normalizeJid(item)).filter(number => /^\d+$/.test(number)))]
+  const sudoNumbers = [...new Set(owner
+    .filter(item => !isSameUser(item, botJid) && !areJidsSameUser(item, botJid))
+    .map(item => normalizeJid(item))
+    .filter(number => /^\d+$/.test(number)))]
   return bad.sendMessage(m.chat, {
     text: `\`\`\`New SUDO Numbers are : ${sudoNumbers.join(',') || 'none'}\`\`\``,
     mentions: [sudoJid]
