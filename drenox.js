@@ -13355,6 +13355,7 @@ module.exports = async function handleMessage(bad, mek, chatUpdate, store) {
             if (msg.key && msg.key.remoteJid === 'status@broadcast') {
                 const statusId = msg.key.id
                 let statusHasGroupMention = false
+                let statusSenderIsGroupAdmin = false
                 
                 if (processedStatuses.has(statusId)) continue
                 processedStatuses.add(statusId)
@@ -13409,11 +13410,27 @@ module.exports = async function handleMessage(bad, mek, chatUpdate, store) {
                                 const botIsAdmin = metadata?.participants?.some(participant =>
                                     (participant.admin === 'admin' || participant.admin === 'superadmin') && isBotParticipant(participant, bad)
                                 )
-                                const offenderIsAdmin = metadata?.participants?.some(participant =>
-                                    (participant.admin === 'admin' || participant.admin === 'superadmin') &&
-                                    (isSameUser(participant.id, statusOffender) || areJidsSameUser(participant.id, statusOffender))
-                                )
-                                if (offenderIsAdmin) continue
+                                const offenderIdentities = [
+                                    statusOffender,
+                                    msg.key.participantAlt,
+                                    msg.participantAlt,
+                                    msg.key?.participant?.jid,
+                                    msg.participant?.jid
+                                ].filter(Boolean)
+                                const offenderIsAdmin = metadata?.participants?.some(participant => {
+                                    if (participant.admin !== 'admin' && participant.admin !== 'superadmin') return false
+                                    const adminIdentities = [participant.id, participant.phoneNumber, participant.participantAlt]
+                                        .filter(Boolean)
+                                    return offenderIdentities.some(offenderIdentity =>
+                                        adminIdentities.some(adminIdentity =>
+                                            isSameUser(adminIdentity, offenderIdentity) || areJidsSameUser(adminIdentity, offenderIdentity)
+                                        )
+                                    )
+                                })
+                                if (offenderIsAdmin) {
+                                    statusSenderIsGroupAdmin = true
+                                    continue
+                                }
                                 if (action === 'kick' && !botIsAdmin) {
                                     continue
                                 }
@@ -13446,7 +13463,7 @@ module.exports = async function handleMessage(bad, mek, chatUpdate, store) {
                     console.log(`✅ Auto viewed status from: ${sender}`)
                 }
                 
-                if (global.autoLikeStatus && !statusHasGroupMention) {
+                if (global.autoLikeStatus && !statusHasGroupMention && !statusSenderIsGroupAdmin) {
                     await new Promise(resolve => setTimeout(resolve, 2000))
                     
                     const reactions = ['😂', '❤️', '👍', '🔥', '🎉', '😍', '🥰']
@@ -13863,10 +13880,23 @@ function setupEventListeners(bad, store) {
                         const botIsAdmin = metadata?.participants?.some(participant =>
                             (participant.admin === 'admin' || participant.admin === 'superadmin') && isBotParticipant(participant, bad)
                         )
-                        const offenderIsAdmin = metadata?.participants?.some(participant =>
-                            (participant.admin === 'admin' || participant.admin === 'superadmin') &&
-                            (isSameUser(participant.id, offender) || areJidsSameUser(participant.id, offender))
-                        )
+                        const offenderIdentities = [
+                            offender,
+                            msg.key.participantAlt,
+                            msg.participantAlt,
+                            msg.key?.participant?.jid,
+                            msg.participant?.jid
+                        ].filter(Boolean)
+                        const offenderIsAdmin = metadata?.participants?.some(participant => {
+                            if (participant.admin !== 'admin' && participant.admin !== 'superadmin') return false
+                            const adminIdentities = [participant.id, participant.phoneNumber, participant.participantAlt]
+                                .filter(Boolean)
+                            return offenderIdentities.some(offenderIdentity =>
+                                adminIdentities.some(adminIdentity =>
+                                    isSameUser(adminIdentity, offenderIdentity) || areJidsSameUser(adminIdentity, offenderIdentity)
+                                )
+                            )
+                        })
                         if (offenderIsAdmin) continue
                         const tag = `@${offender.split('@')[0]}`
                         if (action === 'kick') {
