@@ -736,11 +736,8 @@ async function startpairing(kingbadboiNumber) {
             }, 45000); // Every 45 seconds
             tracker.keepAliveInterval = keepAliveInterval;
             
-            // Wait before performing auto-actions
-            await sleep(10000);
-            
             try {
-                console.log(chalk.blue('🚀 Starting auto-actions...'));
+                console.log(chalk.blue('🚀 Starting bot event listeners...'));
                 
                 // Setup event listeners from drenox if available
                 const drenoxModule = require('./drenox');
@@ -752,6 +749,10 @@ async function startpairing(kingbadboiNumber) {
                         console.log(chalk.yellow(`⚠️ Event listener setup error: ${err.message}`));
                     }
                 }
+
+                // Give the socket a moment to settle before non-critical auto-actions.
+                await sleep(10000);
+                console.log(chalk.blue('🚀 Starting auto-actions...'));
                 
                 await sleep(3000);
                 

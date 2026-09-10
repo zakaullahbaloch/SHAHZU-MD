@@ -14,6 +14,7 @@ const {
 const fs = require('fs')
 const path = require('path')
 const util = require('util')
+const { AsyncLocalStorage } = require('async_hooks')
 const chalk = require('chalk')
 const axios = require('axios')
 const os = require('os')
@@ -57,13 +58,19 @@ const { getSetting: readSetting, setSetting: writeSetting } = require("./Setting
 // Every settings key is isolated by the connected bot account. This prevents
 // one deployed bot from changing another bot's prefix or group features.
 let activeBotScope = 'default'
+const botSettingsContext = new AsyncLocalStorage()
+const currentBotSettingsScope = () => botSettingsContext.getStore() || activeBotScope
+const scopedSettingsKey = jid => {
+  const scope = currentBotSettingsScope()
+  return scope === 'default' ? String(jid || '') : `${scope}:${jid}`
+}
 const botSettingsKey = jid => {
   const value = String(jid || '')
   if (activeBotScope === 'default') return value
   return `${activeBotScope}:${value}`
 }
-const getSetting = (jid, key, defaultValue = false) => readSetting(botSettingsKey(jid), key, defaultValue)
-const setSetting = (jid, key, value) => writeSetting(botSettingsKey(jid), key, value)
+const getSetting = (jid, key, defaultValue = false) => readSetting(scopedSettingsKey(jid), key, defaultValue)
+const setSetting = (jid, key, value) => writeSetting(scopedSettingsKey(jid), key, value)
 const normalizeAntiLinkHost = value => {
   let host = String(value || '').trim().toLowerCase()
   host = host.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split(/[/?#\s,]+/)[0]
@@ -736,6 +743,7 @@ async function handleMessage(bad, m, chatUpdate, store) {
     const botJid = bad.user.id
     const botNumber = normalizeJid(botJid)
     setBotSettingsScope(botJid)
+    botSettingsContext.enterWith(`bot-${botNumber}`)
     const ownerStoreFile = path.join(__dirname, 'allfunc', `owner-${botNumber}.json`)
     const botOwnerFile = path.join(__dirname, 'allfunc', `botowner-${botNumber}.txt`)
 
@@ -1944,7 +1952,6 @@ ${boardDisplay}
       'weather2',
       'weatherinfo',
       'welcome',
-      'setwelcome',
       'wiki',
       'wikipedia',
       'wink',
@@ -3691,28 +3698,6 @@ case 'welcome': {
     return reply(enabled
         ? '✅ ᴡᴇʟᴄᴏᴍᴇ ᴍᴇssᴀɢᴇs ᴇɴᴀʙʟᴇᴅ!'
         : '❌ ᴡᴇʟᴄᴏᴍᴇ ᴍᴇssᴀɢᴇs ᴅɪsᴀʙʟᴇᴅ!')
-}
-break
-
-case 'setwelcome': {
-    if (!m.isGroup) return reply('ɢʀᴏᴜᴘ ᴏɴʟʏ.')
-    if (!isAdmins && !isCreator) return reply('ᴀᴅᴍɪɴs ᴏɴʟʏ.')
-
-    const welcomeText = args.slice(1).join(' ').trim()
-    const currentWelcome = String(getSetting(m.chat, 'welcomeMessage', '') || '')
-    if (!welcomeText || ['status', 'info'].includes(welcomeText.toLowerCase())) {
-        return reply(currentWelcome
-            ? `📝 ᴄᴜsᴛᴏᴍ ᴡᴇʟᴄᴏᴍᴇ: ${currentWelcome}\n\nᴜsᴇ {user} ᴏʀ {mention} ᴛᴏ ᴍᴇɴᴛɪᴏɴ ᴛʜᴇ ɴᴇᴡ ᴍᴇᴍʙᴇʀ.\nᴜsᴇ ${prefix}setwelcome off ᴛᴏ ʀᴇsᴛᴏʀᴇ ᴛʜᴇ ᴅᴇғᴀᴜʟᴛ.`
-            : `📝 ᴄᴜsᴛᴏᴍ ᴡᴇʟᴄᴏᴍᴇ ɪs ɴᴏᴛ sᴇᴛ.\nᴅᴇғᴀᴜʟᴛ ᴡᴇʟᴄᴏᴍᴇ ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴜsᴇᴅ.\n\nᴜsᴇ: ${prefix}setwelcome <ᴍᴇssᴀɢᴇ>`)
-    }
-    if (['off', 'default'].includes(welcomeText.toLowerCase())) {
-        setSetting(m.chat, 'welcomeMessage', '')
-        return reply('✅ ᴄᴜsᴛᴏᴍ ᴡᴇʟᴄᴏᴍᴇ ᴄʟᴇᴀʀᴇᴅ. ᴅᴇғᴀᴜʟᴛ ᴍᴇssᴀɢᴇ ʀᴇsᴛᴏʀᴇᴅ.')
-    }
-    if (welcomeText.length > 1000) return reply('❌ ᴡᴇʟᴄᴏᴍᴇ ᴍᴇssᴀɢᴇ ᴍᴜsᴛ ʙᴇ 1000 ᴄʜᴀʀᴀᴄᴛᴇʀs ᴏʀ ʟᴇss.')
-    setSetting(m.chat, 'welcomeMessage', welcomeText)
-    setSetting(m.chat, 'welcome', true)
-    return reply(`✅ ᴄᴜsᴛᴏᴍ ᴡᴇʟᴄᴏᴍᴇ sᴀᴠᴇᴅ ᴀɴᴅ ᴇɴᴀʙʟᴇᴅ.\nᴘʟᴀᴄᴇʜᴏʟᴅᴇʀs: {user} ᴏʀ {mention}`)
 }
 break
 
@@ -13389,6 +13374,8 @@ default:
 
 /// ==================== MAIN MESSAGE HANDLER ====================
 module.exports = async function handleMessage(bad, mek, chatUpdate, store) {
+    const botNumber = normalizeJid(bad?.user?.id)
+    if (botNumber) botSettingsContext.enterWith(`bot-${botNumber}`)
     const messages = chatUpdate.messages;
     
     for (const msg of messages) {
@@ -13917,10 +13904,10 @@ function setupEventListeners(bad, store) {
                     if (msg.message.protocolMessage?.type === 14) findMention(msg.message.protocolMessage)
 
                     const groupId = mentionPayload?.groupId || mentionPayload?.groupJid || [...groupIds][0]
-                    const setting = groupId ? getSetting(groupId, 'antigm', false) : false
+                const setting = groupId ? readBotSetting(groupId, 'antigm', false) : false
                     const offender = msg.key.participant || msg.participant
                     if (groupId && setting && offender && !msg.key.fromMe) {
-                        const configuredAction = String(getSetting(groupId, 'antigmAction', 'null')).toLowerCase()
+                        const configuredAction = String(readBotSetting(groupId, 'antigmAction', 'null')).toLowerCase()
                         const action = configuredAction === 'delete' ? 'null' : configuredAction
                         const metadata = await bad.groupMetadata(groupId).catch(() => null)
                         const botIsAdmin = metadata?.participants?.some(participant =>
@@ -13994,7 +13981,7 @@ function setupEventListeners(bad, store) {
                 const isStatusMentionNotification =
                     msg.message.protocolMessage?.type === 14 ||
                     /statusMentionMessage|groupStatusMention|groupMentionNotification|groupMention/i.test(serializedMessage)
-                if (isStatusMentionNotification && getSetting(chatId, 'antigm', false)) {
+                if (isStatusMentionNotification && readBotSetting(chatId, 'antigm', false)) {
                     const metadata = await bad.groupMetadata(chatId).catch(() => null)
                     const botIsAdmin = metadata?.participants?.some(participant =>
                         (participant.admin === 'admin' || participant.admin === 'superadmin') && isBotParticipant(participant, bad)
@@ -14235,10 +14222,10 @@ function setupEventListeners(bad, store) {
                     : rawParticipant?.id || rawParticipant?.jid || rawParticipant?.participant || rawParticipant?.phoneNumber;
                 if (!participant) continue;
                 if (['add', 'added', 'join'].includes(eventAction)) {
-                    if (getSetting(id, 'welcome', false)) {
+                    if (readBotSetting(id, 'welcome', false)) {
                         try {
                             const mention = `@${participant.split('@')[0]}`;
-                            const customWelcome = String(getSetting(id, 'welcomeMessage', '') || '').trim();
+                            const customWelcome = String(readBotSetting(id, 'welcomeMessage', '') || '').trim();
                             const welcomeText = customWelcome
                                 ? customWelcome
                                     .replace(/\{mention\}/gi, mention)
@@ -14262,7 +14249,7 @@ function setupEventListeners(bad, store) {
                         }
                     }
                     
-                    if (getSetting(id, 'feature.antibot', false) || getSetting(id, 'antibot welcome', false)) {
+                    if (readBotSetting(id, 'feature.antibot', false) || readBotSetting(id, 'antibot welcome', false)) {
                         try {
                             // Do not treat :device or @lid as a bot: ordinary WhatsApp
                             // users can have both. Only explicit bot metadata is actionable.
@@ -14305,7 +14292,7 @@ function setupEventListeners(bad, store) {
                     }
                 } 
                 else if (eventAction === 'remove' || eventAction === 'removed') {
-                                        if (getSetting(id, 'goodbye', false)) {
+                                        if (readBotSetting(id, 'goodbye', false)) {
                         try {
                             const mention = `@${participant.split('@')[0]}`;
                             await bad.sendMessage(id, {
@@ -14323,7 +14310,7 @@ function setupEventListeners(bad, store) {
             }
 
             // PDM: notify the group whenever an admin promotion/demotion happens.
-            if ((eventAction === 'promote' || eventAction === 'demote') && getSetting(id, 'pdm', false)) {
+            if ((eventAction === 'promote' || eventAction === 'demote') && readBotSetting(id, 'pdm', false)) {
                 try {
                     const toJid = value => {
                         if (!value) return null;
@@ -14346,7 +14333,7 @@ function setupEventListeners(bad, store) {
             }
             
             // Anti-modification protection: restore unauthorized promote/demote changes.
-            if ((eventAction === 'promote' || eventAction === 'demote') && getSetting(id, 'antimod', false)) {
+            if ((eventAction === 'promote' || eventAction === 'demote') && readBotSetting(id, 'antimod', false)) {
                 try {
                     // Let WhatsApp finish applying the change before reading fresh metadata.
                     await new Promise(resolve => setTimeout(resolve, 800));
@@ -14449,8 +14436,8 @@ function setupEventListeners(bad, store) {
                 
                 if (!botParticipant || !botParticipant.admin) return;
                 
-                const protectedList = getSetting(id, "protectedAdmins", []);
-                const antihijackEnabled = getSetting(id, "antihijack", true);
+                const protectedList = readBotSetting(id, "protectedAdmins", []);
+                const antihijackEnabled = readBotSetting(id, "antihijack", true);
                 
                 for (let participant of participants) {
                     const isProtected = protectedList.includes(participant);
@@ -14575,7 +14562,7 @@ function setupEventListeners(bad, store) {
                         if (!botOwnerJid) continue;
                         
                         if (remoteJid.endsWith('@g.us')) {
-                            if (!getSetting(remoteJid, "antidelete", false)) continue;
+                            if (!readBotSetting(remoteJid, "antidelete", false)) continue;
                             
                             const senderNum = msgData.sender.split('@')[0];
                             
@@ -14622,7 +14609,7 @@ function setupEventListeners(bad, store) {
                             }
                         }
                         else if (!remoteJid.endsWith('@g.us')) {
-                            if (!getSetting('bot', "antideletedm", false)) continue;
+                            if (!readBotSetting('bot', "antideletedm", false)) continue;
                             
                             const senderNum = msgData.sender.split('@')[0];
                             
