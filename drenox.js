@@ -1972,6 +1972,44 @@ ${boardDisplay}
     // Commands, including menu, must always start with the configured prefix.
     if (!isCmd) return
 
+    // Show a temporary processing reaction only for commands. The proxy makes
+    // every command response clear it immediately before that response is sent,
+    // while leaving non-command messages and existing reactions untouched.
+    const commandSocket = bad
+    let commandReactionActive = false
+    const clearCommandReaction = async () => {
+      if (!commandReactionActive) return
+      commandReactionActive = false
+      try {
+        await commandSocket.sendMessage(from, { react: { text: '', key: m.key } })
+      } catch (error) {
+        console.log(chalk.yellow('⚠️ Temporary command reaction cleanup failed:'), error.message)
+      }
+    }
+
+    try {
+      await commandSocket.sendMessage(from, { react: { text: '⏳', key: m.key } })
+      commandReactionActive = true
+      bad = new Proxy(commandSocket, {
+        get(target, property, receiver) {
+          if (property === 'sendMessage') {
+            return async (...args) => {
+              await clearCommandReaction()
+              return target.sendMessage(...args)
+            }
+          }
+          const value = Reflect.get(target, property, receiver)
+          return typeof value === 'function' ? value.bind(target) : value
+        },
+        set(target, property, value) {
+          target[property] = value
+          return true
+        }
+      })
+    } catch (error) {
+      console.log(chalk.yellow('⚠️ Temporary command reaction failed:'), error.message)
+    }
+
     switch(command) {
 
 
