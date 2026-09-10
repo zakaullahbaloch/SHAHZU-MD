@@ -14326,6 +14326,21 @@ function setupEventListeners(bad, store) {
                         const actor = typeof actorValue === 'string'
                             ? actorValue
                             : actorValue?.id || actorValue?.jid || actorValue?.participant || actorValue?.phoneNumber;
+                        const identityValues = rawParticipant => {
+                            if (!rawParticipant) return [];
+                            if (typeof rawParticipant === 'string') return [rawParticipant];
+                            return [rawParticipant.id, rawParticipant.jid, rawParticipant.participant,
+                                rawParticipant.phoneNumber, rawParticipant.participantAlt].filter(Boolean);
+                        };
+                        const resolveParticipantTarget = rawParticipant => {
+                            const values = identityValues(rawParticipant);
+                            const matched = metadata.participants.find(participant =>
+                                identityValues(participant).some(candidate =>
+                                    values.some(value => isSameUser(candidate, value) || areJidsSameUser(candidate, value))
+                                )
+                            );
+                            return matched?.phoneNumber || matched?.participantAlt || matched?.id || values[0] || null;
+                        };
                         // If the deployed bot made this admin change, never reverse it.
                         if (actor && isProtectedBotTarget(actor)) {
                             await updateAdminState(bad, id);
@@ -14334,26 +14349,27 @@ function setupEventListeners(bad, store) {
                         const changedParticipants = (Array.isArray(participants) ? participants : [participants])
                             .filter(Boolean)
                             .filter(participant => !isProtectedBotTarget(participant))
-                            .map(participant => typeof participant === 'string' ? participant : participant?.id || participant?.jid || participant?.participant || participant?.phoneNumber)
+                            .map(resolveParticipantTarget)
                             .filter(Boolean);
+                        const actorTarget = resolveParticipantTarget(actor);
                         const reverseAction = eventAction === 'demote' ? 'promote' : 'demote';
                         for (const participant of changedParticipants) {
-                            for (let attempt = 1; attempt <= 2; attempt++) {
+                            for (let attempt = 1; attempt <= 3; attempt++) {
                                 try {
                                     await bad.groupParticipantsUpdate(id, [participant], reverseAction);
                                     break;
                                 } catch (error) {
-                                    if (attempt === 2) throw error;
-                                    await new Promise(resolve => setTimeout(resolve, 700));
+                                    if (attempt === 3) throw error;
+                                    await new Promise(resolve => setTimeout(resolve, 300));
                                 }
                             }
                         }
-                        if (actor && !isProtectedBotTarget(actor)) {
-                            await bad.groupParticipantsUpdate(id, [actor], 'demote').catch(error =>
+                        if (actorTarget && !isProtectedBotTarget(actor)) {
+                            await bad.groupParticipantsUpdate(id, [actorTarget], 'demote').catch(error =>
                                 console.error('Anti-mod actor demotion failed:', error.message)
                             );
                         }
-                        const actorMention = actor || changedParticipants[0] || '';
+                        const actorMention = actorTarget || actor || changedParticipants[0] || '';
                         const actionLabel = eventAction === 'promote' ? 'Anti-Promote' : 'Anti-Demote';
                         const actionDescription = eventAction === 'promote'
                             ? 'Unauthorized promotion reversed and actor demoted.'
