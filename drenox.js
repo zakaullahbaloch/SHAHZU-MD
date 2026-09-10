@@ -3705,7 +3705,7 @@ break;
 case 'alive': {
   const runtimeSeconds = Math.max(0, (Date.now() - (bad.__chandRuntimeStartedAt || Date.now())) / 1000)
   const uptime = runtime(runtimeSeconds)
-  reply(`CHAND MD IS ALIVE ✅\nCHAND MD | ${uptime}`)
+  reply(`CHAND MD IS ALIVE ✅ | CHAND MD | ${uptime}`)
 }
 break;
 
