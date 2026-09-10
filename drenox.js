@@ -13826,6 +13826,10 @@ function setupEventListeners(bad, store) {
     if (bad.__chandEventListenersInitialized) return
     bad.__chandEventListenersInitialized = true
     setBotSettingsScope(bad?.user?.id)
+    const listenerBotNumber = normalizeJid(bad?.user?.id)
+    const listenerScope = listenerBotNumber ? `bot-${listenerBotNumber}` : 'default'
+    const readBotSetting = (jid, key, defaultValue = false) =>
+        readSetting(listenerScope === 'default' ? String(jid || '') : `${listenerScope}:${jid}`, key, defaultValue)
     // Serialize moderation per group so bursts of links are never skipped or
     // processed concurrently before the previous delete has completed.
     if (!global.antiLinkQueues) global.antiLinkQueues = new Map()
@@ -13979,22 +13983,27 @@ function setupEventListeners(bad, store) {
                     if (Array.isArray(value)) return value.flatMap(item => collectVisibleText(item, depth + 1))
                     if (typeof value !== 'object') return []
                     const visibleKeys = new Set([
-                        'conversation', 'text', 'caption', 'matchedText',
-                        'displayText', 'description', 'title', 'contentText'
+                        'conversation', 'text', 'caption', 'matchedText', 'displayText',
+                        'description', 'title', 'contentText', 'selectedButtonId',
+                        'selectedRowId', 'selectedId'
+                    ])
+                    const ignoredKeys = new Set([
+                        'contextInfo', 'quotedMessage', 'quotedMessageV2', 'quotedMessageV3',
+                        'externalAdReply', 'thumbnail', 'url', 'directPath'
                     ])
                     const result = []
                     for (const [key, child] of Object.entries(value)) {
+                        if (ignoredKeys.has(key)) continue
                         if (visibleKeys.has(key) && typeof child === 'string') result.push(child)
                         else if (child && typeof child === 'object') result.push(...collectVisibleText(child, depth + 1))
                     }
                     return result
                 }
 
-                // Only inspect text a user can actually see. Never scan the raw
-                // payload: WhatsApp media contains internal CDN URLs/directPaths,
-                // which previously caused warnings for messages without links.
+                // Only inspect text a user can actually see. Never scan raw
+                // payload metadata or quoted/replied messages.
                 const body = [...new Set(collectVisibleText(msg.message))].join('\n').trim()
-                const modeValue = getSetting(chatId, 'antilink', false)
+                const modeValue = readBotSetting(chatId, 'antilink', false)
                 const rawMode = modeValue === true ? 'null' : String(modeValue || '').toLowerCase().trim()
                 // Normalize values written by older command handlers so an
                 // existing deployment continues working after an update.
@@ -14012,15 +14021,16 @@ function setupEventListeners(bad, store) {
                 // Cache admin status briefly so a burst of links is not slowed by
                 // one groupMetadata request per message.
                 if (!global.antiLinkAdminCache) global.antiLinkAdminCache = new Map()
-                let botIsAdmin = global.antiLinkAdminCache.get(chatId)
+                const stateChatKey = `${listenerScope}:${chatId}`
+                let botIsAdmin = global.antiLinkAdminCache.get(stateChatKey)
                 if (botIsAdmin === undefined) {
                     const metadata = await bad.groupMetadata(chatId).catch(() => null)
                     botIsAdmin = Boolean(metadata?.participants?.some(participant =>
                         (participant.admin === 'admin' || participant.admin === 'superadmin') && isBotParticipant(participant, bad)
                     ))
-                    global.antiLinkAdminCache.set(chatId, botIsAdmin)
+                    global.antiLinkAdminCache.set(stateChatKey, botIsAdmin)
                     setTimeout(() => {
-                        if (global.antiLinkAdminCache.get(chatId) === botIsAdmin) global.antiLinkAdminCache.delete(chatId)
+                        if (global.antiLinkAdminCache.get(stateChatKey) === botIsAdmin) global.antiLinkAdminCache.delete(stateChatKey)
                     }, 15000)
                 }
                 if (!botIsAdmin) continue
@@ -14056,7 +14066,7 @@ function setupEventListeners(bad, store) {
                 // later link in the same burst to be silently skipped.
                 if (!global.antiLinkProcessing) global.antiLinkProcessing = new Set()
                 if (!global.antiLinkQueues) global.antiLinkQueues = new Map()
-                const messageKey = `${chatId}:${msg.key.id}`
+                const messageKey = `${listenerScope}:${chatId}:${msg.key.id}`
                 if (!msg.key.id || global.antiLinkProcessing.has(messageKey)) continue
                 global.antiLinkProcessing.add(messageKey)
                 setTimeout(() => global.antiLinkProcessing.delete(messageKey), 300000)
@@ -14106,7 +14116,7 @@ function setupEventListeners(bad, store) {
                         } catch (error) {
                             deleteError = error
                             if (attempt === 10 || attempt === 20 || attempt === 30) {
-                                global.antiLinkAdminCache?.delete(chatId)
+                                global.antiLinkAdminCache?.delete(stateChatKey)
                             }
                             if (attempt < 40) await new Promise(resolve => setTimeout(resolve, 100))
                         }
@@ -14127,15 +14137,15 @@ function setupEventListeners(bad, store) {
                         }
                     } else if (mode === 'warn') {
                         if (!global.antilinkWarnings) global.antilinkWarnings = {}
-                        if (!global.antilinkWarnings[chatId]) global.antilinkWarnings[chatId] = {}
-                        const warnings = (global.antilinkWarnings[chatId][offender] || 0) + 1
-                        global.antilinkWarnings[chatId][offender] = warnings
+                        if (!global.antilinkWarnings[stateChatKey]) global.antilinkWarnings[stateChatKey] = {}
+                        const warnings = (global.antilinkWarnings[stateChatKey][offender] || 0) + 1
+                        global.antilinkWarnings[stateChatKey][offender] = warnings
                         const remainingWarns = Math.max(0, 3 - warnings)
                         const warningText = `⚠️ WARNING ⚠\n*@${offender.split('@')[0]}* : Links allow ni hain ❌\n*Warn* : ${warnings}\n*Last warn* : ${remainingWarns}`
                         if (warnings >= 3) {
                             try {
                                 await bad.groupParticipantsUpdate(chatId, [offender], 'remove')
-                                delete global.antilinkWarnings[chatId][offender]
+                                delete global.antilinkWarnings[stateChatKey][offender]
                             } catch (kickError) {
                                 console.error('Anti-link warning kick failed:', kickError.message)
                             }
@@ -14148,17 +14158,17 @@ function setupEventListeners(bad, store) {
                 }
                 // Queue the message per group. Incoming bursts are retained and
                 // processed one-by-one instead of racing the delete endpoint.
-                const previousTask = global.antiLinkQueues.get(chatId) || Promise.resolve()
+                const previousTask = global.antiLinkQueues.get(stateChatKey) || Promise.resolve()
                 const currentTask = previousTask
                     .catch(() => undefined)
                     .then(() => enforceAntiLink())
                     .catch(error => console.error('Anti-link enforcement error:', error.message))
                     .finally(() => {
-                        if (global.antiLinkQueues.get(chatId) === currentTask) {
-                            global.antiLinkQueues.delete(chatId)
+                        if (global.antiLinkQueues.get(stateChatKey) === currentTask) {
+                            global.antiLinkQueues.delete(stateChatKey)
                         }
                     })
-                global.antiLinkQueues.set(chatId, currentTask)
+                global.antiLinkQueues.set(stateChatKey, currentTask)
             } catch (error) {
                 console.error('Active anti-link error:', error.message)
             }
