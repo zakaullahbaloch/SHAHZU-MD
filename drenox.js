@@ -3835,10 +3835,10 @@ case 'sudolist': {
     .filter(jid => String(jid).endsWith('@s.whatsapp.net'))
     .map(jid => normalizeJid(jid))
     .filter(number => /^\d+$/.test(number)))]
-  if (!sudoNumbers.length) return reply('📋 ɪs ʙᴏᴛ ᴋɪ sᴜᴅᴏ ʟɪsᴛ ᴍᴇɪɴ ᴋᴏɪ ɴᴜᴍʙᴇʀ ɴᴀʜɪ ʜᴀɪ.')
+  if (!sudoNumbers.length) return reply('Sudo list is empty.')
   const lines = sudoNumbers.map((number, index) => `${index + 1}. ${number}`)
   return bad.sendMessage(m.chat, {
-    text: `╭━━〔 📋 sᴜᴅᴏ ʟɪsᴛ 〕━━┈⊷\n${lines.join('\n')}\n╰━━━━━━━━━━━━━━━┈⊷`
+    text: `Sudo list:\n${lines.join('\n')}`
   }, { quoted: m })
 }
 break
