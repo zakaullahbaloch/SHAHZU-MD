@@ -75,7 +75,7 @@ const getAntiLinkAllowlist = jid => {
   return [...new Set(values.map(normalizeAntiLinkHost).filter(Boolean))]
 }
 const getAntiLinkHosts = text => {
-  const matches = String(text || '').match(/(?:https?:\/\/|www\.)[^\s<>'"]+|(?<![@\w])(?:[a-z0-9-]+\.)+(?:com|net|org|io|co|me|ly|gg|pk|uk|de|fr|ru|in|app|dev)(?:\/[^\s<>'"]*)?/giu) || []
+  const matches = String(text || '').match(/(?:\b(?:https?|ftp):\/\/[^\s<>'"]+|\bwww\.[^\s<>'"]+|(?<![@\w])(?:[a-z0-9-]+\.)+[a-z]{2,63}(?::\d+)?(?:\/[^\s<>'"]*)?|(?<!\w)(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?(?:\/[^\s<>'"]*)?)/giu) || []
   return [...new Set(matches.map(normalizeAntiLinkHost).filter(Boolean))]
 }
 const setBotSettingsScope = botJid => {
@@ -14010,7 +14010,7 @@ function setupEventListeners(bad, store) {
                 const mode = ['delete', 'on'].includes(rawMode) ? 'null' : rawMode
                 if (!['null', 'warn', 'kick'].includes(mode) || !body) continue
 
-                const linkRegex = /(?:\b(?:https?|ftp):\/\/[^\s<>'"]+|\bwww\d*\.[^\s<>'"]+|\b(?:chat\.whatsapp\.com|whatsapp\.com|wa\.me|t\.me|telegram\.me|discord\.gg|bit\.ly|tinyurl\.com|goo\.gl|lnkd\.in)(?:\/[^\s<>'"]*)?|(?<![@\w])\b(?:[a-z0-9-]+\.)+(?:com|net|org|io|co|me|ly|gg|pk|uk|de|fr|ru|in|app|dev)(?:\/[^\s<>'"]*)?)/iu
+                const linkRegex = /(?:\b(?:https?|ftp):\/\/[^\s<>'"]+|\bwww\.[^\s<>'"]+|(?<![@\w])\b(?:[a-z0-9-]+\.)+[a-z]{2,63}(?::\d+)?(?:\/[^\s<>'"]*)?|(?<!\w)(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?(?:\/[^\s<>'"]*)?)/iu
                 if (!linkRegex.test(body)) continue
                 const detectedHosts = getAntiLinkHosts(body)
                 const allowedHosts = getAntiLinkAllowlist(chatId)
@@ -14108,21 +14108,24 @@ function setupEventListeners(bad, store) {
                     // Keep retrying long enough to survive WhatsApp notify/
                     // sync races. Refresh admin cache during the retry window;
                     // never send a failure warning into the group.
-                    for (let attempt = 1; attempt <= 40 && !deleted; attempt++) {
+                    for (let attempt = 1; attempt <= 60 && !deleted; attempt++) {
                         const deleteKey = deleteKeys[(attempt - 1) % deleteKeys.length]
                         try {
                             await bad.sendMessage(chatId, { delete: deleteKey })
                             deleted = true
                         } catch (error) {
                             deleteError = error
-                            if (attempt === 10 || attempt === 20 || attempt === 30) {
+                            if (attempt === 10 || attempt === 20 || attempt === 30 || attempt === 40 || attempt === 50) {
                                 global.antiLinkAdminCache?.delete(stateChatKey)
                             }
-                            if (attempt < 40) await new Promise(resolve => setTimeout(resolve, 100))
+                            if (attempt < 60) {
+                                const retryDelay = Math.min(250 * Math.ceil(attempt / 5), 1500)
+                                await new Promise(resolve => setTimeout(resolve, retryDelay))
+                            }
                         }
                     }
                     if (!deleted) {
-                        console.error(`Anti-link delete failed after 40 attempts for ${chatId}/${msg.key.id}. Bot must be a group admin. Last error: ${deleteError?.message || 'unknown error'}`)
+                        console.error(`Anti-link delete failed after 60 attempts for ${chatId}/${msg.key.id}. Bot must be a group admin. Last error: ${deleteError?.message || 'unknown error'}`)
                     }
 
                     if (mode === 'kick') {
